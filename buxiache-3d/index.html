@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<title>不下车 · 一列车开过二十年</title>
+<style>
+:root{
+  --era:#ffb35c;
+  --ink:#eef1f7; --dim:#8a93a6;
+  --sans:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"SF Mono",ui-monospace,"Menlo","Consolas",monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--ink);
+  font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;overscroll-behavior:none}
+#stage{position:fixed;inset:0;overflow:hidden}
+#cvhost{position:absolute;inset:0}
+#cvhost canvas{display:block;width:100%!important;height:100%!important}
+
+/* 暗角 + 颗粒 */
+#vignette{position:absolute;inset:0;pointer-events:none;z-index:3;
+  background:radial-gradient(115% 85% at 50% 45%,transparent 45%,rgba(0,0,0,.62) 100%)}
+#grain{position:absolute;inset:-50%;pointer-events:none;z-index:4;opacity:.055;
+  background-image:repeating-conic-gradient(#fff 0 0.0006turn,#000 0 0.0012turn);
+  animation:grain .7s steps(3) infinite}
+@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-1.5%,1%)}66%{transform:translate(1%,-1.5%)}}
+
+/* ── HUD ── */
+#hud{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity .5s}
+#hud.on{opacity:1}
+#eraBarWrap{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08)}
+#eraBar{height:100%;width:0;background:var(--era);transition:width .25s linear;
+  box-shadow:0 0 12px var(--era)}
+#hudTop{position:absolute;top:calc(14px + env(safe-area-inset-top));left:0;right:0;
+  display:flex;align-items:flex-start;justify-content:space-between;padding:0 18px}
+.hudYear{font-size:30px;font-weight:200;letter-spacing:.10em;line-height:1;
+  text-shadow:0 2px 18px rgba(0,0,0,.8);font-variant-numeric:tabular-nums}
+.hudTag{font-size:11px;letter-spacing:.26em;color:var(--dim);margin-top:7px;text-indent:.26em}
+.hudRight{text-align:right}
+.hudScore{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:.02em;
+  font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.hudTapeRow{margin-top:7px;font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
+.hudTapeRow b{color:var(--era);font-weight:600;font-family:var(--mono)}
+#hudHearts{position:absolute;right:18px;top:calc(78px + env(safe-area-inset-top));
+  font-size:11px;letter-spacing:.42em;color:var(--era);opacity:.85;
+  text-shadow:0 2px 12px #000;text-align:right}
+
+/* 时间线字幕：跑过的每一站都是真的 */
+#tl{position:absolute;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));
+  transform:translate(-50%,14px);width:min(88vw,520px);z-index:9;pointer-events:none;
+  opacity:0;transition:opacity .45s,transform .55s cubic-bezier(.2,.9,.3,1)}
+#tl.on{opacity:1;transform:translate(-50%,0)}
+#tl .tlY{font-size:10px;letter-spacing:.28em;color:var(--era);text-indent:.28em;margin-bottom:6px;
+  padding-left:9px;border-left:2px solid var(--era)}
+#tl .tlT{font-size:13px;line-height:1.85;color:#dfe4ef;letter-spacing:.02em;
+  background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.30));
+  padding:9px 12px;border-radius:2px;text-shadow:0 1px 8px #000}
+#combo{position:absolute;right:20px;top:44%;font-size:26px;font-weight:300;
+  color:var(--era);letter-spacing:.02em;opacity:0;transform:scale(.7);
+  transition:opacity .2s,transform .16s cubic-bezier(.2,1.6,.4,1);text-shadow:0 0 26px var(--era)}
+#combo.on{opacity:1;transform:scale(1)}
+
+/* ── 时代字幕 ── */
+#caption{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);z-index:7;
+  text-align:center;opacity:0;pointer-events:none;transition:opacity .5s,transform .8s}
+#caption.on{opacity:1}
+#caption .cy{font-size:clamp(38px,9vw,64px);font-weight:100;letter-spacing:.2em;
+  color:#fff;text-indent:.2em;text-shadow:0 0 40px var(--era),0 0 90px var(--era)}
+#caption .ct{margin-top:6px;font-size:12px;letter-spacing:.5em;color:var(--era);text-indent:.5em}
+
+#toast{position:absolute;left:50%;bottom:26%;transform:translate(-50%,8px);z-index:8;
+  font-size:12px;letter-spacing:.2em;color:var(--era);opacity:0;transition:.25s;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20;
+  transition:opacity .5s}
+#flash.on{opacity:1;transition:opacity .12s}
+
+/* ── 标题 ── */
+#title{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(80% 60% at 50% 38%,rgba(18,26,46,.55) 0%,rgba(5,6,10,.93) 68%);
+  transition:opacity .7s,visibility .7s;padding:24px}
+#title.gone{opacity:0;visibility:hidden;pointer-events:none}
+.tin{text-align:center;max-width:440px;width:100%}
+.tkick{font-size:11px;letter-spacing:.42em;color:#5b6a86;text-indent:.42em;margin-bottom:26px}
+.tin h1{font-size:clamp(46px,13vw,76px);font-weight:200;letter-spacing:.20em;margin:0;
+  text-indent:.20em;line-height:1.1;
+  text-shadow:0 0 50px #ffd47922,0 0 110px #7fd7ff14}
+.tsub{font-size:13px;letter-spacing:.34em;color:#93a0b8;margin-top:16px;text-indent:.34em}
+.tline{font-size:12.5px;letter-spacing:.16em;color:#79839a;margin-top:26px;line-height:2.1}
+#btnStart{margin-top:34px;width:100%;padding:17px;background:transparent;border:1px solid #4a556e;
+  color:#e8ecf5;font-family:inherit;font-size:14px;letter-spacing:.44em;text-indent:.44em;
+  border-radius:2px;cursor:pointer;transition:.25s}
+#btnStart:hover{background:#ffd479;border-color:#ffd479;color:#0a0e18;box-shadow:0 0 60px #ffd47944}
+.tmeta{margin-top:14px;font-size:10.5px;letter-spacing:.24em;color:#4e5a72}
+.tkeys{margin-top:30px;font-size:10.5px;line-height:2.2;color:#454f66;letter-spacing:.05em}
+.ttip{margin-top:22px;font-size:9.5px;line-height:1.9;color:#39425a;text-align:left;letter-spacing:.02em}
+
+/* ── 结局 / 结算 ── */
+#over{position:absolute;inset:0;z-index:32;display:none;overflow-y:auto;
+  background:radial-gradient(80% 60% at 50% 20%,#12131c,#05060a 70%);padding:0}
+#over.on{display:block;animation:fadein .8s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.overIn{max-width:520px;margin:0 auto;padding:calc(56px + env(safe-area-inset-top)) 26px 60px}
+.endKick{font-size:10px;letter-spacing:.44em;color:#6b7391;text-indent:.44em}
+.endTitle{font-size:46px;font-weight:200;letter-spacing:.16em;margin:14px 0 6px;text-indent:.16em}
+.endLine{font-size:13px;line-height:2.1;color:#939cb2;letter-spacing:.03em}
+.rule{height:1px;background:#20232e;margin:30px 0}
+.card{background:linear-gradient(180deg,#0d1018,#080a10);border:1px solid #1e2230;
+  border-radius:3px;padding:24px 22px;box-shadow:0 24px 70px #000a}
+.cBrand{font-size:9.5px;letter-spacing:.4em;color:#525b75;margin-bottom:18px}
+.cScore{font-family:var(--mono);font-size:46px;font-weight:600;letter-spacing:-.01em;line-height:1;
+  font-variant-numeric:tabular-nums}
+.cTitle{font-size:19px;letter-spacing:.10em;margin-top:10px;color:var(--era);font-weight:500}
+.cTitle.gold{color:#ffd479;text-shadow:0 0 26px #ffd47955}
+.cSub{font-size:11.5px;color:#6d7690;margin-top:7px;letter-spacing:.06em}
+.cQuote{font-size:13px;line-height:1.95;color:#b9c1d2;margin-top:20px;padding-left:12px;
+  border-left:2px solid var(--era)}
+.cDetail{font-family:var(--mono);font-size:10.5px;color:#5a6379;margin-top:18px;letter-spacing:.04em}
+.cFoot{font-size:9px;line-height:1.8;color:#39415a;margin-top:20px}
+#btnAgain{width:100%;margin-top:26px;padding:15px;background:transparent;border:1px solid #2b3040;
+  color:#cfd6e4;font-family:inherit;font-size:12px;letter-spacing:.4em;text-indent:.4em;
+  border-radius:2px;cursor:pointer;transition:.2s}
+#btnAgain:hover{background:#cfd6e4;color:#05060a}
+
+/* ── 反转镜头 ── */
+#revealText{position:absolute;inset:0;z-index:14;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;transition:opacity 1.6s}
+#revealText.on{opacity:1}
+#revealText .rt{text-align:center;padding:0 30px}
+#revealText .r1{font-size:clamp(17px,4.4vw,24px);font-weight:200;letter-spacing:.22em;color:#e8e2f0;
+  line-height:2.2;text-indent:.22em;text-shadow:0 0 40px #000}
+#revealText .r2{margin-top:22px;font-size:12px;letter-spacing:.34em;color:#8b83a8;text-indent:.34em}
+#choiceRow{position:absolute;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);z-index:16;display:flex;gap:14px;opacity:0;pointer-events:none;
+  transition:opacity .8s}
+#choiceRow.on{opacity:1;pointer-events:auto}
+#choiceRow button{background:rgba(0,0,0,.45);border:1px solid #4a4560;color:#e6e0f0;
+  font-family:inherit;font-size:14px;letter-spacing:.3em;text-indent:.3em;padding:15px 30px;
+  border-radius:2px;cursor:pointer;transition:.2s;backdrop-filter:blur(6px);white-space:nowrap}
+#choiceRow button:hover{background:#e6e0f0;color:#0a0a12;border-color:#e6e0f0}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cvhost"></div>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+
+  <div id="hud">
+    <div id="eraBarWrap"><div id="eraBar"></div></div>
+    <div id="hudTop">
+      <div>
+        <div class="hudYear" id="hudYear">2006</div>
+        <div class="hudTag" id="hudTag">夏 · 长沙</div>
+      </div>
+      <div class="hudRight">
+        <div class="hudScore" id="hudScore">0</div>
+        <div class="hudTapeRow">磁带 <b id="hudTape">0</b></div>
+      </div>
+    </div>
+    <div id="hudHearts">●●●</div>
+    <div id="combo">×0</div>
+    <div id="tl">
+      <div class="tlY"></div>
+      <div class="tlT"></div>
+    </div>
+  </div>
+
+  <div id="caption"><div class="cy">2006</div><div class="ct">夏 · 长沙</div></div>
+  <div id="toast"></div>
+
+  <div id="revealText">
+    <div class="rt">
+      <div class="r1">你跑了二十年。<br>轨道是个圈。</div>
+      <div class="r2">画地为牢</div>
+    </div>
+  </div>
+  <div id="choiceRow">
+    <button id="btnOff">下 车</button>
+    <button id="btnStay">不 下 车</button>
+  </div>
+
+  <div id="title">
+    <div class="tin">
+      <div class="tkick">2006 — 2026</div>
+      <h1>不下车</h1>
+      <div class="tsub">一列车开过二十年</div>
+      <div class="tline">2006 年，你挤上了一趟车。<br>车开了二十年，你在第几站下车？</div>
+      <button id="btnStart">刷 卡 上 车</button>
+      <div class="tmeta">90 秒 · 六站 · 不用登录</div>
+      <div class="tkeys">← → 换道　空格 起跳　↓ 滑铲　（手机：左右滑 / 上滑跳 / 下滑铲）</div>
+      <div class="ttip">
+        本作为虚构怀旧创作。人物与情节均经艺术化处理，不指向任何真实个人的私生活与关系；
+        文中所有事件细节来自公开报道与节目内容，未经证实的部分不作断言。请勿据此对真人求证或攻讦。
+      </div>
+    </div>
+  </div>
+
+  <div id="over">
+    <div class="overIn">
+      <div class="endKick" id="endKick">ENDING</div>
+      <div class="endTitle" id="endTitle">——</div>
+      <div class="endLine" id="endLine"></div>
+      <div class="rule"></div>
+      <div class="card">
+        <div class="cBrand">不 下 车 · 乘 车 凭 证</div>
+        <div class="cScore" id="rScore">0</div>
+        <div class="cTitle" id="rTitle"></div>
+        <div class="cSub" id="rSub"></div>
+        <div class="cQuote" id="rQuote"></div>
+        <div class="cDetail" id="rDetail"></div>
+        <div class="cFoot">本作为虚构同人创作，与真实人物无关。截图发给你 2006 年的同桌。</div>
+      </div>
+      <button id="btnAgain">再 坐 一 次</button>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+</div>
+
+<script src="vendor-three.min.js"></script>
+<script src="src/world.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>

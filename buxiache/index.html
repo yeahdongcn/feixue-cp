@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>不下车 · 一个粉丝的二十年</title>
+<meta name="theme-color" content="#08080a">
+<style>
+:root{
+  --maxw:720px;
+  --bg:#0a1226; --bg2:#12203d; --fg:#e8eefc; --dim:#8fa3c8;
+  --accent:#8ef2c0; --card:#101d36; --line:#24365c;
+  --vig:#000a;
+  --font:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --serif:"Songti SC","SimSun","Noto Serif SC",serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);
+  transition:background .9s ease,color .9s ease;
+  overflow:hidden;
+}
+/* ── themes ─────────────────────────────── */
+body[data-theme="night"]{--bg:#081227;--bg2:#101f3c;--fg:#e9eefb;--dim:#8ea4c9;--accent:#8ff0c2;--card:#0e1c34;--line:#22345a;--font:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif}
+body[data-theme="bbs"]{--vig:transparent;--bg:#f3efe4;--bg2:#eae4d4;--fg:#1d1c1a;--dim:#6d6555;--accent:#1b4fbf;--card:#fffdf7;--line:#d5cbb4;--font:"Songti SC","SimSun","Noto Serif SC",serif}
+body[data-theme="city"]{--bg:#17181b;--bg2:#202227;--fg:#d8dade;--dim:#83888f;--accent:#9fb0c4;--card:#1e2024;--line:#303338}
+body[data-theme="stage"]{--bg:#170a1c;--bg2:#2a0f2f;--fg:#f8ebff;--dim:#b191c2;--accent:#ff5fa2;--card:#240d29;--line:#40203f}
+body[data-theme="feed"]{--bg:#000;--bg2:#0d0d10;--fg:#f2f2f5;--dim:#8b8b93;--accent:#ff2d55;--card:#141418;--line:#26262c}
+body[data-theme="snow"]{--bg:#0b141d;--bg2:#14222f;--fg:#eaf4ff;--dim:#8fa8bd;--accent:#a8dcff;--card:#111e29;--line:#25384a}
+body[data-theme="end"]{--bg:#07070a;--bg2:#101014;--fg:#eceaf0;--dim:#8a8694;--accent:#d3bb85;--card:#111114;--line:#282830}
+
+/* ── shell ──────────────────────────────── */
+#stage{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  max-width:var(--maxw);margin:0 auto;
+}
+#stage::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 50% 0%,color-mix(in oklab,var(--accent) 9%,transparent),transparent 60%),
+    radial-gradient(140% 100% at 50% 120%,var(--vig),transparent 55%);
+  transition:background .9s ease;
+}
+#stage::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.035;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>");
+}
+#hud{
+  position:relative;z-index:6;display:flex;align-items:center;gap:10px;
+  padding:14px 18px 8px;font-size:11px;letter-spacing:.14em;color:var(--dim);
+  text-transform:uppercase;flex:none;
+}
+#chap{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.meters{display:flex;gap:8px;align-items:center}
+.meter{width:44px;height:3px;border-radius:2px;background:color-mix(in oklab,var(--fg) 14%,transparent);position:relative;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;transition:width .5s cubic-bezier(.3,1,.4,1)}
+.meter.z i{background:#ff5f8f}.meter.q i{background:#6fe3d2}
+#bagBtn{
+  position:relative;z-index:6;border:1px solid var(--line);background:var(--card);color:var(--dim);
+  font:inherit;font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:20px;cursor:pointer;
+  transition:.3s;white-space:nowrap
+}
+#bagBtn:hover{color:var(--fg);border-color:var(--accent)}
+#bagBtn b{color:var(--accent);font-weight:600}
+
+#scene{
+  position:relative;z-index:5;flex:1;display:flex;flex-direction:column;
+  padding:6px 22px 0;overflow:hidden;min-height:0;
+}
+#scene.tap::after{
+  content:"轻触继续";position:absolute;right:22px;bottom:6px;z-index:7;
+  font-size:10px;letter-spacing:.2em;color:var(--dim);opacity:.45;pointer-events:none
+}
+#kicker{
+  font-size:11px;letter-spacing:.2em;color:var(--accent);opacity:.8;
+  min-height:15px;flex:none;font-weight:600;
+}
+#text{
+  flex:1;overflow-y:auto;padding:12px 0 4px;min-height:0;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+#text::-webkit-scrollbar{display:none}
+#text p{margin:0 0 .72em;line-height:1.95;font-size:16.5px;letter-spacing:.012em;animation:pin .5s both}
+@keyframes pin{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+#text p.nar{color:var(--fg);opacity:.94}
+#text p.dia{color:var(--fg);padding-left:2px}
+#text p.dia .who{
+  display:inline-block;margin-right:.55em;font-size:12px;letter-spacing:.1em;
+  color:var(--accent);border:1px solid color-mix(in oklab,var(--accent) 40%,transparent);
+  padding:1px 7px;border-radius:3px;vertical-align:.12em;font-weight:600;
+}
+#text p.big{
+  font-family:var(--serif);font-size:26px;line-height:1.6;text-align:center;
+  padding:1.1em .4em;margin:.6em 0;color:var(--fg);letter-spacing:.04em;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+#text p.note{font-size:12.5px;color:var(--dim);line-height:1.9;letter-spacing:.02em;font-family:var(--font)}
+#text p.bbs{
+  font-size:15.5px;padding:9px 12px;margin:0 0 .5em;background:var(--card);
+  border-left:3px solid var(--accent);line-height:1.8;
+}
+#text p.sys{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--dim);letter-spacing:.02em;line-height:1.8}
+
+#choices{flex:none;padding:4px 0 22px;display:flex;flex-direction:column;gap:9px;max-height:64vh;overflow-y:auto;scrollbar-width:none}
+#choices::-webkit-scrollbar{display:none}
+.choice{
+  display:block;width:100%;text-align:left;cursor:pointer;
+  background:var(--card);color:var(--fg);border:1px solid var(--line);
+  padding:13px 16px;border-radius:11px;font:inherit;font-size:15px;line-height:1.5;
+  transition:.22s;animation:cin .45s both;position:relative;overflow:hidden
+}
+.choice::after{
+  content:"";position:absolute;inset:0;background:linear-gradient(90deg,color-mix(in oklab,var(--accent) 16%,transparent),transparent 55%);
+  opacity:0;transition:.25s
+}
+.choice:hover{border-color:var(--accent);transform:translateX(3px)}
+.choice:hover::after{opacity:1}
+.choice .ct{position:relative;z-index:1;display:block}
+.choice .cs{position:relative;z-index:1;display:block;margin-top:4px;font-size:12px;color:var(--dim);letter-spacing:.02em}
+.choice.cont{
+  text-align:center;background:transparent;border-style:dashed;border-color:var(--line);
+  color:var(--dim);font-size:12.5px;letter-spacing:.3em;padding:11px;text-indent:.3em
+}
+.choice.cont::after{display:none}
+.choice.cont:hover{color:var(--fg);border-color:var(--accent);transform:none}
+@keyframes cin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ── danmu ──────────────────────────────── */
+#danmu{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.dm{
+  position:absolute;white-space:nowrap;font-size:13px;color:#fff;opacity:.5;
+  text-shadow:0 1px 4px #000c;animation:fly linear forwards;
+}
+@keyframes fly{from{transform:translateX(100vw)}to{transform:translateX(-120%)}}
+
+/* ── mini games ─────────────────────────── */
+.mini{margin-top:6px;padding:16px;border:1px dashed var(--line);border-radius:14px;background:var(--card)}
+.mini .lbl{font-size:11px;letter-spacing:.18em;color:var(--dim);margin-bottom:10px}
+.btn{
+  width:100%;cursor:pointer;font:inherit;font-size:15px;padding:15px;border-radius:11px;
+  border:1px solid var(--accent);background:color-mix(in oklab,var(--accent) 12%,var(--card));
+  color:var(--fg);transition:.15s;user-select:none;-webkit-user-select:none;touch-action:none
+}
+.btn:active{transform:scale(.985);background:color-mix(in oklab,var(--accent) 26%,var(--card))}
+.btn.ghost{border-color:var(--line);background:transparent;color:var(--dim);font-size:13px;padding:11px;margin-top:9px}
+.track{height:5px;border-radius:3px;background:color-mix(in oklab,var(--fg) 12%,transparent);overflow:hidden;margin:14px 0 8px}
+.track i{display:block;height:100%;width:0;background:var(--accent);transition:width .1s linear}
+.ticks{margin-top:12px;font-size:13px;line-height:1.85;color:var(--dim);min-height:60px}
+.ticks b{color:var(--fg);font-weight:400}
+.phone{border:1px solid var(--line);border-radius:14px;padding:14px;background:#00000055;font-family:ui-monospace,Menlo,monospace}
+.phone .sms{font-size:12.5px;line-height:1.75;color:var(--accent);min-height:52px;white-space:pre-wrap}
+.cards{display:flex;flex-direction:column;gap:10px;max-height:none}
+.card{
+  border:1px solid var(--line);border-radius:13px;background:var(--card);padding:13px 14px;cursor:pointer;
+  transition:.2s;animation:cin .4s both
+}
+.card:hover{border-color:var(--accent)}
+.card .src{font-size:10.5px;letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
+.card .ttl{font-size:15px;line-height:1.55;font-weight:500}
+.card .meta{font-size:11.5px;color:var(--dim);margin-top:8px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.card .save{font-size:11px;border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--dim)}
+.card.on{border-color:var(--accent)}
+.card.on .save{color:var(--accent);border-color:var(--accent)}
+
+/* ── overlays ───────────────────────────── */
+.overlay{
+  position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(90% 70% at 50% 30%,#131a2e,#05060a 70%);
+  padding:28px;overflow-y:auto
+}
+.overlay.hide{opacity:0;pointer-events:none;transition:opacity .7s}
+.t-inner{max-width:460px;text-align:center}
+.t-sub{font-size:11px;letter-spacing:.5em;color:#7d8aa5;margin-bottom:22px;text-indent:.5em}
+h1{
+  margin:0;font-family:var(--serif);font-size:64px;letter-spacing:.14em;font-weight:400;
+  color:#f2f4fa;text-indent:.14em;
+  animation:glow 4s ease-in-out infinite alternate;
+}
+@keyframes glow{from{text-shadow:0 0 30px #7bb7ff22}to{text-shadow:0 0 50px #9fd8ff44}}
+.t-line{margin-top:16px;font-size:13px;letter-spacing:.32em;color:#8fa1bd;text-indent:.32em}
+#startBtn{
+  margin-top:38px;background:transparent;border:1px solid #39445c;color:#dfe6f3;
+  font:inherit;font-size:14px;letter-spacing:.35em;padding:14px 40px;border-radius:2px;cursor:pointer;transition:.35s;text-indent:.35em
+}
+#startBtn:hover{background:#dfe6f3;color:#0a1020;border-color:#dfe6f3}
+.t-note{margin-top:40px;font-size:10.5px;line-height:2;color:#5a6478;letter-spacing:.02em;text-align:left}
+
+/* bag */
+#bag{position:fixed;inset:0;z-index:50;background:#05060ae8;backdrop-filter:blur(14px);overflow-y:auto;padding:26px 20px 60px;display:none}
+#bag.on{display:block;animation:pin .35s}
+.bag-in{max-width:640px;margin:0 auto}
+.bag-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.bag-hd h2{font-family:var(--serif);font-size:24px;font-weight:400;margin:0;letter-spacing:.1em;color:#eef0f6}
+.bag-hd button{background:none;border:1px solid #2b303c;color:#8b93a5;font:inherit;font-size:12px;padding:6px 14px;border-radius:20px;cursor:pointer}
+.bag-sub{font-size:11.5px;color:#6d7688;letter-spacing:.06em;margin-bottom:22px;line-height:1.9}
+.item{border-top:1px solid #1e222b;padding:14px 0}
+.item .n{font-size:15px;color:#e6e9f1;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.item .d{font-size:12.5px;color:#8b93a5;line-height:1.85;margin-top:6px}
+.item .nt{font-size:11.5px;color:#6d7688;line-height:1.85;margin-top:6px;font-style:italic}
+.chip{font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:20px;border:1px solid;white-space:nowrap}
+.v-true{color:#6fe3a8;border-color:#2a6b4e}
+.v-luo{color:#f0c36a;border-color:#6b532a}
+.v-unv{color:#8f9bb3;border-color:#3a4152}
+.v-read{color:#e08fc0;border-color:#6b2a52}
+.empty{color:#5a6478;font-size:13px;padding:30px 0;text-align:center}
+
+/* ending */
+#endwrap{position:fixed;inset:0;z-index:45;background:#07070a;overflow-y:auto;display:none;padding:0}
+#endwrap.on{display:block}
+.end-in{max-width:680px;margin:0 auto;padding:52px 24px 90px}
+.end-tag{font-size:10.5px;letter-spacing:.4em;color:#8a7f66;margin-bottom:18px;text-indent:.4em}
+.end-title{font-family:var(--serif);font-size:40px;letter-spacing:.08em;color:#f1eee6;margin:0 0 6px;font-weight:400}
+.end-sub{font-size:12px;color:#7d7688;letter-spacing:.18em;margin-bottom:34px}
+.end-body p{font-size:15.5px;line-height:2.05;color:#d9d6de;margin:0 0 1.1em}
+.end-body p.note{font-size:12.5px;color:#7f7a88;line-height:1.95}
+.rule{height:1px;background:#24222a;margin:38px 0}
+.recap-h{font-size:11px;letter-spacing:.3em;color:#8a7f66;margin-bottom:18px;text-indent:.3em}
+.stat-row{display:flex;gap:26px;margin:0 0 28px}
+.stat{flex:1}
+.stat .k{font-size:10.5px;letter-spacing:.15em;color:#6f6a78;margin-bottom:7px}
+.stat .v{font-family:var(--serif);font-size:27px;color:#f1eee6}
+.stat .b{height:2px;background:#22212a;margin-top:9px;border-radius:2px;overflow:hidden}
+.stat .b i{display:block;height:100%;background:#d3bb85}
+#again{
+  display:block;width:100%;margin-top:40px;padding:15px;border:1px solid #2f2c36;background:transparent;
+  color:#d9d6de;font:inherit;font-size:13px;letter-spacing:.3em;border-radius:2px;cursor:pointer;transition:.3s;text-indent:.3em
+}
+#again:hover{background:#d9d6de;color:#07070a}
+.toast{
+  position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);z-index:60;
+  background:#e9edf6;color:#0a0f1c;font-size:12.5px;padding:9px 18px;border-radius:22px;
+  opacity:0;transition:.4s;pointer-events:none;font-weight:500;box-shadow:0 8px 30px #000a;white-space:nowrap
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:480px){
+  h1{font-size:46px}
+  #text p{font-size:15.5px}
+  #text p.big{font-size:21px;padding:.9em .2em}
+  #scene{padding:6px 17px 0}
+  #hud{padding:12px 14px 6px}
+  .end-title{font-size:31px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body data-theme="night">
+
+<div id="stage">
+  <div id="hud">
+    <span id="chap"></span>
+    <span class="meters">
+      <span class="meter z"><i></i></span>
+      <span class="meter q"><i></i></span>
+    </span>
+    <button id="bagBtn">料 <b>0</b></button>
+  </div>
+  <div id="scene">
+    <div id="kicker"></div>
+    <div id="text"></div>
+    <div id="choices"></div>
+  </div>
+  <div id="danmu"></div>
+</div>
+
+<div class="overlay" id="title">
+  <div class="t-inner">
+    <div class="t-sub">非官方同人 · 飞雪</div>
+    <h1>不下车</h1>
+    <div class="t-line">一个粉丝的二十年</div>
+    <button id="startBtn">上车</button>
+    <p class="t-note">
+      本作为粉丝视角的虚构同人，取材于公开报道、节目内容与网络流传的说法。<br>
+      文中人物是真实的公众人物；一切推测、CP 叙事与所谓的「真相」，都只属于叙事者的眼睛，不代表当事人的真实关系与事实。<br>
+      请勿据此对真人求证、攻击或传播。她们只是唱过歌的人。
+    </p>
+  </div>
+</div>
+
+<div id="bag">
+  <div class="bag-in">
+    <div class="bag-hd"><h2>料</h2><button id="bagClose">合上</button></div>
+    <div class="bag-sub" id="bagSub">你收集到的碎片。有的经得起查，有的只是别人想让你相信。</div>
+    <div id="bagList"></div>
+  </div>
+</div>
+
+<div id="endwrap"><div class="end-in" id="endIn"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════ 引擎 ══════════════ */
+const $ = s => document.querySelector(s);
+const bodyEl = document.body;
+const textEl = $('#text'), choicesEl = $('#choices'), kickerEl = $('#kicker'),
+      chapEl = $('#chap'), danmuEl = $('#danmu'), toastEl = $('#toast');
+
+const S = { zhi: 0, qing: 0, money: 50, cai: [], f: {}, ch: '' };
+
+/* 料库：v = 真 / 罗生门 / 未证实 / 无法证实 / 画面真·动机是读出来的 */
+const CAI = {
+  yashe:   { n:'鸭舌', v:'真', d:'厉娜递给许飞一袋鸭舌，许飞从此吃上瘾。', nt:'节目与早年采访都提过。' },
+  bait:    { n:'白T恤', v:'真', d:'两人同住一间宿舍，厉娜爱干净，天天晾白T恤。', nt:'节目回忆段落。' },
+  vote:    { n:'于公于私，于情于理', v:'真', d:'PK环节被问投票标准，厉娜说完这八个字，举起了许飞的手。', nt:'2006年播出画面，是这段关系最著名的镜头。' },
+  rumour:  { n:'告密', v:'罗生门', d:'许飞称自己只把解约、接私活的计划告诉了厉娜，几天后消息传到天娱高层。', nt:'许飞指认；厉娜先否认，后被追问时改口「也许话赶话提过，但没点名」。没有第三方证据。' },
+  freeze:  { n:'七年空白', v:'真', d:'2007年底到2014年，许飞的行程单近乎全空，收到律师函，通告叫停。', nt:'公开行程可查。至于「因为谁」，各方说法不同。' },
+  lace:    { n:'系鞋带', v:'画面真·动机是读出来的', d:'选车环节，许飞蹲在保姆车边反复系鞋带。', nt:'画面确实存在。但「鞋带没松、她在等厉娜」是网友逐帧读出来的，没有当事人确认。' },
+  huadi:   { n:'画地为牢', v:'真', d:'「我是被宣判的人，我能去哪儿啊。我画地为牢。」', nt:'节目原话，海拔约四千米的悬崖小屋。' },
+  mcd:     { n:'麦当劳', v:'真', d:'厉娜当场没接住那句话，回屋用AI查「画地为牢」什么意思，然后点了份麦当劳。', nt:'节目画面与本人回应。网友称之「深情与钝感的错位」。' },
+  bus:     { n:'不下车', v:'真', d:'收官环节，四组人里只有这一组，双方都没有下车。', nt:'整季唯一一对。互道「感谢我的人生你曾出现过」。' },
+  yuzheng: { n:'于正磕CP', v:'真', d:'编剧于正深夜发视频，说「我们给厉娜发的视频，磕生磕死的追」。', nt:'他还说厉娜看了也回了。' },
+  recut:   { n:'重剪纯友情向', v:'未证实', d:'网传节目被举报，将重剪为「纯友情向」。', nt:'芒果TV与双方均未回应。' },
+  tianya:  { n:'天涯千楼', v:'无法证实', d:'流传的2007年爆料原帖截图，据称跟了两千多楼。', nt:'原帖早已删除，流传的截图来源不明。你当年看到的那一版，可能根本不是最初那一版。' },
+  crash:   { n:'服务器崩了', v:'真', d:'节目播出期间芒果TV被挤崩，有效播放破七亿。', nt:'云合综艺市占率一度接近六成。' },
+};
+
+const VCLASS = { '真':'v-true', '罗生门':'v-luo', '未证实':'v-unv', '无法证实':'v-unv', '画面真·动机是读出来的':'v-read' };
+
+/* ── 主题 / HUD ── */
+function setTheme(t){ if(t) bodyEl.dataset.theme = t; }
+function setChap(t){ chapEl.textContent = t || ''; }
+function refreshHUD(){
+  document.querySelector('.meter.z i').style.width = Math.min(100, S.zhi/22*100) + '%';
+  document.querySelector('.meter.q i').style.width = Math.min(100, S.qing/22*100) + '%';
+  $('#bagBtn b').textContent = S.cai.length;
+}
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>toastEl.classList.remove('on'), 1700);
+}
+function addCai(k){
+  if(S.cai.includes(k)) return;
+  S.cai.push(k); refreshHUD(); toast('＋ 料：' + CAI[k].n);
+}
+
+/* ── 打字机 ── */
+let queue = [], cur = null, curIdx = 0, timer = null, busy = false, doneCb = null;
+
+function makePara(p){
+  const el = document.createElement('p');
+  let txt = '';
+  if (typeof p === 'string'){ el.className='nar'; txt = p; }
+  else if (p.w){ el.className='dia'; const s=document.createElement('span'); s.className='who'; s.textContent=p.w; el.appendChild(s); txt=p.t; }
+  else if (p.big){ el.className='big'; txt=p.big; }
+  else if (p.note){ el.className='note'; txt=p.note; }
+  else if (p.bbs){ el.className='bbs'; txt=p.bbs; }
+  else if (p.sys){ el.className='sys'; txt=p.sys; }
+  else { el.className='nar'; txt=p.t || ''; }
+  const tn = document.createTextNode('');
+  el.appendChild(tn);
+  return { el, tn, txt };
+}
+
+function playParas(paras, cb){
+  $('#scene').classList.add('tap');
+  queue = (paras || []).slice();
+  doneCb = cb || null;
+  busy = true;
+  textEl.innerHTML = '';
+  choicesEl.innerHTML = '';
+  step();
+}
+function step(){
+  if (!queue.length){
+    busy = false;
+    const f = doneCb; doneCb = null;
+    if (f) f();
+    return;
+  }
+  const p = queue.shift();
+  cur = makePara(p);
+  curIdx = 0;
+  textEl.appendChild(cur.el);
+  type();
+}
+function type(){
+  if (curIdx >= cur.txt.length){ finishPara(); return; }
+  const step2 = cur.txt[curIdx] === '。' || cur.txt[curIdx] === '，' ? 55 : 26;
+  cur.tn.textContent += cur.txt[curIdx++];
+  scrollBottom();
+  timer = setTimeout(type, step2);
+}
+function finishPara(){
+  clearTimeout(timer);
+  cur.tn.textContent = cur.txt;
+  scrollBottom();
+  timer = setTimeout(step, 190);
+}
+function skipAll(){
+  if (!busy) return;
+  clearTimeout(timer);
+  if (cur) cur.tn.textContent = cur.txt;
+  while (queue.length){
+    const o = makePara(queue.shift());
+    o.tn.textContent = o.txt;
+    textEl.appendChild(o.el);
+  }
+  busy = false;
+  scrollBottom();
+  const f = doneCb; doneCb = null;
+  if (f) f();
+}
+function scrollBottom(){ textEl.scrollTop = textEl.scrollHeight; }
+
+/* ── 选项 ── */
+function showChoices(list){
+  $('#scene').classList.remove('tap');
+  choicesEl.innerHTML = '';
+  list.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'choice' + (c.cont ? ' cont' : '');
+    b.style.animationDelay = (i*70) + 'ms';
+    b.innerHTML = '<span class="ct"></span>' + (c.sub ? '<span class="cs"></span>' : '');
+    b.querySelector('.ct').textContent = c.t;
+    if (c.sub) b.querySelector('.cs').textContent = c.sub;
+    b.onclick = () => {
+      if (c.fx) applyFx(c.fx);
+      choicesEl.innerHTML = '';
+      if (c.go) goto(c.go);
+      else if (c.do) c.do();
+    };
+    choicesEl.appendChild(b);
+  });
+}
+function applyFx(fx){
+  if (fx.z) { S.zhi += fx.z; }
+  if (fx.q) { S.qing += fx.q; }
+  if (fx.money) { S.money += fx.money; }
+  if (fx.cai) { [].concat(fx.cai).forEach(addCai); }
+  if (fx.flag) { Object.assign(S.f, fx.flag); }
+  refreshHUD();
+}
+
+/* ── 主流程 ── */
+function goto(id){
+  if (id === '__end'){ doEnding(); return; }
+  const n = NODES[id];
+  if (!n){ doEnding(); return; }
+  setTheme(n.theme);
+  setChap(n.ch);
+  if (n.kicker !== undefined) kickerEl.textContent = n.kicker;
+  if (n.enter) n.enter();
+  playParas(n.text, () => {
+    if (n.special){ runSpecial(n.special, n); return; }
+    if (n.choices) { showChoices(n.choices); return; }
+    if (n.next){ showChoices([{ t: n.nextLabel || '继续', go: n.next, cont: true }]); return; }
+    if (n.end){ doEnding(); }
+  });
+}
+
+/* ── 弹幕 ── */
+const DM = ['她们没在一起我就不相信爱情了','鞋带根本没松啊姐妹们','我在工位哭成狗','于正都比我会磕','这糖兑水能喝十年','别磕了会受伤的','她连画地为牢都要问AI','一个人内耗一个人点麦当劳','这不是友情这是事故','二十年前我就该跑','厉娜那句乖我记一辈子','求求你们别和解 我需要这个念想','不下车才是最体面的','路人表示看哭了','剪辑给我剪出花来了','这是友情版的再见爱人'];
+let dmTimer = null;
+function startDanmu(){
+  stopDanmu();
+  const spawn = () => {
+    if (document.hidden) return;
+    const d = document.createElement('div');
+    d.className = 'dm';
+    d.textContent = DM[Math.floor(Math.random()*DM.length)];
+    d.style.top = (12 + Math.random()*72) + '%';
+    d.style.animationDuration = (11 + Math.random()*9) + 's';
+    danmuEl.appendChild(d);
+    setTimeout(()=>d.remove(), 21000);
+  };
+  spawn(); spawn();
+  dmTimer = setInterval(spawn, 2600);
+}
+function stopDanmu(){ if (dmTimer){ clearInterval(dmTimer); dmTimer = null; } danmuEl.innerHTML = ''; }
+
+/* ── 小游戏 1：短信投票 ── */
+function runVote(node){
+  const opts = [
+    { t:'五十块，全投给许飞', sub:'你知道她更需要这一票', v:50, who:'许飞' },
+    { t:'五十块，全投给厉娜', sub:'她笑得那么好看，你脑子一热', v:50, who:'厉娜' },
+    { t:'一人二十五', sub:'公平，是你十七岁最擅长的自我安慰', v:50, who:'两人各25' },
+    { t:'投二十，留三十吃饭', sub:'你还有五天要活', v:20, who:'两人各10' },
+    { t:'一分不投', sub:'你把钱塞回了口袋', v:0, who:'' },
+  ];
+  miniWrap(opts.map((o,i)=>({
+    t:o.t, sub:o.sub,
+    do(){ S.money -= o.v; afterVote(o); }
+  })));
+}
+function afterVote(o){
+  const sms = o.v > 0
+    ? '您已成功为 06号选手 投票 ' + o.v + ' 票。\n本条信息费 1 元/条（不含通信费）。\n余额：' + (50 - o.v) + ' 元'
+    : '您已退出投票页面。\n余额：50 元';
+  choicesEl.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'mini';
+  box.innerHTML = '<div class="lbl">SMS</div><div class="phone"><div class="sms"></div></div>';
+  choicesEl.appendChild(box);
+  const el = box.querySelector('.sms');
+  let i = 0;
+  const tick = () => {
+    if (i <= sms.length){ el.textContent = sms.slice(0, i++); setTimeout(tick, 18); }
+    else {
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.innerHTML = '<span class="ct">把手机收起来</span>';
+      b.onclick = () => {
+        if (o.v >= 20) { S.zhi += 1; refreshHUD(); }
+        if (o.v === 50) { S.zhi += 2; refreshHUD(); }
+        goto('c1_d');
+      };
+      choicesEl.appendChild(b);
+    }
+  };
+  tick();
+}
+
+/* ── 小游戏 2：盯住鞋带 ── */
+function runLace(node){
+  choicesEl.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'mini';
+  box.innerHTML =
+    '<div class="lbl">选车环节 · 现场</div>' +
+    '<div class="track"><i></i></div>' +
+    '<button class="btn hold">按住 · 别移开视线</button>' +
+    '<button class="btn ghost away">松开 · 看向别处</button>' +
+    '<div class="ticks"></div>';
+  choicesEl.appendChild(box);
+
+  const fill = box.querySelector('.track i'),
+        ticks = box.querySelector('.ticks'),
+        hold = box.querySelector('.hold');
+  let p = 0, raf = null, holding = false, done = false;
+
+  const msgs = [
+    [18, '她蹲在车门边上。左手扶着车漆，右手在鞋面上。'],
+    [40, '鞋带是系好的。你反复看了三遍，是系好的。'],
+    [62, '她解开，又系上。这是第二次。'],
+    [82, '第三次。她抬头看了一眼另一辆车的方向。'],
+    [100, '第四次。她终于站起来，上了那辆车。\n鞋带，一次都没有松过。'],
+  ];
+  let shown = 0;
+
+  function frame(){
+    if (!holding) return;
+    p = Math.min(100, p + 0.62);
+    fill.style.width = p + '%';
+    while (shown < msgs.length && p >= msgs[shown][0]){
+      const d = document.createElement('div');
+      d.innerHTML = '<b>' + msgs[shown][1].replace(/\n/g,'</b><br><b>') + '</b>';
+      ticks.appendChild(d);
+      shown++;
+    }
+    if (p >= 100){ end(true); return; }
+    raf = requestAnimationFrame(frame);
+  }
+  function end(hit){
+    if (done) return;
+    done = true; holding = false;
+    cancelAnimationFrame(raf);
+    hold.disabled = true; box.querySelector('.away').disabled = true;
+    if (hit){
+      addCai('lace'); S.zhi += 3; S.qing += 1; refreshHUD();
+    } else {
+      ticks.innerHTML = '<div><b>你移开了视线。等你再看回去，她已经上车了。</b></div>';
+      S.qing += 2; refreshHUD();
+    }
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.style.marginTop = '12px';
+    b.innerHTML = '<span class="ct">继续</span>';
+    b.onclick = () => goto('c6_c');
+    choicesEl.appendChild(b);
+  }
+  hold.addEventListener('pointerdown', e => { e.preventDefault(); if(done) return; holding = true; frame(); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev =>
+    hold.addEventListener(ev, () => { if (holding && !done){ holding = false; cancelAnimationFrame(raf); end(false); } })
+  );
+  box.querySelector('.away').onclick = () => end(false);
+}
+
+/* ── 小游戏 3：不下车 ── */
+function runBus(node){
+  choicesEl.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'mini';
+  box.innerHTML =
+    '<div class="lbl">第 18 天 · 终点站</div>' +
+    '<div class="track"><i></i></div>' +
+    '<button class="btn hold">按住 · 喊出来</button>' +
+    '<button class="btn ghost away">松开 · 什么都不做</button>' +
+    '<div class="ticks"></div>';
+  choicesEl.appendChild(box);
+
+  const fill = box.querySelector('.track i'), ticks = box.querySelector('.ticks'),
+        hold = box.querySelector('.hold');
+  let p = 0, raf = null, holding = false, done = false;
+  const msgs = [
+    [22, '车门开着。风灌进来，很冷。'],
+    [48, '你在站台上。你什么都做不了。'],
+    [72, '你想起二十年前，你在电视机前打翻了一碗泡面。'],
+    [100, '你的喉咙里有一个名字。它没有出来。'],
+  ];
+  let shown = 0;
+  function frame(){
+    if (!holding) return;
+    p = Math.min(100, p + 0.8);
+    fill.style.width = p + '%';
+    while (shown < msgs.length && p >= msgs[shown][0]){
+      const d = document.createElement('div'); d.innerHTML = '<b>'+msgs[shown][1]+'</b>';
+      ticks.appendChild(d); shown++;
+    }
+    if (p >= 100){ end('shout'); return; }
+    raf = requestAnimationFrame(frame);
+  }
+  function end(kind){
+    if (done) return;
+    done = true; holding = false;
+    cancelAnimationFrame(raf);
+    hold.disabled = true; box.querySelector('.away').disabled = true;
+    if (kind === 'shout'){ S.zhi += 3; ticks.innerHTML = '<div><b>你喊了。车厢里没有人回头。</b></div>'; }
+    else { S.qing += 3; ticks.innerHTML = '<div><b>你松开了手。车门关上的声音很轻。</b></div>'; }
+    refreshHUD();
+    const b = document.createElement('button');
+    b.className = 'choice'; b.style.marginTop = '12px';
+    b.innerHTML = '<span class="ct">继续</span>';
+    b.onclick = () => goto('c6_g');
+    choicesEl.appendChild(b);
+  }
+  hold.addEventListener('pointerdown', e => { e.preventDefault(); if(done) return; holding = true; frame(); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev =>
+    hold.addEventListener(ev, () => { if (holding && !done){ holding = false; cancelAnimationFrame(raf); end('letgo'); } })
+  );
+  box.querySelector('.away').onclick = () => end('letgo');
+}
+
+/* ── 小游戏 4：信息流 ── */
+const FEED = [
+  { k:'lace',   src:'抖音 · 12.4万赞', ttl:'许飞蹲在车边系了四次鞋带，鞋带根本没松', meta:'8小时前 · 娱乐搬运工' },
+  { k:'tianya', src:'小红书 · 收藏 3021', ttl:'我翻到了2007年天涯那个原帖，两千一百楼全在这', meta:'昨天 · 考古专用小号' },
+  { k:'mcd',    src:'微博 · 热搜', ttl:'厉娜回屋用AI查「画地为牢」是什么意思，然后点了麦当劳', meta:'2天前 · 追剧日记' },
+  { k:'recut',  src:'短视频 · 未证实', ttl:'独家：节目被举报，将重剪为「纯友情向」（官方未回应）', meta:'5小时前 · 圈内爆料君' },
+  { k:'yuzheng',src:'微博 · 视频', ttl:'于正深夜发视频求厉娜原谅许飞：磕生磕死的追', meta:'1天前 · 娱乐前线' },
+];
+function runFeed(node){
+  let picked = 0;
+  choicesEl.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'cards';
+  choicesEl.appendChild(wrap);
+
+  FEED.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.animationDelay = (i*60) + 'ms';
+    el.innerHTML = '<div class="src"></div><div class="ttl"></div><div class="meta"><span></span><span class="save">收藏</span></div>';
+    el.querySelector('.src').textContent = c.src;
+    el.querySelector('.ttl').textContent = c.ttl;
+    el.querySelector('.meta span').textContent = c.meta;
+    el.onclick = () => {
+      if (el.classList.contains('on')) return;
+      el.classList.add('on');
+      el.querySelector('.save').textContent = '已收藏';
+      addCai(c.k);
+      if (c.k === 'recut' || c.k === 'tianya') S.qing += 1; else S.zhi += 1;
+      refreshHUD();
+      picked++;
+      if (picked >= 3) showNext();
+    };
+    wrap.appendChild(el);
+  });
+
+  function showNext(){
+    if (wrap.nextElementSibling) return;
+    const b = document.createElement('button');
+    b.className = 'choice'; b.style.marginTop = '4px';
+    b.innerHTML = '<span class="ct">划走</span><span class="cs">你已经收藏了 '+picked+' 条</span>';
+    b.onclick = () => goto('c5_b');
+    choicesEl.appendChild(b);
+    setTimeout(()=>{ choicesEl.scrollTop = choicesEl.scrollHeight; }, 60);
+  }
+}
+
+function runSpecial(kind, node){
+  if (kind === 'vote') runVote(node);
+  if (kind === 'lace') runLace(node);
+  if (kind === 'bus')  runBus(node);
+  if (kind === 'feed') runFeed(node);
+}
+
+/* ── 通用选项面板（小游戏前用） ── */
+function miniWrap(list){
+  choicesEl.innerHTML = '';
+  list.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.style.animationDelay = (i*70) + 'ms';
+    b.innerHTML = '<span class="ct"></span>' + (c.sub ? '<span class="cs"></span>' : '');
+    b.querySelector('.ct').textContent = c.t;
+    if (c.sub) b.querySelector('.cs').textContent = c.sub;
+    b.onclick = c.do;
+    choicesEl.appendChild(b);
+  });
+}
+
+/* ── 料袋 ── */
+let bagOpen = false;
+function openBag(){
+  bagOpen = true; $('#bag').classList.add('on'); renderBag();
+}
+function renderBag(){
+  const L = $('#bagList');
+  if (!S.cai.length){ L.innerHTML = '<div class="empty">还什么都没有。<br>料是一点一点攒出来的。</div>'; return; }
+  L.innerHTML = '';
+  S.cai.forEach(k => {
+    const c = CAI[k];
+    const d = document.createElement('div');
+    d.className = 'item';
+    d.innerHTML = '<div class="n"><span></span><span class="chip '+(VCLASS[c.v]||'v-unv')+'"></span></div><div class="d"></div>' + (c.nt ? '<div class="nt"></div>' : '');
+    d.querySelector('.n span').textContent = c.n;
+    d.querySelector('.chip').textContent = c.v;
+    d.querySelector('.d').textContent = c.d;
+    if (c.nt) d.querySelector('.nt').textContent = c.nt;
+    L.appendChild(d);
+  });
+}
+$('#bagBtn').onclick = openBag;
+$('#bagClose').onclick = () => { bagOpen = false; $('#bag').classList.remove('on'); };
+
+/* ── 结局 ── */
+const ENDINGS = {
+  e_be: {
+    tag:'ENDING 01', title:'意难平', sub:'你还在那间屋子里',
+    body:[
+      '节目结束以后，你还是每天刷她们的词条。',
+      '你把那十一秒的视频存了下来，调了0.5倍速，一帧一帧地看。你在评论区认识了很多和你一样的人。你们互相确认：那双鞋，是有话要说的。',
+      '你开始写。你把二十年写成了一条时间线，写她们怎么认识，怎么同住，怎么在PK台上举起手，怎么在某个冬天之后再也不提对方的名字。你写得很细，细到自己都相信了。',
+      '有天深夜你写到一半，忽然停下来，问了自己一句：这件事里，我到底知道什么？',
+      '你真正确认过的，只有一些画面。鸭舌。白T恤。一只举起来的手。四次没松过的鞋带。一句「我画地为牢」。一份麦当劳。两扇没有打开的车门。',
+      '剩下的全是你的。',
+      '你没有关掉那个文档。你只是把标题从「真相」改成了「我以为」。',
+    ],
+    note:'也许最好的CP，是那种永远不需要被证实的。它属于你，也只属于你。'
+  },
+  e_peace: {
+    tag:'ENDING 02', title:'各自安好', sub:'你把灯牌放下了',
+    body:[
+      '收官那晚，你发了一条很长的微博。写完删，删完写，最后发出去的只有一句：',
+      '「谢谢你们唱过歌。」',
+      '你把超话取关了。没有告别，没有仪式。第二天早上醒来，你发现世界并没有变。地铁还是那么挤，你还是坐过了两站。',
+      '后来你偶尔还会刷到她们。厉娜接了新的商演，许飞发了新歌。评论区还是有人在问那个问题，还是有人给出不同的答案。',
+      '你不再点进去了。',
+      '你不是不爱了。你只是终于分清了：你爱的是她们唱过的歌，不是她们必须成为你想象的样子。',
+      '那盏灯牌的闪灯早就坏了。你把它从纸箱里拿出来，擦干净，放在了书架上，正面朝外。',
+      '就四个字。许飞加油。',
+    ],
+    note:'清醒不是不爱，是不再要求对方为你的爱负责。'
+  },
+  e_wall: {
+    tag:'ENDING 03', title:'画地为牢', sub:'你承认你也是那个人',
+    body:[
+      '你没有脱粉，也没有再上头。你就那么待在原地。',
+      '节目里那句「我画地为牢」，你听了不止一遍。你起初觉得那是许飞在说她自己。后来你发现，说这句话的人，可以是任何一个在深夜里翻旧账的人。',
+      '你想起十七岁那年，你在灯牌背面写了三个字，又涂掉。你涂得很用力，马克笔都洇开了。',
+      '二十年后那三个字露出来了。你才明白，有些东西不是被涂掉的，是被压在下面的。',
+      '你继续做你的粉丝。你买票，你听歌，你在她们各自的评论区里留一句「好听」。你不催她们和好，也不再帮她们编故事。',
+      '你只是把那盏灯牌留着了。',
+      '有一天你也许会把它扔掉。但不是今天。',
+    ],
+    note:'有些牢，是自己画的。承认这件事，本身就是走出来的一半。'
+  },
+  e_outsider: {
+    tag:'ENDING 04', title:'局外人', sub:'你只是看了一档好节目',
+    body:[
+      '你把整季看完，关掉视频，去洗了个碗。',
+      '节目确实好看。剪辑、配乐、那个海拔四千米的悬崖小屋，都好看。你甚至在朋友圈发了一句「最近这综艺不错」。',
+      '有人回你：你磕吗？',
+      '你说：不磕，但我理解。',
+      '你理解一个人在原地站了十五年，也理解另一个人根本不知道有这间屋子。你理解深情，也理解钝感。你甚至理解那个深夜发视频的编剧——大家只是想在自己的人生里，找到一个不会散的版本。',
+      '你没有收集那些料。你只是记得，有两个女孩在2006年的夏天，同住过一间宿舍。',
+      '一个爱干净，天天晾白T恤。一个被人递了一袋鸭舌，从此吃上瘾。',
+      '这就够了。剩下的，是别人的二十年。',
+    ],
+    note:'不投入也是一种诚实。旁观者往往看得最清楚，也最不容易受伤。'
+  }
+};
+function doEnding(){
+  stopDanmu();
+  let key;
+  const z = S.zhi, q = S.qing;
+  if (z >= 9 && z - q >= 4) key = 'e_be';
+  else if (q >= 8 && q - z >= 2) key = 'e_peace';
+  else if (z >= 5) key = 'e_wall';
+  else key = 'e_outsider';
+  const E = ENDINGS[key];
+
+  const trueCount = S.cai.filter(k => CAI[k].v === '真').length;
+  const total = S.cai.length;
+
+  const items = S.cai.map(k => {
+    const c = CAI[k];
+    return '<div class="item"><div class="n"><span>'+esc(c.n)+'</span><span class="chip '+(VCLASS[c.v]||'v-unv')+'">'+esc(c.v)+'</span></div>' +
+           '<div class="d">'+esc(c.d)+'</div>' + (c.nt ? '<div class="nt">'+esc(c.nt)+'</div>' : '') + '</div>';
+  }).join('');
+
+  $('#endIn').innerHTML =
+    '<div class="end-tag">'+E.tag+'</div>' +
+    '<h2 class="end-title">'+E.title+'</h2>' +
+    '<div class="end-sub">'+E.sub+'</div>' +
+    '<div class="end-body">' + E.body.map(p => '<p>'+esc(p)+'</p>').join('') +
+      '<p class="note">'+esc(E.note)+'</p></div>' +
+    '<div class="rule"></div>' +
+    '<div class="recap-h">复 盘</div>' +
+    '<div class="stat-row">' +
+      '<div class="stat"><div class="k">执 念</div><div class="v">'+z+'</div><div class="b"><i style="width:'+Math.min(100,z/22*100)+'%"></i></div></div>' +
+      '<div class="stat"><div class="k">清 醒</div><div class="v">'+q+'</div><div class="b"><i style="width:'+Math.min(100,q/22*100)+'%"></i></div></div>' +
+      '<div class="stat"><div class="k">料</div><div class="v">'+total+'</div><div class="b"><i style="width:'+Math.min(100,total/12*100)+'%"></i></div></div>' +
+    '</div>' +
+    '<p style="font-size:12.5px;line-height:1.95;color:#8a8494;margin:0 0 26px">' +
+      '你收集了 '+total+' 条。其中经得起查的，'+trueCount+' 条。' +
+      (total ? '剩下的那些，有的还在打官司，有的早就删了，有的从一开始就只是别人想让你相信的东西。' : '') +
+    '</p>' +
+    (items || '<div class="empty">你没有捡起任何一片。</div>') +
+    '<div class="rule"></div>' +
+    '<p class="note" style="font-size:11.5px;line-height:2;color:#66626f">' +
+      '本作是非官方同人。许飞与厉娜是真实的歌手，2006年《超级女声》长沙赛区的冠军与季军，全国第五与第六。' +
+      '文中的公开事件（于公于私于情于理、七年空白、王牌对王牌、后会友期、画地为牢、麦当劳、不下车、于正磕CP）均有公开报道可循；' +
+      '而「告密」一事至今是罗生门，双方各执一词，没有任何一方被证实。' +
+      '所有情感解读、内心戏与「真相」，都是粉丝视角的虚构。<br><br>' +
+      '请把她们当歌手。她们唱过歌，这就够了。</p>' +
+    '<button id="again">再来一次</button>';
+
+  $('#endwrap').classList.add('on');
+  $('#endwrap').scrollTop = 0;
+  $('#again').onclick = () => location.reload();
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+/* ── 交互绑定 ── */
+$('#stage').addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  if (busy) skipAll();
+});
+$('#startBtn').onclick = () => {
+  $('#title').classList.add('hide');
+  setTimeout(()=>$('#title').style.display='none', 700);
+  goto('p0');
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && bagOpen){ bagOpen=false; $('#bag').classList.remove('on'); return; }
+  if ((e.key === ' ' || e.key === 'Enter') && busy){ e.preventDefault(); skipAll(); return; }
+  if (busy || bagOpen) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 9){
+    const list = choicesEl.querySelectorAll('.choice');
+    if (list[n-1]){ e.preventDefault(); list[n-1].click(); }
+  }
+});
+
+const NODES = {};
+function boot(){
+  refreshHUD();
+  const q = new URLSearchParams(location.search).get('n');
+  if (q){
+    $('#title').style.display = 'none';
+    if (q === '__end'){ S.zhi = 11; S.qing = 3; ['yashe','bait','vote','rumour','freeze','lace','huadi','mcd','bus','yuzheng'].forEach(addCai); doEnding(); }
+    else goto(q);
+  }
+}
+</script>
+<script>
+Object.assign(NODES, {
+
+/* ══════════ 序 ══════════ */
+p0: { theme:'feed', ch:'', kicker:'2026 · 冬 · 凌晨一点四十',
+  text:[
+    '凌晨一点四十。你侧躺着，拇指已经自动划了三个小时。',
+    {big:'「她系了四次鞋带。」'},
+    '视频只有十一秒。一个女人蹲在保姆车旁边，低着头，在系鞋带。',
+    '配文六个字：鞋带根本没松。',
+    '你看了第九遍。',
+    '然后你忽然发现，你认识她。',
+    '你认识她，二十年了。',
+  ],
+  choices:[
+    { t:'把手机扣在枕头底下', sub:'明天还要上班', go:'p1', fx:{ q:1 } },
+    { t:'再看一遍', sub:'第十遍', go:'p1', fx:{ z:2 } },
+  ]
+},
+
+/* ══════════ 一 · 长沙 ══════════ */
+p1: { theme:'night', ch:'一 · 长沙', kicker:'2006 · 夏',
+  text:[
+    '2006年6月，长沙像一个没关紧的蒸笼。',
+    '你十七岁，刚考完。兜里五十块，是这一个礼拜的生活费。',
+    '你在定王台做了块灯牌。三十八块。老板问要不要加闪灯，你说加。',
+    '牌子上四个字：许飞加油。',
+    '背面你偷偷写了另外三个字。写完，又用马克笔涂掉了，涂得很用力。',
+    {note:'（那年你还不承认自己写了什么。）'},
+  ],
+  next:'c1_b', nextLabel:'去广电门口'
+},
+
+c1_b: { theme:'night', ch:'一 · 长沙', kicker:'湖南广电 · 门口',
+  text:[
+    '晚上七点，人已经排到马路牙子上。',
+    '有人举着「飞雪 forever」，有人把两个名字写在同一张纸上，中间画了一颗心。',
+    {w:'小满', t:'你也是飞雪的？'},
+    '一个扎马尾的女生挤过来，手里两块灯牌。她叫小满，比你大两岁，贴吧的小吧主。',
+    {w:'小满', t:'她们今天住一个宿舍。我表哥在里面当志愿者，真的。'},
+    {w:'你', t:'……真的假的。'},
+    {w:'小满', t:'真的。而且厉娜爱干净，天天晾白T恤。许飞被她喂鸭舌，现在自己也上瘾了。'},
+    '你把这句话记了很多年。',
+  ],
+  choices:[
+    { t:'「能不能带我进去看一眼」', sub:'你知道不可能', go:'c1_c', fx:{ z:1 } },
+    { t:'不说话，专心等', sub:'等一个可能不会出现的人', go:'c1_c', fx:{ q:1 } },
+  ]
+},
+
+c1_c: { theme:'night', ch:'一 · 长沙', kicker:'现场 · 投票通道开放中',
+  enter(){ addCai('yashe'); addCai('bait'); },
+  text:[
+    '节目间隙，大屏幕打出投票方式。主持人说，你们的每一条短信，都会算进今晚的票数。',
+    '你摸了摸口袋。五十块。',
+    '1 元 1 条。',
+    {note:'（2006 年，短信是唯一能让你参与进去的东西。）'},
+  ],
+  special:'vote'
+},
+
+c1_d: { theme:'night', ch:'一 · 长沙', kicker:'PK 环节',
+  enter(){ addCai('vote'); },
+  text:[
+    '灯光暗下去，又亮起来。',
+    '主持人问厉娜：你这一票，投给谁？标准是什么？',
+    '她没看镜头。',
+    {big:'「于公于私，于情于理。」'},
+    '然后她举起了许飞的手。',
+    '全场炸了。你在电视机前，把手里的泡面打翻了。',
+    '小满在旁边跳，一边跳一边哭，睫毛膏糊了一脸。',
+    '那一刻你以为，有些事是不会散的。',
+  ],
+  choices:[
+    { t:'跟着一起喊', sub:'喊到嗓子哑', go:'c1_e', fx:{ z:2 } },
+    { t:'盯着她举手的角度看了很久', sub:'你想把这个画面记住', go:'c1_e', fx:{ z:1, q:1 } },
+  ]
+},
+
+c1_e: { theme:'night', ch:'一 · 长沙', kicker:'散场',
+  text:[
+    '散场以后，你和小满蹲在路边分一袋鸭舌。',
+    {w:'小满', t:'你说，她们会不会一直这么好？'},
+    '你嚼着鸭舌，没说话。',
+    '那年夏天结束的时候，厉娜是全国第五，许飞是第六。',
+    '名次差一位。后来你们说，这一位，像一句谶语。',
+  ],
+  choices:[
+    { t:'把那盏灯牌收进箱子', sub:'明年还用得上', go:'c2_a', fx:{ z:1 } },
+  ]
+},
+
+/* ══════════ 二 · 帖子 ══════════ */
+c2_a: { theme:'bbs', ch:'二 · 帖子', kicker:'2007 · 11 · 天涯社区',
+  text:[
+    '2007年11月。你上了大学，宿舍里一台共用电脑，网速 128K。',
+    '天涯娱乐八卦版，一个帖子被顶到了首页。',
+    {bbs:'《关于某超女解约那点事，我知道的不多，但都是真的》'},
+    {note:'楼主：马甲不用了　　2007-11-18 02:14　　回复：2137'},
+    '楼主只说了三句话。',
+    {bbs:'一、她不是自己要走的。'},
+    {bbs:'二、她的计划，只有一个人知道。'},
+    {bbs:'三、那个人，现在还在台上。'},
+    '下面跟了两千一百三十七楼。',
+    '你把这三句话读了很多遍，读到能背下来。',
+  ],
+  next:'c2_b', nextLabel:'往下翻'
+},
+
+c2_b: { theme:'bbs', ch:'二 · 帖子', kicker:'三个版本',
+  text:[
+    '接下来的一年里，你听到了三个版本。',
+    {w:'版本一', t:'许飞：我只把解约和接私活的计划，告诉了她一个人。几天后，公司找我谈话。'},
+    {w:'版本二', t:'厉娜：我从来没有说过。……也许话赶话提过，但我没有点名。'},
+    {w:'版本三', t:'公司：我们收到的是一封匿名邮件。'},
+    '三个版本，互相咬不住。',
+    '你那年十九岁。你以为真相只有一个，而且一定在这三个人里面。',
+    {note:'（很多年后你才知道：有些事不是有人撒谎，是根本没有哪一个版本是全的。）'},
+  ],
+  choices:[
+    { t:'我信许飞。', sub:'她赌上了整个事业', go:'c2_c', fx:{ z:2, cai:'rumour', flag:{ belief:'xf' } } },
+    { t:'我信厉娜。', sub:'她否认过，而且她一贯不解释', go:'c2_c', fx:{ z:1, cai:'rumour', flag:{ belief:'ln' } } },
+    { t:'我不信任何人。', sub:'包括这个帖子本身', go:'c2_c', fx:{ q:2, cai:'rumour', flag:{ belief:'none' } } },
+    { t:'我不知道该信谁。', sub:'这句话你说得很小声', go:'c2_c', fx:{ z:1, q:1, cai:'rumour', flag:{ belief:'?' } } },
+  ]
+},
+
+c2_c: { theme:'city', ch:'二 · 帖子', kicker:'2007 冬 — 2014',
+  enter(){ addCai('freeze'); },
+  text:[
+    '2008年春天，许飞的行程单开始变空。',
+    '不是慢慢变空。是一个月，两个月，然后是一整年。',
+    '律师函。通告取消。合约冻结。',
+    '后来有人算过，从 2007 年底到 2014 年，将近七年。',
+    '一个歌手最好的七年。',
+    '你在宿舍里，把她所有的歌下进 MP3。128K，音质很差。',
+    '你循环了一整个冬天，循环到那种粗糙的音质，变成了你记忆里的原声。',
+  ],
+  choices:[
+    { t:'一直相信她', sub:'哪怕没有人替你作证', go:'c3_a', fx:{ z:2 } },
+    { t:'不敢再提她的名字', sub:'怕别人问「她现在在干嘛」', go:'c3_a', fx:{ q:2 } },
+  ]
+},
+
+/* ══════════ 三 · 空白 ══════════ */
+c3_a: { theme:'city', ch:'三 · 空白', kicker:'2014 · 春 · 北京',
+  text:[
+    '2014年，你在北京五环上班。早高峰的地铁，人贴着人。',
+    '手机弹出一条通稿：《许飞新歌上线》。',
+    '你点开评论区。47 条。',
+    '第一条是：姐姐你终于回来了。',
+    '你把手机举到胸口，怕旁边的人看见你在哭。',
+    '那天你没迟到。你只是坐过了两站。',
+  ],
+  choices:[
+    { t:'翻到最后一条评论', sub:'47 条，你要看完', go:'c3_b', fx:{ z:1 } },
+    { t:'关掉手机', sub:'留着晚上一个人看', go:'c3_b', fx:{ q:1 } },
+  ]
+},
+
+c3_b: { theme:'city', ch:'三 · 空白', kicker:'搬家',
+  text:[
+    '搬家那天，你从床底下拖出一个纸箱。',
+    '灯牌还在。闪灯早就坏了。',
+    '背面的马克笔被磨掉了一半，那三个字反而露出来了。',
+    {big:'厉 娜'},
+    '你蹲在地上，看了很久。',
+  ],
+  choices:[
+    { t:'留着', sub:'反正也不占地方', go:'c3_c', fx:{ z:1 } },
+    { t:'扔了', sub:'你把它放进楼道的垃圾桶，又在那儿站了五分钟', go:'c3_c', fx:{ q:2 } },
+  ]
+},
+
+c3_c: { theme:'city', ch:'三 · 空白', kicker:'2014',
+  text:[
+    '最后你还是把它塞回了纸箱。',
+    '然后你打开电脑，想再看看那个帖子。',
+    '已经被删了。两千一百三十七楼，一楼都没剩。',
+    '你忽然明白，有些事不是被解决的，是被时间吞掉的。',
+  ],
+  next:'c4_a', nextLabel:'2016 — 2020'
+},
+
+/* ══════════ 四 · 重聚 ══════════ */
+c4_a: { theme:'stage', ch:'四 · 重聚', kicker:'2020 · 4 · 一档怀旧综艺',
+  text:[
+    '2020年春天，一档节目把 06 超女请回了舞台。',
+    '灯光一打，所有人都在笑。所有人都在等对方先哭。',
+    '然后许飞拿起了话筒。',
+    {w:'许飞', t:'我私信你，你为什么从来都不回？'},
+    '现场安静了三秒。那三秒后来被剪成了很多个版本，每个版本都比原版长。',
+    {w:'唐笑', t:'其实我们有聚，只是我们总是没有你。'},
+    '那天夜里，许飞发了长文。第二天，热搜第一是三个字加一个问号：许飞 情商？',
+  ],
+  choices:[
+    { t:'打开群聊', sub:'486 个人，999+ 条未读', go:'c4_b' },
+  ]
+},
+
+c4_b: { theme:'stage', ch:'四 · 重聚', kicker:'你的群',
+  text:[
+    '你的粉丝群有 486 个人。十分钟里，消息刷了 999+。',
+    {note:'「她凭什么啊，人家招她惹她了」'},
+    {note:'「她说的是实话，你们自己心里没数？」'},
+    {note:'「脱粉了，别 @ 我」'},
+    {note:'「你们有没有想过，厉娜一句话都没说」'},
+    {note:'「她一贯这样。她只会说『我们不说别人了，乖』」'},
+    '你是群主。手指悬在输入框上。',
+  ],
+  choices:[
+    { t:'控评：把骂她的都踢了', sub:'你今天想当一次暴君', go:'c4_c', fx:{ z:2 } },
+    { t:'打一大段话，然后一个字一个字删掉', sub:'你发现自己没有立场', go:'c4_c', fx:{ q:2 } },
+    { t:'把群解散了', sub:'486 个人，一瞬间安静', go:'c4_c', fx:{ q:3 } },
+  ]
+},
+
+c4_c: { theme:'stage', ch:'四 · 重聚', kicker:'',
+  text:[
+    '那天晚上，厉娜只说了六个字。',
+    {w:'厉娜', t:'我们不说别人了，乖。'},
+    '就这一句。热搜上没人转。',
+    '你盯着这六个字，突然有点想笑。',
+    '二十年了，她还是那个在 PK 台上不解释的人。',
+    '你也还是那个在电视机前，替她着急的人。',
+  ],
+  next:'c5_a', nextLabel:'2026'
+},
+
+/* ══════════ 五 · 信息流 ══════════ */
+c5_a: { theme:'feed', ch:'五 · 信息流', kicker:'2026 · 10 · 你的手机',
+  enter(){ addCai('crash'); startDanmu(); },
+  text:[
+    '然后到了 2026 年。',
+    '一档叫《后会友期》的节目，把四对走散的旧友塞进一列火车，走十八天。',
+    '芒果TV 的服务器被挤崩过。有效播放破七亿，云合综艺市占率一度接近六成。',
+    '你的首页被淹了。',
+    '你划了三个小时。',
+    {note:'（挑三条收藏。你以为你在收集真相。）'},
+  ],
+  special:'feed'
+},
+
+c5_b: { theme:'feed', ch:'五 · 信息流', kicker:'',
+  enter(){ stopDanmu(); },
+  text:[
+    '你收藏了几条，翻来覆去地看。',
+    '像在拼一张缺了很多块的拼图。',
+    '拼到最后你发现，缺的那几块，可能根本不存在。',
+  ],
+  next:'c6_a', nextLabel:'第 1 天'
+},
+
+/* ══════════ 六 · 列车 ══════════ */
+c6_a: { theme:'snow', ch:'六 · 列车', kicker:'第 1 天 · 选车',
+  text:[
+    '《后会友期》。十八天，一列开往北方的车，四对走散的旧友。',
+    '节目组说，这是一档关于「和解还是告别」的节目。',
+    '第一天，选车。四组人，四辆车。谁跟谁坐，是一道题。',
+    '厉娜站在车门口，还没决定。',
+    '许飞已经走到另一辆车旁边了。',
+    '然后她蹲了下去。',
+  ],
+  special:'lace'
+},
+
+c6_c: { theme:'snow', ch:'六 · 列车', kicker:'第 1 天 · 车上',
+  text:[
+    '车门关上的时候，没有人看清她到底系没系上。',
+    '但你知道，鞋带这种东西，一次就够。',
+    '她系了四次。',
+    '弹幕开始刷。有人说「她就是在等」，有人说「别过度解读」。',
+    '两边吵了三千楼。',
+    '你忽然意识到：这个画面里，唯一不知道自己在演什么的人，可能是她本人。',
+  ],
+  choices:[
+    { t:'发一条弹幕：她在等她', sub:'你打了三遍，才发出去', go:'c6_d', fx:{ z:2 } },
+    { t:'什么都不说', sub:'把手机反过来放在腿上', go:'c6_d', fx:{ q:2 } },
+  ]
+},
+
+c6_d: { theme:'snow', ch:'六 · 列车', kicker:'第 11 天 · 海拔约 4000 米',
+  enter(){ addCai('huadi'); },
+  text:[
+    '悬崖上的小屋。风把麦克风刮得嗡嗡响。',
+    '节目组问许飞：这十五年，你怎么过来的？',
+    {w:'许飞', t:'我是被宣判的人。我能去哪儿啊。'},
+    {w:'许飞', t:'我画地为牢。'},
+    '镜头切给厉娜。',
+    '她没接住这句话。',
+    '她甚至有点困惑。',
+  ],
+  next:'c6_e', nextLabel:'当晚'
+},
+
+c6_e: { theme:'snow', ch:'六 · 列车', kicker:'当晚',
+  enter(){ addCai('mcd'); },
+  text:[
+    '回屋以后，她打开手机，问 AI：画地为牢是什么意思。',
+    'AI 解释完，她点了一份麦当劳。',
+    '一个内耗，一个松弛。',
+    '网友做了一万条二创。有人说这是今年最好笑的一幕。',
+    '有人说，这才是这段关系真正的样子——',
+    {big:'一个人在里面坐了十五年，另一个人根本不知道有这间屋子。'},
+    '你笑不出来。',
+    '因为你想起，你也是那个在屋子里的人。',
+  ],
+  choices:[
+    { t:'关灯，睡觉', sub:'明天还要上班', go:'c6_f' },
+  ]
+},
+
+c6_f: { theme:'snow', ch:'六 · 列车', kicker:'第 18 天 · 终点站',
+  text:[
+    '最后一天。节目组设了一个环节，叫「下车」。',
+    '车停稳。愿意继续做朋友的人，下车，走到对面去。',
+    '不愿意的，坐在原位，等车门关上。',
+    '四组人。三组下了车。',
+    '只剩最后一组。',
+    '车门开了。',
+    '厉娜没有动。',
+    '许飞也没有动。',
+    '导播间里，有人在哭。',
+  ],
+  special:'bus'
+},
+
+c6_g: { theme:'snow', ch:'六 · 列车', kicker:'终点站',
+  enter(){ addCai('bus'); },
+  text:[
+    '她们隔着一条过道，说了一句话。',
+    {big:'「感谢我的人生，你曾出现过。」'},
+    '然后车门关上了。',
+    '整季唯一一对，双方都没有下车的人。',
+    '后来厉娜在采访里说：关系可以缓和，但不会成为朋友。',
+    '许飞说：我从来没有告密。可是我证明不了。',
+    '一个说不会原谅。一个说无法自证。',
+    '二十年，就卡在这两句话中间。',
+  ],
+  next:'c6_h', nextLabel:'收官那晚'
+},
+
+c6_h: { theme:'feed', ch:'六 · 列车', kicker:'收官 · 凌晨',
+  enter(){ addCai('yuzheng'); startDanmu(); },
+  text:[
+    '节目收官那天晚上，编剧于正发了一条视频。',
+    '他对着镜头说：我们给厉娜发的视频，磕生磕死的追。',
+    '他还说，这节目太好看了。',
+    '你看着这条视频，笑出了声。',
+    '原来最大的那个 CP 粉，是个编剧。',
+    '原来你和他的区别，只是你没有一个可以发视频的号。',
+    '你关掉视频。屏幕暗下去，映出你的脸。',
+    '二十年前你在广电门口，举着一块加了闪灯的牌子。',
+    '牌子上写着：许飞加油。',
+    '背面那三个字，你到现在都没敢承认是写给谁的。',
+  ],
+  next:'__end', nextLabel:'天亮了'
+}
+
+});
+boot();
+</script>
+
+</body>
+</html>
