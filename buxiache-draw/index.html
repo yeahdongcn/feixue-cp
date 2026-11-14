@@ -40,9 +40,14 @@
   #ropeBar.low i{background:linear-gradient(90deg,#ff5c48,var(--bad))}
   #ropeNum{font-size:13px;letter-spacing:.05em;color:var(--warm);
     font-variant-numeric:tabular-nums;transition:color .2s}
+  #ropeNum b{font-weight:400}
+  #ropeNum i{font-style:normal;color:var(--dim);margin-left:4px;letter-spacing:.02em}
   #ropeNum.low{color:var(--bad)}
-  #needLine{font-size:13px;letter-spacing:.07em;color:var(--ink2);margin-top:11px}
+  #ropeNum.low i{color:rgba(255,143,120,.72)}
+  #needLine{font-size:13px;letter-spacing:.07em;color:var(--ink2);margin-top:11px;
+    font-variant-numeric:tabular-nums;transition:color .2s}
   #needLine b{color:var(--warm);font-weight:400}
+  #needLine.ok{color:var(--warm)}
 
   /* ── 底部 ── */
   #hint{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:13px;
@@ -56,8 +61,8 @@
   #snd:hover{border-color:rgba(255,201,138,.5);color:var(--warm)}
   #snd.off{color:var(--dim)}
 
-  /* ── 中央提示 ── */
-  #toast{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;
+  /* ── 提示条：固定贴在底部提示行上方，永远不压物件 / 圈 ── */
+  #toast{position:absolute;left:0;right:0;bottom:84px;text-align:center;
     font-size:16px;letter-spacing:.18em;color:var(--warm);opacity:0;transition:opacity .22s;
     text-shadow:0 0 30px rgba(255,170,90,.55)}
   #toast.on{opacity:1}
@@ -146,6 +151,8 @@
 
   @media (max-width:560px){
     #hint{bottom:76px}
+    /* 手机上提示行抬到 76px，提示条跟着抬，保持 18px 间距 */
+    #toast{bottom:112px}
     #card::before,#card::after{display:none}
     #card .in{width:calc(100vw - 40px);padding:24px 22px 22px}
     #card .t{font-size:28px;margin:14px 0 16px}
@@ -208,10 +215,10 @@
     <div id="sub">第 1 站 / 6</div>
   </div>
   <div id="side">
-    <div id="ropeLabel">绳 长</div>
+    <div id="ropeLabel">剩余绳长</div>
     <div id="ropeBar"><i id="ropeFill"></i></div>
-    <div id="ropeNum">900</div>
-    <div id="needLine">圈住 <b>3</b> 样</div>
+    <div id="ropeNum"><b id="ropeLeft">900</b><i id="ropeOf">/ 900</i></div>
+    <div id="needLine">还需圈住 <b>3</b> 样</div>
   </div>
   <div id="hint">按住拖动 · 把线绕回来接上，就封口了</div>
   <div id="toast"></div>
@@ -481,6 +488,7 @@ const ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
 const els = {
   year:$('year'), sub:$('sub'), ropeBar:$('ropeBar'), ropeFill:$('ropeFill'), ropeNum:$('ropeNum'),
+  ropeLeft:$('ropeLeft'), ropeOf:$('ropeOf'),
   need:$('needLine'), hint:$('hint'), toast:$('toast'), snd:$('snd'),
   card:$('card'), cYear:$('cYear'), cTitle:$('cTitle'), cLine:$('cLine'), cMeta:$('cMeta'), cDots:$('cDots'),
   end:$('end'), eStat:$('eStat'), eBig:$('eBig'), eKept:$('eKept'), eLeft:$('eLeft'),
@@ -565,16 +573,77 @@ function vibrate(p){
   try { if (navigator.vibrate) navigator.vibrate(p); } catch(_){}
 }
 
-/* ══════════════════ 视图 ══════════════════ */
-let view = { s:1, ox:0, oy:0 };
+/* ══════════════════ 视图 ══════════════════
+   不再固定把 1000×1000 的盘塞进屏幕：每一关按本关物件的包围盒
+   自动缩放、居中，盘面（边框 / 网格）铺到屏幕边缘，物件撑满画面。
+   frame  = 屏幕上的纸面（盘面装饰）
+   safe   = 真正放物件的地方：让开顶部 HUD 和底部提示行 / 声音按钮 / 提示条
+   ════════════════════════════════════════════ */
+let view = { s:1, ox:0, oy:0, cx:0, cy:0 };
+let frame = { x:0, y:0, w:0, h:0 };
+let safe = { x:0, y:0, w:0, h:0 };
+let levelCen = { x:500, y:500 };
 let dpr = 1;
+
+function layout(){
+  const w = window.innerWidth, h = window.innerHeight;
+  const narrow = w <= 560;
+  const side = narrow ? 14 : 20;
+  frame = { x:side, y:narrow ? 12 : 16, w:w - side*2, h:h - (narrow ? 24 : 32) };
+
+  // 提示条：读真实的提示行 / 声音按钮位置，永远贴在它们上方（不靠魔数）
+  let tb = narrow ? 112 : 84;
+  if (els.hint.getBoundingClientRect && els.snd.getBoundingClientRect){
+    const rh = els.hint.getBoundingClientRect(), rs = els.snd.getBoundingClientRect();
+    tb = Math.max(64, Math.round(h - Math.min(rh.top, rs.top) + 16));
+  }
+  els.toast.style.bottom = tb + 'px';
+
+  const top = h < 520 ? 84 : 108;          // 顶部 HUD 高度
+  const bottom = tb + 46;                  // 提示条 + 一行余量
+  safe = {
+    x: narrow ? 12 : 30,
+    y: top,
+    w: w - (narrow ? 24 : 60),
+    h: Math.max(120, h - top - bottom),
+  };
+  fitView();
+}
+
+/* 本关物件的世界包围盒 */
+function levelBox(L){
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const o of L.objs){
+    x0 = Math.min(x0, o.x); x1 = Math.max(x1, o.x);
+    y0 = Math.min(y0, o.y); y1 = Math.max(y1, o.y);
+  }
+  if (!isFinite(x0)){ x0 = y0 = 460; x1 = y1 = 540; }
+  return { x0, y0, x1, y1, w:x1 - x0, h:y1 - y0 };
+}
+
+const MIN_SPAN = 360;   // 只剩一个物件时也要留出能画下半径 ~57 的圈
+
+function fitView(){
+  const L = LEVELS[G.idx] || LEVELS[0];
+  const b = levelBox(L);
+  // 物件名与光晕在屏幕上是固定像素，缩放要给它们让出边距
+  const padX = Math.min(46, Math.max(24, safe.w * .08));
+  const padY = Math.max(26, Math.min(38, safe.h * .07));
+  const bw = Math.max(b.w, MIN_SPAN), bh = Math.max(b.h, MIN_SPAN);
+  const s = Math.max(.12, Math.min((safe.w - padX*2) / bw, (safe.h - padY*2) / bh));
+
+  levelCen = { x:(b.x0 + b.x1)/2, y:(b.y0 + b.y1)/2 };
+  const ox = safe.x + safe.w/2 - levelCen.x*s;
+  const oy = safe.y + safe.h/2 - levelCen.y*s;
+  view = { s, ox, oy, cx:levelCen.x*s + ox, cy:levelCen.y*s + oy };
+}
+
 function resize(){
   dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = window.innerWidth, h = window.innerHeight;
   cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
   cv.style.width = w+'px'; cv.style.height = h+'px';
-  const s = Math.min(w*0.94, h*0.78) / WORLD;
-  view = { s, ox:(w - WORLD*s)/2, oy:(h - WORLD*s)*0.52 };
+  layout();
   seedMotes(w, h);
 }
 window.addEventListener('resize', resize);
@@ -590,7 +659,7 @@ const G = {
   area:0, inside:[], sealedAt:0, toastT:0, failId:0,
   kept:[], left:[], t:0, sealPulse:0,
   // 手感 / 表现
-  nearStart:false, lastMove:0, lastEmit:0, speed:0,
+  nearStart:false, lastMove:0, lastEmit:0, speed:0, needAt:0,
   sealT:0, failT:0, dim:0, flash:0, flashBad:false, flashX:0, flashY:0,
   shake:0, particles:[], ripples:[], motes:[],
   hover:{x:0, y:0, on:false},
@@ -638,10 +707,6 @@ function mulberry32(a){
   };
 }
 const rand = mulberry32(0x9e3779b9);
-const SPECKS = [];
-for (let i=0;i<110;i++){
-  SPECKS.push({ x:rand()*WORLD, y:rand()*WORLD, r:.5+rand()*1.4, a:.018+rand()*.045 });
-}
 const DUST = [];
 for (let i=0;i<40;i++){
   DUST.push({ x:rand(), y:rand(), r:.5+rand()*1.3, a:.05+rand()*.14,
@@ -666,17 +731,46 @@ function loadLevel(i){
   G.toastT = 0; els.toast.classList.remove('on'); els.toast.classList.remove('bad');
   els.year.textContent = L.year;
   els.sub.textContent = `第 ${i+1} 站 / ${LEVELS.length}`;
-  els.need.innerHTML = `圈住 <b>${L.need}</b> 样`;
+  G.needAt = 0;
+  syncNeed();
   els.hint.classList.remove('gone');
   syncHud();
+  fitView();
 }
 function syncHud(){
   const k = Math.max(0, G.rope/G.ropeFull);
   els.ropeFill.style.width = (k*100).toFixed(1)+'%';
-  els.ropeNum.textContent = Math.max(0, Math.round(G.rope));
+  els.ropeLeft.textContent = Math.max(0, Math.round(G.rope));
+  els.ropeOf.textContent = '/ ' + G.ropeFull;
   const low = k < 0.22;
   els.ropeBar.classList.toggle('low', low);
   els.ropeNum.classList.toggle('low', low);
+}
+
+/* 右上角只放一份要求：画的时候是实时还差几样，封口后变成这一笔的账 */
+function insideCount(poly){
+  const L = LEVELS[G.idx];
+  if (!poly || poly.length < 3) return 0;
+  let n = 0;
+  for (const o of L.objs) if (inPoly(o, poly)) n++;
+  return n;
+}
+function syncNeed(){
+  const L = LEVELS[G.idx];
+  if (!L) return;
+  if (G.state === 'sealed'){
+    els.need.classList.add('ok');
+    els.need.innerHTML = `圈住 <b>${G.inside.length}</b> · 放手 ${L.objs.length - G.inside.length}`;
+    return;
+  }
+  els.need.classList.remove('ok');
+  if (G.drawing && G.path.length > 5 && G.len > 90){
+    const d = L.need - insideCount(G.path);
+    if (d <= 0){ els.need.classList.add('ok'); els.need.innerHTML = '够了 · 松手封口'; }
+    else els.need.innerHTML = `还差 <b>${d}</b> 样`;
+  } else {
+    els.need.innerHTML = `还需圈住 <b>${L.need}</b> 样`;
+  }
 }
 
 /* ══════════════════ 粒子 / 波 ══════════════════ */
@@ -726,9 +820,10 @@ function startStroke(x, y){
   G.path = [{x:p.x, y:p.y, w:.55}];
   G.drawing = true; G.over = false; G.len = 0; G.turn = 0;
   G.rope = G.ropeFull; G.area = 0; G.inside = [];
-  G.nearStart = false; G.lastMove = Date.now(); G.lastEmit = G.t;
+  G.nearStart = false; G.lastMove = Date.now(); G.lastEmit = G.t; G.needAt = 0;
   els.hint.classList.add('gone');
   syncHud();
+  syncNeed();
   sfxTick();
 }
 function moveStroke(x, y){
@@ -760,6 +855,8 @@ function moveStroke(x, y){
   G.path.push({x:p.x, y:p.y, w});
   G.nearStart = Math.hypot(p.x-G.path[0].x, p.y-G.path[0].y) < 74
                 && G.len > MIN_LEN && Math.abs(G.turn) > 1.2;
+  // 实时数一数“这一笔画到现在圈住了几样”，右上角只报还差多少
+  if (G.len - G.needAt > 18){ G.needAt = G.len; syncNeed(); }
   syncHud();
 
   // 笔尖火星
@@ -800,13 +897,13 @@ function endStroke(){
     fail('没接上');
   } else {
     G.path = []; G.rope = G.ropeFull; G.len = 0; G.turn = 0;
-    G.nearStart = false; syncHud(); els.hint.classList.remove('gone');
+    G.nearStart = false; syncHud(); syncNeed(); els.hint.classList.remove('gone');
   }
 }
 function resetStroke(){
   G.path = []; G.drawing = false; G.rope = G.ropeFull;
   G.len = 0; G.turn = 0; G.over = false; G.nearStart = false; G.dim = 0;
-  syncHud(); els.hint.classList.remove('gone');
+  syncHud(); syncNeed(); els.hint.classList.remove('gone');
 }
 function showToast(text, bad, dur){
   els.toast.textContent = text;
@@ -832,7 +929,7 @@ function fail(msg){
   }
   G.ripples.push({x:tip.x, y:tip.y, r0:8, r1:96, life:.55, max:.55, col:'rgba(255,110,90,.45)'});
   showToast(msg, true, .85);
-  syncHud();
+  syncHud(); syncNeed();
   vibrate([12,40,12]);
   sfxFail();
   setTimeout(() => {
@@ -841,7 +938,7 @@ function fail(msg){
     if (G.state === 'play'){
       G.path = []; G.rope = G.ropeFull; G.len = 0; G.turn = 0; G.over = false;
       G.dim = 0; G.nearStart = false;
-      syncHud();
+      syncHud(); syncNeed();
       els.hint.classList.remove('gone');
     }
   }, 780);
@@ -858,7 +955,7 @@ function seal(){
   G.inside = L.objs.filter(o => inPoly(o, poly));
 
   if (G.inside.length < L.need){
-    fail(`${G.inside.length} 样不够 · 要圈住 ${L.need} 样`);
+    fail(`不够 · 只圈到 ${G.inside.length} 样`);
     return;
   }
   G.state = 'sealed';
@@ -880,7 +977,8 @@ function seal(){
     if (G.inside.indexOf(o) >= 0) G.kept.push({o, i:G.idx});
     else G.left.push({o, i:G.idx});
   });
-  showToast(`封住了 · 圈住 ${G.inside.length} 样`, false, 1.35);
+  syncNeed();
+  showToast('封住了', false, 1.35);
   vibrate([18,50,28]);
   sfxSeal();
   // 用墙钟推进：掉帧时不会把“封口 → 下一站”拖长（截图夹具等 1.9s）
@@ -967,7 +1065,8 @@ function makeGrain(){
 }
 
 function drawBg(w, h){
-  const cx = w/2, cy = view.oy + WORLD*view.s*0.46;
+  // 顶灯跟着本关物件的重心，画面重心才落得住
+  const cx = view.cx || w/2, cy = view.cy || h*0.46;
   const R = Math.max(w, h);
   let g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R*0.84);
   g.addColorStop(0, '#2e251b');
@@ -990,44 +1089,42 @@ function drawBg(w, h){
 }
 
 function drawBoard(){
+  // 盘面在屏幕空间里画：一张铺满画面的纸，而不是一块缩在中间的方板
+  const p = frame;
+  if (!p.w || !p.h) return;
   ctx.save();
-  let g = ctx.createRadialGradient(500, 470, 30, 500, 500, 730);
-  g.addColorStop(0, 'rgba(255,232,196,.052)');
-  g.addColorStop(0.45, 'rgba(255,220,180,.023)');
+
+  // 光池：本关物件重心处提亮
+  let g = ctx.createRadialGradient(view.cx, view.cy, 20, view.cx, view.cy, Math.max(p.w, p.h)*0.66);
+  g.addColorStop(0, 'rgba(255,232,196,.055)');
+  g.addColorStop(0.45, 'rgba(255,220,180,.024)');
   g.addColorStop(1, 'rgba(255,210,170,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, WORLD, WORLD);
+  ctx.fillStyle = g; ctx.fillRect(p.x, p.y, p.w, p.h);
 
-  ctx.strokeStyle = 'rgba(255,214,170,.13)';
-  ctx.lineWidth = 1.4/view.s;
-  ctx.strokeRect(0, 0, WORLD, WORLD);
+  // 纸边
+  ctx.strokeStyle = 'rgba(255,214,170,.14)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
 
-  // 四角刻线
-  ctx.strokeStyle = 'rgba(255,214,170,.22)';
-  ctx.lineWidth = 1.2/view.s;
-  const t = 24;
-  [[0,0,1,1],[WORLD,0,-1,1],[0,WORLD,1,-1],[WORLD,WORLD,-1,-1]].forEach(([x,y,sx,sy])=>{
+  // 四角刻线：贴着屏幕角，像裁切线
+  ctx.strokeStyle = 'rgba(255,214,170,.20)';
+  ctx.lineWidth = 1;
+  const t = 18;
+  [[p.x,p.y,1,1],[p.x+p.w,p.y,-1,1],[p.x,p.y+p.h,1,-1],[p.x+p.w,p.y+p.h,-1,-1]].forEach(([x,y,sx,sy])=>{
     ctx.beginPath();
     ctx.moveTo(x+sx*t, y); ctx.lineTo(x, y); ctx.lineTo(x, y+sy*t);
     ctx.stroke();
   });
 
-  ctx.strokeStyle = 'rgba(255,228,190,.032)';
-  ctx.lineWidth = 1/view.s;
-  for (let i=1;i<10;i++){
-    const p = i*WORLD/10;
-    ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, WORLD); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(WORLD, p); ctx.stroke();
-  }
-  // 很淡的同心圈：暗示“圈”这个动作
-  ctx.strokeStyle = 'rgba(255,220,180,.028)';
-  for (const r of [150, 300, 450]){
-    ctx.beginPath(); ctx.arc(500, 500, r, 0, Math.PI*2); ctx.stroke();
-  }
-  // 纸面颗粒
-  ctx.fillStyle = 'rgba(255,226,190,.05)';
-  for (const s of SPECKS){
-    ctx.fillRect(s.x, s.y, s.r, s.r);
-  }
+  // 方格纸：横竖都等分成接近正方形的格子
+  const cell = Math.max(46, Math.min(78, Math.min(p.w, p.h)/8));
+  const nx = Math.max(3, Math.round(p.w/cell)), ny = Math.max(3, Math.round(p.h/cell));
+  ctx.strokeStyle = 'rgba(255,228,190,.030)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i=1;i<nx;i++){ const x = Math.round(p.x + p.w*i/nx) + .5; ctx.moveTo(x, p.y); ctx.lineTo(x, p.y+p.h); }
+  for (let j=1;j<ny;j++){ const y = Math.round(p.y + p.h*j/ny) + .5; ctx.moveTo(p.x, y); ctx.lineTo(p.x+p.w, y); }
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -1163,7 +1260,7 @@ function drawPath(P){
   }
 }
 
-function drawObj(o, state, idx){
+function drawObj(o, state, idx, cen){
   const sx = o.x*view.s + view.ox, sy = o.y*view.s + view.oy;
   const r = 18;
   const col = state === 'kept' ? '#ffd7a6' : state === 'live' ? '#f2ebdc'
@@ -1183,15 +1280,11 @@ function drawObj(o, state, idx){
   if (state === 'kept'){
     ctx.shadowColor = '#ffb36b'; ctx.shadowBlur = 16;
   }
+  // 一个环就够：原来外面那圈同心环像扫描仪的准星
   const breathe = state === 'live' ? 1 + Math.sin(G.t*1.6 + idx)*.03 : 1;
   ctx.strokeStyle = col;
-  ctx.lineWidth = state === 'kept' ? 1.5 : 1.15;
+  ctx.lineWidth = state === 'kept' ? 1.5 : 1.1;
   ctx.beginPath(); ctx.arc(sx, sy, r*breathe, 0, Math.PI*2); ctx.stroke();
-  if (state === 'live'){
-    ctx.globalAlpha = alpha*.7;
-    ctx.beginPath(); ctx.arc(sx, sy, r+4.5, 0, Math.PI*2); ctx.stroke();
-    ctx.globalAlpha = alpha;
-  }
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = col;
@@ -1200,10 +1293,26 @@ function drawObj(o, state, idx){
   ctx.fillText(o.ch, sx, sy + 1);
 
   if (state !== 'ghost'){
-    ctx.globalAlpha = alpha * .86;
+    // 名字沿“远离本关重心”的方向外移，并用暗色描边压住底下的圈线
+    let lx = sx, ly = sy + r + 15, align = 'center';
+    if (cen){
+      const dx = sx - cen.x, dy = sy - cen.y, d = Math.hypot(dx, dy);
+      if (d > 4){
+        const ux = dx/d, uy = dy/d;
+        lx = sx + ux*(r + 15);
+        ly = sy + uy*(r + 15) + 4;
+        align = ux > .45 ? 'left' : ux < -.45 ? 'right' : 'center';
+      }
+    }
+    ctx.textAlign = align; ctx.textBaseline = 'middle';
     ctx.font = `13px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
-    ctx.fillStyle = state === 'kept' ? '#ffc98a' : state === 'left' ? '#8f8879' : '#b3a892';
-    ctx.fillText(o.name, sx, sy + r + 14);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.lineWidth = 3.6;
+    ctx.strokeStyle = 'rgba(9,7,5,.9)';
+    ctx.strokeText(o.name, lx, ly);
+    ctx.globalAlpha = alpha * .96;
+    ctx.fillStyle = state === 'kept' ? '#ffcf93' : state === 'left' ? '#8f8879' : '#cdc1aa';
+    ctx.fillText(o.name, lx, ly);
   }
   ctx.restore();
 }
@@ -1273,13 +1382,8 @@ function draw(){
   ctx.save();
   ctx.translate(shx, shy);
 
-  // 盘面（世界坐标）
-  ctx.save();
-  ctx.translate(view.ox, view.oy);
-  ctx.scale(view.s, view.s);
+  // 盘面（屏幕坐标：一张铺满画面的纸）
   drawBoard();
-  ctx.restore();
-
   drawMotes(w, h);
 
   const P = G.path.map(toScreen);
@@ -1289,14 +1393,15 @@ function draw(){
   // 物件（屏幕坐标，文字不随缩放变小）
   const L = LEVELS[G.idx];
   const isFinal = G.idx === LEVELS.length - 1;
+  const cen = { x: view.cx + shx, y: view.cy + shy };
   if (isFinal){
-    G.kept.forEach(k => { if (k.i !== G.idx) drawObj(k.o, 'ghost'); });
-    G.left.forEach(k => { if (k.i !== G.idx) drawObj(k.o, 'ghost'); });
+    G.kept.forEach(k => { if (k.i !== G.idx) drawObj(k.o, 'ghost', 0, cen); });
+    G.left.forEach(k => { if (k.i !== G.idx) drawObj(k.o, 'ghost', 0, cen); });
   }
   L.objs.forEach((o, i) => {
     let st = 'live';
     if (G.state === 'sealed') st = G.inside.indexOf(o) >= 0 ? 'kept' : 'left';
-    drawObj(o, st, i);
+    drawObj(o, st, i, cen);
     if (st === 'kept'){
       const dt = G.sealT - i*.085;
       if (dt > 0 && dt < .7){

@@ -41,9 +41,14 @@
   .nm small{ font-size:12px; color:var(--acc); letter-spacing:.18em; margin-left:10px; vertical-align:2px; }
   .pitch{ font-size:13.5px; line-height:1.95; color:var(--dim); }
   .meta{ display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--dim2); letter-spacing:.12em; margin-top:auto; padding-top:6px; }
-  .go{ font-size:12px; color:var(--acc); letter-spacing:.24em; opacity:.55; transition:opacity .25s, letter-spacing .25s; }
-  a.card:hover .go{ opacity:1; letter-spacing:.34em; }
+  .go{ align-self:flex-start; margin-top:4px; font-size:12.5px; letter-spacing:.22em; color:#0c0c0e;
+    background:var(--acc); padding:9px 18px; border-radius:2px; opacity:.9;
+    transition:opacity .2s, transform .2s, box-shadow .2s; }
+  a.card:hover .go{ opacity:1; transform:translateX(2px); box-shadow:0 0 24px #ffc98a55; }
 
+
+  .how{ margin-top:18px; font-size:13.5px; letter-spacing:.04em; color:var(--acc); }
+  .how b{ font-weight:400; border-bottom:1px solid #ffc98a55; padding-bottom:2px; }
   footer{ max-width:1080px; color:var(--dim2); font-size:11.5px; line-height:2.1; letter-spacing:.03em; border-top:1px solid var(--line); padding-top:22px; }
   footer a{ color:var(--dim); }
 </style>
@@ -54,8 +59,9 @@
   <h1>同一段往事，<em>三种坐法</em>。</h1>
   <p class="sub">
     许飞和厉娜，同届，同宿舍，一个冠军一个季军。此后二十年，互相扶持过，也互相消耗过，七年断了联系，
-    又在同一档节目里重新坐在了一起。三个游戏共用这一份底色，但玩法毫不相干——你想怎么靠近她们，就选哪一个。
+    又在同一档节目里重新坐在了一起。三个游戏共用这一份底色，但玩法毫不相干。
   </p>
+  <p class="how"><b>点下面任意一张卡片就能玩</b>，不需要下载，手机上也可以。</p>
 </header>
 
 <div class="grid">
