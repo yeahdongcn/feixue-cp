@@ -103,7 +103,7 @@ console.log('\n— 版式 —');
   /* 和 index.html 的 layout() / fitView() 同一套算法：
      纸边 = 整屏内缩 14/20px；安全区让开 HUD 和底部提示条；
      物件包围盒等比放进安全区、居中。这里复算一遍，防止“改宽了圆圈又缩回四分之一”。 */
-  const MIN_SPAN = 360, OBJ_R = 24;
+  const MIN_SPAN = 360, OBJ_R = 28;
   const frameOf = (w,h) => { const n = w <= 560, side = n ? 14 : 20;
     return { x:side, y:n?12:16, w:w-side*2, h:h-(n?24:32) }; };
   const safeOf = (w,h) => { const n = w <= 560, top = h < 520 ? 84 : 108, tb = n ? 110 : 84;
@@ -122,7 +122,8 @@ console.log('\n— 版式 —');
     let md = Infinity;
     for (let i=0;i<L.objs.length;i++) for (let j=i+1;j<L.objs.length;j++)
       md = Math.min(md, Math.hypot(L.objs[i].x-L.objs[j].x, L.objs[i].y-L.objs[j].y)*s);
-    return { s, sf, md, ox:sx, oy:sy, objR: Math.max(15, Math.min(OBJ_R, md*0.42)),
+    const maxR = sf.w < 360 ? 24 : OBJ_R;   // 和 index.html 同步：窄屏退回 24
+    return { s, sf, md, ox:sx, oy:sy, objR: Math.max(15, Math.min(maxR, md*0.42)),
              box: { x0:x0*s+sx, y0:y0*s+sy, x1:x1*s+sx, y1:y1*s+sy } };
   }
 
@@ -165,7 +166,7 @@ console.log('\n— 版式 —');
       const f = fitOf(L,w,h);
       return Math.max((f.box.x1-f.box.x0)/safe.w, (f.box.y1-f.box.y0)/safe.h);
     }));
-    console.log(`  ${name} ${w}×${h}: 缩放 ${minS.toFixed(2)}–${maxS.toFixed(2)}，物件最近 ${worstGap.toFixed(0)}px，圈半径 ${Math.max(15,Math.min(24,worstGap*0.42)).toFixed(0)}px，覆盖 ${(cover*100).toFixed(0)}%`);
+    console.log(`  ${name} ${w}×${h}: 缩放 ${minS.toFixed(2)}–${maxS.toFixed(2)}，物件最近 ${worstGap.toFixed(0)}px，圈半径 ${Math.max(15,Math.min(w<=360?24:28,worstGap*0.42)).toFixed(0)}px，覆盖 ${(cover*100).toFixed(0)}%`);
     chk(bad2.length === 0, `${name} 物件/名字不出纸、不压提示条、圈不叠${bad2.length?'（'+bad2.join('，')+'）':''}`);
     chk(worstGap >= 30, `${name} 物件最近 ≥30px`);
     if (fills) chk(cover >= 0.75, `${name} 画面撑满安全区 ≥75%`);

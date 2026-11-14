@@ -60,9 +60,84 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
   box-shadow:0 2px 12px #000c}
 #focus::after{content:"";position:absolute;left:50%;bottom:-4px;margin-left:-3px;
   border:3px solid transparent;border-top-color:#ffd47999}
-#hint{position:absolute;left:14px;bottom:10px;font-size:11.5px;letter-spacing:.12em;color:#a6b1c8;
-  pointer-events:none;z-index:5;text-shadow:0 1px 6px #000,0 0 12px #000}
+#hint{position:absolute;left:14px;bottom:14px;max-width:calc(100% - 28px);
+  font-size:11.5px;line-height:1.5;letter-spacing:.06em;color:#d3dced;
+  background:#04070ccc;border:1px solid #ffffff1a;border-left:2px solid var(--accent);
+  border-radius:2px;padding:4px 9px;pointer-events:none;z-index:5;
+  box-shadow:0 6px 20px #0008}
+#hint:empty{display:none}
 #hint::before{content:"▸ ";color:var(--accent)}
+
+/* ── 静音 / 声音 ── */
+.hmute{flex:none;margin-left:6px;pointer-events:auto;cursor:pointer;
+  width:32px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #ffffff24;background:#0009;border-radius:3px;color:#cfd8ea;
+  font:inherit;font-size:12px;line-height:1;backdrop-filter:blur(4px);transition:.15s}
+.hmute:hover{border-color:var(--accent);color:var(--accent)}
+.hmute.muted{color:#77808f;border-color:#ffffff12}
+.hmute b{font-weight:400}
+
+/* ── 竖屏中场：随身听 ──
+   390×844 下 320×180 的画面只有 219px 高，中间原本是一大片空渐变。
+   这里放一台真的「随身听」：磁带壳、会转的盘、当前年份标签。
+   它同时是配乐的实体：播放/静音、速度、调性都写在上面。 */
+#walkman{position:absolute;left:0;right:0;top:calc(var(--sh, 219px) + 6px);
+  bottom:calc(286px + env(safe-area-inset-bottom));z-index:3;
+  display:none;align-items:center;justify-content:center;pointer-events:none;padding:0 18px}
+body.started.portrait #walkman{display:flex}
+body:not(.started) #walkman{display:none}
+/* 选择时不去掉随身听（否则竖屏又空了 400px），只把它压暗，让选项成为主体 */
+body.choosing #walkman{opacity:.42;transition:opacity .2s}
+.wk{width:min(300px,82vw);display:flex;flex-direction:column;gap:9px;
+  filter:drop-shadow(0 20px 44px #000b)}
+.wk-hd{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:11px;letter-spacing:.2em;color:#8c99b2}
+.wk-hd span:last-child{color:var(--accent);letter-spacing:.2em;opacity:.92}
+.wk-tape{position:relative;height:clamp(116px,19vh,164px);border-radius:6px;
+  background:linear-gradient(180deg,#242a34,#11151c 58%,#1a1f27);
+  border:1px solid #3d4657;
+  box-shadow:inset 0 1px 0 #ffffff1c,inset 0 -12px 26px #000a,0 2px 0 #0008}
+.wk-sc{position:absolute;width:6px;height:6px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#6b7689,#20262f 70%);
+  box-shadow:inset 0 0 0 1px #0007}
+.wk-sc.a{left:7px;top:7px}.wk-sc.b{right:7px;top:7px}
+.wk-sc.c{left:7px;bottom:7px}.wk-sc.d{right:7px;bottom:7px}
+.wk-label{position:absolute;left:14px;right:14px;top:15px;height:57%;
+  border-radius:2px;padding:8px 11px 7px;overflow:hidden;
+  background:linear-gradient(180deg,#f2e7cc,#ddcba6 76%,#cdb992);
+  box-shadow:inset 0 0 0 1px #00000018,0 1px 0 #0006;color:#2b2318}
+.wk-label::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:repeating-linear-gradient(90deg,#b8452f 0 9px,#e6d7b4 9px 18px);opacity:.8}
+.wk-y{font-size:22px;letter-spacing:.12em;font-variant-numeric:tabular-nums;
+  line-height:1.05;margin-top:2px;font-weight:600;color:#241c12}
+.wk-sub{font-size:11px;letter-spacing:.2em;color:#6a5638;margin-top:3px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.wk-rule{height:1px;background:#00000026;margin:6px 0 5px}
+.wk-note{font-size:11px;letter-spacing:.1em;color:#7a6544}
+.wk-win{position:absolute;left:28%;right:28%;bottom:9px;height:26%;
+  border-radius:3px;background:linear-gradient(180deg,#080b10,#141922);
+  box-shadow:inset 0 0 0 1px #0009,inset 0 2px 6px #000c;
+  display:flex;align-items:center;justify-content:space-between;padding:0 9%}
+.wk-reel{position:relative;width:32%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,#efe7d2 0 18%,#a99d83 19% 30%,#1b2029 31% 100%);
+  box-shadow:0 0 0 1px #0009}
+.wk-reel::before{content:"";position:absolute;inset:13%;border-radius:50%;
+  background:repeating-conic-gradient(#cfc2a4 0deg 13deg,#262c35 13deg 60deg);
+  opacity:.92}
+.wk-reel::after{content:"";position:absolute;inset:31%;border-radius:50%;
+  background:#090c11;box-shadow:0 0 0 1px #7a705c,0 0 0 2px #0008}
+body.musicon .wk-reel{animation:wk-spin 5.4s linear infinite}
+body.musicon .wk-reel:last-child{animation-direction:reverse;animation-duration:6.8s}
+@keyframes wk-spin{to{transform:rotate(360deg)}}
+.wk-teeth{position:absolute;left:0;right:0;bottom:0;height:7px;border-radius:0 0 6px 6px;
+  background:repeating-linear-gradient(90deg,#0a0d12 0 6px,#333b48 6px 9px);opacity:.9}
+.wk-ft{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:11px;letter-spacing:.04em;color:#8491a8}
+.wk-mute{pointer-events:auto;cursor:pointer;flex:none;width:30px;height:30px;border-radius:50%;
+  border:1px solid #ffffff24;background:#0a0f18cc;color:#cfd8ea;font:inherit;font-size:13px;
+  display:flex;align-items:center;justify-content:center}
+.wk-mute:hover{border-color:var(--accent);color:var(--accent)}
+.wk-mute.muted{color:#77808f;border-color:#ffffff12}
 
 /* ── 对话 ── */
 #bottombar{
@@ -93,6 +168,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
 /* ── 选项 ── */
 #choices{position:relative;width:100%;display:none;flex-direction:column;gap:7px}
 #choices.on{display:flex}
+#choices .ask{background:#0a0f18ee;border:1px solid #ffffff1a;border-left:2px solid var(--accent);
+  border-radius:3px;padding:9px 12px;margin-bottom:2px;font-size:13px;line-height:1.62;color:#e9edf6;
+  box-shadow:0 8px 24px #0008;letter-spacing:.01em}
+#choices .ask b{display:inline-block;color:var(--accent);font-weight:500;letter-spacing:.08em;
+  margin-right:7px;font-size:11.5px}
+body.choosing #dlg,body.choosing #hint,body.choosing #focus{display:none}
 .opt{
   display:flex;align-items:center;gap:11px;width:100%;text-align:left;cursor:pointer;
   background:linear-gradient(180deg,#141c2e,#0d1320);border:2px solid #333d59;color:#dfe6f4;
@@ -152,14 +233,39 @@ body.portrait #touch .abtn{top:auto;bottom:calc(146px + env(safe-area-inset-bott
 }
 .tape:hover{border-color:var(--accent);transform:translateY(-2px)}
 .tape.cur{border-color:var(--accent2);box-shadow:0 0 0 1px #7fd7ff44,0 0 22px #7fd7ff22}
-.tape.locked{opacity:.34;cursor:default;filter:grayscale(1)}
+.tape.locked{opacity:.46;cursor:default;filter:grayscale(1)}
 .tape.locked:hover{transform:none;border-color:#2c3550}
-.tslot{height:34px;margin-bottom:8px;background:#0a0e18;border:1px solid #232b42;border-radius:3px;
-  display:flex;align-items:center;justify-content:center;gap:14px;position:relative}
-.tspool{width:11px;height:11px;border-radius:50%;border:2px solid #5a6588;background:#131a2a}
-.tspool.r{opacity:.5}
-.tlab{font-size:11.5px;letter-spacing:.08em;color:var(--accent)}
-.tno{font-size:11px;letter-spacing:.12em;color:#7a86a8;margin-top:4px}
+/* 磁带格：不再是一个「深色按钮」，而是一盘磁带——
+   奶白标签条 + SIDE A 字样 + 两个带辐条的盘 + 底部防误抹齿。 */
+.tslot{position:relative;height:58px;margin-bottom:7px;border-radius:4px;overflow:hidden;
+  background:
+    linear-gradient(180deg,#0000 0 37px,#4a3a2b 37px 44px,#0000 44px),
+    linear-gradient(180deg,#323a48,#161b24 62%,#0d1118);
+  border:1px solid #39434f;box-shadow:inset 0 1px 0 #ffffff18,inset 0 -8px 14px #0008}
+.tslot::before{content:"";position:absolute;left:9px;right:9px;top:7px;height:21px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;text-indent:.22em;
+  background:linear-gradient(180deg,#f1e6ca,#d8c6a1);color:#6d5636;
+  font-size:7.5px;letter-spacing:.22em;
+  box-shadow:inset 0 0 0 1px #00000020,0 1px 0 #0006}
+.tslot::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;
+  background:repeating-linear-gradient(90deg,#090c11 0 5px,#2b323d 5px 8px);opacity:.9}
+.tspool{position:absolute;top:33px;width:15px;height:15px;border-radius:50%;
+  background:radial-gradient(circle,#e9e0ca 0 20%,#a99d83 21% 38%,#171c24 39% 100%);
+  box-shadow:0 0 0 1px #0008}
+.tspool::before{content:"";position:absolute;inset:26%;border-radius:50%;
+  background:repeating-conic-gradient(#bdb195 0 28deg,#3a4049 28deg 72deg)}
+.tspool:first-child{left:calc(50% - 23px)}
+.tspool.r{left:calc(50% + 8px)}
+.tshell{position:absolute;left:9px;right:9px;top:7px;height:21px;z-index:1;display:flex;
+  align-items:center;justify-content:center;font-style:normal;font-size:8.5px;letter-spacing:.18em;
+  color:#6d5636;text-indent:.18em}
+.tape.locked .tshell{color:#4a5364}
+.tape.cur .tslot{border-color:#5f93ad;box-shadow:inset 0 1px 0 #ffffff18,0 0 16px #7fd7ff1f}
+.tape.cur .tspool{animation:wk-spin 9s linear infinite}
+.tape.locked .tslot::before{background:linear-gradient(180deg,#232a36,#171c26);color:#4a5364;box-shadow:none}
+.tape.locked .tspool{opacity:.32;filter:grayscale(1)}
+.tlab{font-size:12px;letter-spacing:.08em;color:var(--accent)}
+.tno{font-size:11px;letter-spacing:.12em;color:#7a86a8;margin-top:3px}
 
 /* ── 菜单 ── */
 #menuBody{max-height:58vh;overflow-y:auto}
@@ -169,33 +275,67 @@ body.portrait #touch .abtn{top:auto;bottom:calc(146px + env(safe-area-inset-bott
 .mrow b{font-weight:500;color:#eef2fa}
 .mrow.dim{color:#7d8aa8}.mrow.dim b{color:#7d8aa8}
 
-/* ── 战斗 ── */
-#battle{position:fixed;inset:0;z-index:28;display:none;flex-direction:column;
-  background:radial-gradient(110% 85% at 50% 24%,#2b1836,#090911 72%);padding:18px}
+/* ── 战斗 ──
+   原来是「一块巨大的紫渐变 + 一个 180px 的小人 + 两条横贯全屏的指令」。
+   现在收进 760px 的台口：有台、有光柱、有台词雨，敌人在中间，指令在手下。 */
+#battle{position:fixed;inset:0;z-index:28;display:none;flex-direction:column;overflow:hidden;
+  background:radial-gradient(120% 88% at 50% 8%,#3b1b4d 0%,#1b0f28 46%,#07060c 100%)}
 #battle.on{display:flex;animation:pin .3s}
-.b-top{display:flex;align-items:center;gap:12px;color:#e8e3f0}
-#bEnemyName{font-size:14px;letter-spacing:.2em;color:#ff9ad5;flex:none}
-.bar{flex:1;height:7px;background:#ffffff14;border-radius:4px;overflow:hidden;border:1px solid #ffffff10}
+#battle::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,#ffffff09 0 1px,#0000 1px 96px),
+    radial-gradient(52% 46% at 50% 40%,#ff9ad51f,#ff9ad500 72%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#0006 62%,transparent 88%);
+  mask-image:linear-gradient(180deg,#000 0%,#0006 62%,transparent 88%)}
+#battle::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;
+  background:repeating-linear-gradient(0deg,#0000 0 3px,#00000040 3px 4px);
+  -webkit-mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 78%);
+  mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 78%)}
+.b-wrap{position:relative;z-index:1;width:min(760px,100%);height:100%;margin:0 auto;
+  display:flex;flex-direction:column;padding:16px 18px 18px;gap:10px}
+.b-top{display:flex;align-items:center;gap:10px;color:#e8e3f0}
+#bEnemyName{font-size:15px;letter-spacing:.22em;color:#ff9ad5;flex:none;font-weight:600}
+.btag{flex:none;font-size:11px;letter-spacing:.2em;color:#9a86ad;border:1px solid #ffffff17;
+  border-radius:2px;padding:2px 6px;text-indent:.2em}
+.b-top .bar{max-width:300px;flex:1;margin-left:4px}
+.bar{height:7px;background:#ffffff14;border-radius:4px;overflow:hidden;border:1px solid #ffffff10}
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff6b81,#ff9ad5);transition:width .4s}
-.b-stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;
-  background:radial-gradient(46% 52% at 50% 46%,#ff9ad52e,#ff9ad500 72%)}
-#enemyCv{height:min(300px,100%);width:auto;aspect-ratio:1/1;max-width:100%;image-rendering:pixelated;
-  filter:drop-shadow(0 12px 40px #ff5fa233)}
-.b-log{height:76px;overflow-y:auto;font-size:12.5px;line-height:1.8;color:#a9b3c8;
-  border-top:1px solid #ffffff12;border-bottom:1px solid #ffffff12;padding:8px 2px;margin:8px 0}
+.b-player .bar i{background:linear-gradient(90deg,#6fa8dc,#9ad5ff)}
+.bhpnum{flex:none;font-size:11px;letter-spacing:.06em;color:#cbb8db;font-variant-numeric:tabular-nums}
+.b-stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;
+  overflow:hidden}
+.b-stage::before{content:"";position:absolute;width:min(60vh,440px);max-width:100%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,#ff9ad51c,#ff5fa20a 52%,#ff5fa200 70%)}
+.b-voices{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.b-voices span{position:absolute;font-size:11.5px;max-width:42%;letter-spacing:.04em;color:#f0d8ff;
+  opacity:.16;white-space:normal;line-height:1.45;text-shadow:0 0 22px #ff9ad555;
+  animation:bfloat 8s ease-in-out infinite alternate}
+@keyframes bfloat{from{transform:translateY(-5px)}to{transform:translateY(7px)}}
+.b-stage::after{content:"";position:absolute;left:50%;bottom:4%;width:min(64vh,470px);max-width:100%;height:30px;
+  transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(ellipse,#ff9ad53d,#ff9ad500 70%);filter:blur(7px)}
+#enemyCv{position:relative;z-index:1;height:min(50vh,380px);width:auto;aspect-ratio:1/1;max-width:100%;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 18px 50px #ff5fa233)}
+.b-log{flex:none;height:64px;overflow-y:auto;font-size:12px;line-height:1.62;color:#a9b3c8;
+  border-top:1px solid #ffffff12;border-bottom:1px solid #ffffff12;padding:7px 2px;margin:2px 0}
 .b-log div{animation:pin .2s}
-.b-bottom{flex:none}
-.b-player{display:flex;align-items:center;gap:9px;font-size:11px;color:#9aa4bb;margin-bottom:9px}
+.b-log div:last-child{color:#e2d8ee}
+.b-bottom{flex:none;width:100%;max-width:600px;margin:0 auto}
+.b-player{display:flex;align-items:center;gap:9px;font-size:11px;color:#9aa4bb;margin-bottom:8px}
 .b-player .bar{max-width:220px}
 #bCmds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .bcmd{
-  display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;font:inherit;
-  background:linear-gradient(180deg,#151d2e,#0c1220);border:2px solid #333d59;border-radius:3px;
-  padding:9px 12px;color:#dfe6f4;transition:.12s
+  position:relative;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer;font:inherit;
+  background:linear-gradient(180deg,#1a2030,#0d1220);border:1px solid #3a3f5c;border-radius:3px;
+  padding:9px 12px 9px 13px;color:#dfe6f4;transition:.12s;box-shadow:0 2px 0 #0008
 }
-.bcmd b{font-size:14px;letter-spacing:.08em}
-.bcmd span{font-size:11.5px;color:#8b96ad}
-.bcmd:hover{border-color:#ff9ad5;transform:translateY(-1px)}
+.bcmd b{font-size:13.5px;letter-spacing:.08em}
+.bcmd span{font-size:11px;color:#8b96ad}
+.bkey{position:absolute;right:8px;top:8px;font-size:10.5px;color:#6f7a92;
+  border:1px solid #ffffff14;border-radius:2px;padding:0 3px;line-height:14px}
+.bcmd:hover{border-color:#ff9ad5;transform:translateY(-1px);box-shadow:0 3px 0 #0008,0 0 22px #ff9ad51a}
+.bcmd:active{transform:translateY(0)}
 
 /* ── 标题 ── */
 /* 背景故意半透明：让 draw 的站台实景（含雪与灯）透上来，标题不再压在一整块死黑上 */
@@ -219,6 +359,15 @@ body.portrait #touch .abtn{top:auto;bottom:calc(146px + env(safe-area-inset-bott
 .tkeys{margin-top:24px;font-size:11.5px;line-height:2.05;color:#a9b6d0;letter-spacing:.03em;text-shadow:0 1px 8px #000}
 .ttip{margin-top:22px;font-size:11px;line-height:1.85;color:#9dabc6;text-align:left;letter-spacing:.01em;
   background:#04070e99;border:1px solid #ffffff0f;border-radius:4px;padding:11px 13px;text-shadow:0 1px 6px #000}
+.tmeta{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:16px;
+  font-size:11px;letter-spacing:.1em;color:#94a1ba}
+.tmeta span{border:1px solid #ffffff14;background:#04070e99;border-radius:2px;padding:4px 9px}
+
+/* 标题页底部的时间戳：不是 UI，是一行环境信息 */
+.tstamp{position:absolute;left:0;right:0;bottom:calc(22px + env(safe-area-inset-bottom));
+  text-align:center;font-size:11px;letter-spacing:.34em;color:#7d8da8;text-indent:.34em;
+  pointer-events:none;text-shadow:0 1px 8px #000}
+@media (max-width:520px){ .tstamp{font-size:11px;letter-spacing:.28em;bottom:calc(26px + env(safe-area-inset-bottom))} }
 
 /* ── 结局 ── */
 #ending{position:fixed;inset:0;z-index:45;display:none;overflow-y:auto;padding:0;
@@ -241,7 +390,7 @@ body.portrait #touch .abtn{top:auto;bottom:calc(146px + env(safe-area-inset-bott
 #fade{position:fixed;inset:0;z-index:35;background:#04060b;opacity:0;pointer-events:none;transition:opacity .5s}
 #fade.on{opacity:1}
 #toast{position:fixed;left:50%;bottom:calc(130px + env(safe-area-inset-bottom));transform:translate(-50%,12px);
-  z-index:38;background:#ffd479;color:#0a0e18;font-size:12px;font-weight:600;letter-spacing:.06em;
+  z-index:29;background:#ffd479;color:#0a0e18;font-size:12px;font-weight:600;letter-spacing:.06em;
   padding:9px 18px;border-radius:3px;opacity:0;transition:.35s;pointer-events:none;box-shadow:0 10px 40px #000b;white-space:nowrap}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
@@ -251,13 +400,33 @@ body.portrait #touch .abtn{top:auto;bottom:calc(146px + env(safe-area-inset-bott
   .hlabel{display:none}
   .hslot{width:13px;height:10px}
   .hslots{gap:3px}   /* gap 原来写在 .hslot 上，那是空元素、不起作用 */
+  .hmute{width:34px;height:26px;font-size:13px}
   #dtext{font-size:14px;line-height:1.9}
   #dlg{padding:14px 14px 14px;min-height:88px}
   #tapeList{grid-template-columns:repeat(2,1fr)}
-  .b-log{height:62px;font-size:11.5px}
+  .b-wrap{padding:12px 12px 14px;gap:8px}
+  .b-log{height:56px;font-size:11.5px}
+  #enemyCv{height:min(34vh,290px)}
+  .b-voices span{font-size:11px}
+  .bcmd{padding:8px 10px 8px 11px}
+  .bcmd b{font-size:13px}
   .tin{padding:22px 12px 18px}
   .ttip{font-size:11px;line-height:1.8}
+  .tmeta{font-size:11px;gap:5px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .tmeta span{padding:5px 7px;text-align:center}
   #toast{bottom:calc(118px + env(safe-area-inset-bottom))}
+}
+/* 竖屏：提示条不能压在方向键上（它原来正盖着 ▼ 和「磁带」）。
+   放到随身听顶部，并且压在弹层下面（z-index 29 < 磁带盒 30）。 */
+@media (max-width:520px) and (orientation:portrait){
+  #toast{top:calc(var(--sh, 227px) + 12px);bottom:auto;font-size:11.5px;padding:8px 14px;
+    max-width:86vw;white-space:normal;text-align:center;line-height:1.5}
+}
+/* 竖屏：随身听按屏幕高度收一点，保证不撞上下两边的控件 */
+@media (max-height:720px) and (orientation:portrait){
+  #walkman{bottom:calc(268px + env(safe-area-inset-bottom))}
+  .wk-tape{height:clamp(104px,16vh,140px)}
+  .wk-y{font-size:20px}
 }
 /* 横屏手机：战斗指令横排，别把敌人挤没 */
 @media (max-height:520px) and (min-width:700px){
@@ -291,9 +460,33 @@ body.portrait #hint{bottom:8px;font-size:11px}
         <div class="hslots" id="hudSlots"></div>
         <span class="hcount" id="hudTape">0/6</span>
       </div>
+      <button class="hmute" id="btnMute" type="button" aria-label="静音" title="静音 · M"><b>♪</b></button>
     </div>
     <div id="focus"><b></b></div>
     <div id="hint"></div>
+  </div>
+
+  <!-- 竖屏中场：随身听（同时是配乐的实体界面） -->
+  <div id="walkman" aria-hidden="true">
+    <div class="wk">
+      <div class="wk-hd"><span>随身听 · SIDE A</span><span id="wkState">STANDBY</span></div>
+      <div class="wk-tape">
+        <div class="wk-sc a"></div><div class="wk-sc b"></div>
+        <div class="wk-sc c"></div><div class="wk-sc d"></div>
+        <div class="wk-label">
+          <div class="wk-y" id="wkYear">2026</div>
+          <div class="wk-sub" id="wkSub">秋 · 站台</div>
+          <div class="wk-rule"></div>
+          <div class="wk-note">原创配乐 · 现场合成</div>
+        </div>
+        <div class="wk-win"><div class="wk-reel"></div><div class="wk-reel"></div></div>
+        <div class="wk-teeth"></div>
+      </div>
+      <div class="wk-ft">
+        <span>72 BPM · A 小调 · 主题：一盒磁带</span>
+        <button class="wk-mute" id="wkMute" type="button" aria-label="静音" title="静音 · M"><b>♪</b></button>
+      </div>
+    </div>
   </div>
 
   <div id="touch">
@@ -334,17 +527,24 @@ body.portrait #hint{bottom:8px;font-size:11px}
   </div>
 
   <div id="battle">
-    <div class="b-top">
-      <div id="bEnemyName">——</div>
-      <div class="bar"><i id="bEnemyHp"></i></div>
-    </div>
-    <div class="b-stage"><canvas id="enemyCv" width="128" height="128"></canvas></div>
-    <div class="b-log" id="bLog"></div>
-    <div class="b-bottom">
-      <div class="b-player">
-        <span>心力</span><div class="bar"><i id="bHp"></i></div><span id="bHpN">20/20</span>
+    <div class="b-wrap">
+      <div class="b-top">
+        <div id="bEnemyName">——</div>
+        <div class="btag">把 话 说 清 楚</div>
+        <div class="bar"><i id="bEnemyHp"></i></div>
+        <span class="bhpnum" id="bEnemyHpN">--</span>
       </div>
-      <div id="bCmds"></div>
+      <div class="b-stage">
+        <div class="b-voices" id="bVoices"></div>
+        <canvas id="enemyCv" width="128" height="128"></canvas>
+      </div>
+      <div class="b-log" id="bLog"></div>
+      <div class="b-bottom">
+        <div class="b-player">
+          <span>心力</span><div class="bar"><i id="bHp"></i></div><span id="bHpN">20/20</span>
+        </div>
+        <div id="bCmds"></div>
+      </div>
     </div>
   </div>
 
@@ -360,6 +560,13 @@ body.portrait #hint{bottom:8px;font-size:11px}
         文中人物是真实的公众人物；一切推测与「真相」都只属于叙事者的眼睛，不代表当事人的真实关系与事实。<br>
         请勿据此对真人求证或攻击。她们只是唱过歌的人。
       </div>
+      <div class="tmeta">
+        <span>像素 · 代码绘制</span>
+        <span>配乐 · 现场合成</span>
+        <span>M 键静音</span>
+        <span>非官方同人</span>
+      </div>
+      <div class="tstamp">2026.10 · 23:40 · 站台 · 小雪</div>
     </div>
   </div>
 
@@ -725,8 +932,16 @@ function drawTile(g, t, X, Y, tx, ty, p, e){
     // 车辙：横穿整条马路，所以按行画、跨格连成一条
     if (ty === 15 || ty === 16) dot(0, 5, TS, 3, 'rgba(0,0,0,.14)');
     if (ty === 17) dot(0, 11, TS, 2, 'rgba(0,0,0,.10)');
-    // 中线（被雪盖掉一半，才像是深夜的街）
-    if (ty === 15 && (tx % 4 < 2)){
+    // 斑马线：广电门口正对着的那个路口。没有它，这四行马路就是一整屏空灰。
+    if (tx >= 18 && tx <= 25){
+      if (tx % 2 === 0){
+        dot(4, 0, 5, 16, 'rgba(238,240,244,.34)');
+        dot(4, 0, 5, 1, 'rgba(255,255,255,.10)');
+        if (amt > 0.2 && th(tx,ty,61) > .55) dot(4, 2+(th(tx,ty,62)*9|0), 5, 2, 'rgba(238,240,244,.12)');
+      }
+    }
+    // 中线（被雪盖掉一半，才像是深夜的街）；斑马线上不画中线
+    else if (ty === 15 && (tx % 4 < 2)){
       dot(2,7,12,2, '#b9a464');
       dot(2,7,5,1, sn2);
     }
@@ -1267,7 +1482,10 @@ function eraObjs(){
 
 /* ───────── 相机 / 渲染 ───────── */
 function updateCamera(){
-  const tx = P.x + 8 - CW/2, ty = P.y + 8 - CH/2;
+  /* 镜头往上抬 18px：这是一个「往前走」的游戏，玩家面朝北。
+     原来镜头把人钉在正中心，上半屏永远是空地；抬起来之后，楼、路灯、
+     门脸先入画，人站在画面下方三分之一——走廊感才成立。 */
+  const tx = P.x + 8 - CW/2, ty = P.y + 8 - CH/2 - 18;
   cam.x = clamp(tx, 0, MAPW*TS - CW);
   cam.y = clamp(ty, 0, MAPH*TS - CH);
 }
@@ -1305,6 +1523,11 @@ function render(dt){
     } else {
       drawObj(g, sx, sy, e.ref);
     }
+  }
+
+  // 可拾取物的信标：雪地里那盘 16px 的磁带原本几乎看不见
+  for (const o of OBJS){
+    if (o.type === 'tape' || o.type === 'door') drawBeacon(g, o.x - cam.x, o.y - cam.y, o.type);
   }
 
   drawLights(g, p);
@@ -1501,6 +1724,37 @@ function rgba(hex, a){
   return 'rgba(' + (n>>16&255) + ',' + (n>>8&255) + ',' + (n&255) + ',' + a + ')';
 }
 
+/* 一件小东西躺在 320×180 的雪地里，玩家找不到不是玩家的问题。
+   信标只有三样东西：脚下一圈很淡的光池、一粒向上飘的光、头顶一个 3px 的箭头。
+   它必须看起来像「这个世界在呼吸」，不能像 UI 贴在画面上。 */
+function drawBeacon(g, x, y, type){
+  const t = performance.now();
+  const pulse = .5 + .5 * Math.sin(t / 680);
+  const cx = x + 8;
+  if (type === 'door'){
+    const bob = Math.sin(t / 520) * 1.6;
+    g.globalAlpha = .34 + .34 * pulse;
+    g.fillStyle = '#ffe6c0';
+    g.fillRect(Math.round(cx) - 2, Math.round(y - 24 + bob), 5, 1);
+    g.fillRect(Math.round(cx) - 1, Math.round(y - 23 + bob), 3, 1);
+    g.fillRect(Math.round(cx), Math.round(y - 22 + bob), 1, 1);
+    g.globalAlpha = 1;
+    return;
+  }
+  groundPool(g, cx, y + 17, 20, 7, '#ffd479', .09 + .07 * pulse);
+  const ry = y + 11 - ((t / 62) % 16);
+  g.globalAlpha = .10 + .45 * pulse;
+  g.fillStyle = '#fff2cc';
+  g.fillRect(Math.round(cx + Math.sin(t / 900) * 4), Math.round(ry), 1, 1);
+  g.globalAlpha = 1;
+  const bob = Math.sin(t / 420) * 1.4;
+  g.globalAlpha = .40 + .34 * pulse;
+  g.fillStyle = '#ffe6ae';
+  g.fillRect(Math.round(cx) - 1, Math.round(y - 8 + bob), 3, 1);
+  g.fillRect(Math.round(cx), Math.round(y - 7 + bob), 1, 1);
+  g.globalAlpha = 1;
+}
+
 function drawObj(g, x, y, o){
   const t = performance.now();
   if (o.type === 'tape'){
@@ -1689,7 +1943,7 @@ function bindInput(){
 }
 </script>
 <script>
-/* ───── src/ui.js ───── */
+/* ───── src/ui.js + music.js ───── */
 
 /* ═══════════════════════════════════════════════════════════
    UI 层 · 对话 / 选项 / 磁带 / 菜单 / 战斗 / 结局
@@ -1727,6 +1981,11 @@ function updateHUD(){
   if (el.hint) el.hint.textContent = (typeof hp === 'function') ? hp() : (hp || '');
   if (el.hudTape) el.hudTape.textContent = S.tapes.length + '/6';
   renderTapeSlots();
+  // 音乐跟着时代走：每次 HUD 刷新都同步一次（scene 内部幂等，切换时 1.5s 交叉淡入）
+  if (typeof MUSIC !== 'undefined'){
+    MUSIC.scene(ERA.year);
+    MUSIC.labels(ERA.year, ERA.label);
+  }
 }
 
 /* 顶栏那 6 个槽位 = 磁带盒里的 6 格 = 六盘磁带。
@@ -1789,7 +2048,16 @@ async function say(name, text){
 
 async function choose(opts){
   el.dlg.classList.add('on');
+  const qname = el.dname ? el.dname.textContent : '';
+  const qtext = el.dtext ? el.dtext.textContent : '';
   el.choices.innerHTML = '';
+  // 把「谁在问、问什么」搬到选项上方：原来问题在下面、选项在上面，读起来是反的
+  if (qtext){
+    const ask = document.createElement('div');
+    ask.className = 'ask';
+    ask.innerHTML = (qname ? '<b>' + esc(qname) + '</b>' : '') + '<span>' + esc(qtext) + '</span>';
+    el.choices.appendChild(ask);
+  }
   el.choices.classList.add('on');
   document.body.classList.add('choosing');   // 选择时暂时收起虚拟手柄
   return new Promise(res => {
@@ -1807,7 +2075,7 @@ async function choose(opts){
       el.choices.appendChild(b);
     });
     choose._pick = i => {
-      const b = el.choices.children[i];
+      const b = el.choices.querySelectorAll('.opt')[i];
       if (b) b.click();
     };
   });
@@ -1908,7 +2176,10 @@ function renderTapeList(){
     const d = document.createElement('button');
     d.className = 'tape' + (has ? '' : ' locked') + (S.era === y ? ' cur' : '');
     d.innerHTML =
-      '<div class="tslot"><div class="tspool"></div><div class="tspool r"></div></div>' +
+      '<div class="tslot">' +
+        '<i class="tshell">' + (has ? 'A · ' + y : 'A · －－') + '</i>' +
+        '<div class="tspool"></div><div class="tspool r"></div>' +
+      '</div>' +
       '<div class="tlab">' + (has ? esc(tapeName(y)) : '－－－') + '</div>' +
       '<div class="tno">NO.0' + (i+1) + '</div>';
     if (has) d.onclick = () => { closeTape(); jumpTo(y); };
@@ -1934,9 +2205,12 @@ async function jumpTo(y, spawn){
 }
 
 function eraSpawn(y){
-  const d = { '2006':{x:20,y:18}, '2007':{x:20,y:18}, '2014':{x:20,y:18},
-              '2020':{x:20,y:18}, '2026':{x:20,y:10}, '????':{x:20,y:12} };
-  return d[y] || {x:20,y:18};
+  /* 出生点决定第一眼看到什么。原来四个时代都落在 y=18 的马路上，
+     镜头又被地图下边界钉住——开场是一整屏空马路，看不到楼、也看不到人。
+     往北挪到广场边（y=12）：广电楼、路灯、NPC 和马路各占一条，第一眼就有信息。 */
+  const d = { '2006':{x:20,y:12}, '2007':{x:20,y:12}, '2014':{x:20,y:12},
+              '2020':{x:20,y:12}, '2026':{x:20,y:10}, '????':{x:20,y:12} };
+  return d[y] || {x:20,y:12};
 }
 
 let fading = false;
@@ -2005,51 +2279,161 @@ const ENEMIES = {
 function drawEnemy(g, art, t, hurt){
   g.clearRect(0,0,128,128);
   g.imageSmoothingEnabled = false;
-  const bob = Math.sin(t/500)*3;
+  const bob = Math.sin(t/500)*2;
   const shake = hurt ? (Math.random()*5-2.5) : 0;
 
   if (art === 'whisper'){
+    /* 告密者：一件没有脸的大衣，帽檐下面有两颗绿点。
+       它说的话比它本人多——四周飘着被涂黑的句子。 */
     g.save(); g.translate(shake, bob);
-    g.fillStyle = 'rgba(20,26,20,.9)';
-    g.beginPath(); g.ellipse(64,74,26,34,0,0,Math.PI*2); g.fill();
-    g.fillStyle = '#0d120d'; g.beginPath(); g.ellipse(64,52,20,16,0,0,Math.PI*2); g.fill();
-    g.fillStyle = '#8ef2c0'; g.fillRect(55,52,5,4); g.fillRect(70,52,5,4);
-    g.fillStyle = 'rgba(142,242,192,.25)'; g.fillRect(53,50,9,8); g.fillRect(68,50,9,8);
-    // 气泡
-    for (let i=0;i<3;i++){
-      const bx = 20+i*38, by = 12 + Math.sin(t/300+i)*6;
-      g.fillStyle = 'rgba(230,240,255,'+(0.10+i*0.05)+')';
-      g.fillRect(bx, by, 26, 14);
-      g.fillRect(bx+6, by+14, 4, 3);
+    // 地面上的影
+    g.fillStyle = 'rgba(4,8,8,.55)'; g.beginPath(); g.ellipse(64,119,30,7,0,0,Math.PI*2); g.fill();
+    // 背后那些「帖子」：一叠半透明的纸条
+    for (let i=0;i<5;i++){
+      const bx = 6 + (i*27)%118, by = 10 + (i*31)%58;
+      g.save(); g.translate(bx, by); g.rotate((i%2?1:-1)*0.06);
+      g.fillStyle = 'rgba(16,24,20,.72)'; g.fillRect(0,0,38,20);
+      g.strokeStyle = 'rgba(142,242,192,.16)'; g.lineWidth = 1; g.strokeRect(.5,.5,37,19);
+      g.fillStyle = 'rgba(142,242,192,.22)';
+      for (let k=0;k<3;k++) g.fillRect(4, 5+k*4, 20+(i*5+k*7)%12, 1);
+      g.restore();
     }
+    // 大衣：从帽子到脚，占满画布
+    g.fillStyle = '#0b120d'; g.beginPath();
+    g.moveTo(40,56); g.lineTo(88,56); g.lineTo(104,118); g.lineTo(24,118); g.closePath(); g.fill();
+    g.fillStyle = '#101a13'; g.beginPath();
+    g.moveTo(44,58); g.lineTo(84,58); g.lineTo(96,116); g.lineTo(32,116); g.closePath(); g.fill();
+    // 领子
+    g.fillStyle = '#17231a';
+    g.beginPath(); g.moveTo(52,54); g.lineTo(64,74); g.lineTo(76,54); g.closePath(); g.fill();
+    // 头 / 毛线帽 / 口罩
+    g.fillStyle = '#0a0f0b'; g.beginPath(); g.ellipse(64,42,21,17,0,0,Math.PI*2); g.fill();
+    g.fillStyle = '#1b2a20'; g.fillRect(44,22,40,14);
+    g.fillStyle = '#24382a'; g.fillRect(44,22,40,2);
+    g.fillStyle = '#d8e2da'; g.fillRect(53,44,22,9);       // 口罩
+    g.fillStyle = '#b7c4bb'; g.fillRect(53,44,22,1);
+    g.fillStyle = '#8ef2c0'; g.fillRect(51,37,5,3); g.fillRect(72,37,5,3);
+    g.fillStyle = 'rgba(142,242,192,.22)'; g.fillRect(48,35,11,7); g.fillRect(69,35,11,7);
+    // 伸出来的手 / 指
+    g.fillStyle = '#c9d3cb'; g.fillRect(30,82,5,15); g.fillRect(92,80,5,17);
+    g.fillStyle = '#0b120d'; g.fillRect(30,95,5,4); g.fillRect(92,95,5,4);
+    g.restore();
+    // 飘在画面里的「他说过的话」，用裁剪框住
+    g.save();
+    g.font = '9px "PingFang SC","Microsoft YaHei",sans-serif';
+    g.fillStyle = 'rgba(142,242,192,.55)'; g.textAlign = 'center';
+    g.fillText('我 知 道 是 谁', 64, 9);
     g.restore();
   }
   else if (art === 'seven'){
+    /* 七年：一本被翻烂的台历。页脚的数字一直在跳，最后停在 2555。
+       2007 末到 2014，正好两千五百五十五天。 */
     g.save(); g.translate(shake, bob);
-    g.fillStyle = '#1a1f26'; g.fillRect(34,30,60,68);
-    g.fillStyle = '#2b323c'; g.fillRect(37,33,54,62);
-    g.fillStyle = '#c9d6e8';
-    g.font = 'bold 34px system-ui, sans-serif'; g.textAlign='center';
-    g.fillText(String(2007 + (t/900|0)%8), 64, 70);
-    g.font = '11px system-ui, sans-serif'; g.fillStyle='#7d8a9c';
-    g.fillText('D A Y S', 64, 86);
-    g.fillStyle = 'rgba(160,200,255,.10)';
-    g.fillRect(37,33,54,4);
+    g.fillStyle = 'rgba(5,7,10,.55)'; g.beginPath(); g.ellipse(64,120,34,6,0,0,Math.PI*2); g.fill();
+    // 后面几页
+    for (let i=4;i>=1;i--){
+      g.save(); g.translate(-i*2 + 2, i*2); g.rotate(-i*0.012);
+      g.fillStyle = 'rgba(190,190,178,'+(0.10+i*0.03)+')'; g.fillRect(17,9,94,100);
+      g.restore();
+    }
+    // 台历主体
+    g.fillStyle = '#10161d'; g.fillRect(18,8,94,106);
+    g.fillStyle = '#2b333c'; g.fillRect(18,8,94,2);
+    g.fillStyle = '#0a0d12'; g.fillRect(28,114,12,4); g.fillRect(90,114,12,4);
+    // 纸页
+    g.fillStyle = '#ded6c2'; g.fillRect(23,11,84,82);
+    g.fillStyle = '#b9b29e'; g.fillRect(23,11,84,1);
+    g.fillStyle = '#a8452f'; g.fillRect(23,12,84,10);
+    g.fillStyle = '#f0e7d2'; g.font = 'bold 8px system-ui,sans-serif'; g.textAlign = 'left';
+    g.fillText('2 0 0 7 — 2 0 1 4', 26, 20);
+    const year = String(2007 + ((t/1600|0) % 8));
+    g.fillStyle = '#1a1a18'; g.font = 'bold 29px system-ui,sans-serif'; g.textAlign = 'center';
+    g.fillText(year, 65, 55);
+    g.fillStyle = '#8a8578'; g.font = '8px system-ui,sans-serif';
+    g.fillText('D A Y S', 65, 69);
+    g.fillStyle = '#1a1a18'; g.font = 'bold 17px system-ui,sans-serif';
+    g.fillText('2555 天', 65, 87);
+    // 下方暗部只放装订条
+    g.fillStyle = '#161d25'; g.fillRect(23,93,84,21);
+    g.fillStyle = '#39424d'; g.fillRect(23,93,84,1);
+    g.fillStyle = '#2b333c'; g.fillRect(30,99,70,2); g.fillRect(30,104,70,1);
+    g.fillStyle = '#4a5460'; g.fillRect(46,109,38,2);
     g.restore();
   }
   else if (art === 'mirror'){
+    /* 你的想象：一面占满画布的镜子。里面是一个没有脸的剪影，
+       和你穿一样的衣服、一样的红围巾，一只手按在玻璃上。
+       裂纹从掌心炸开。被看见的不是她，是你自己。 */
     g.save(); g.translate(shake, 0);
-    g.fillStyle = 'rgba(170,220,255,.10)'; g.fillRect(26,14,76,96);
-    g.strokeStyle = 'rgba(170,220,255,.5)'; g.lineWidth = 2;
-    g.strokeRect(26,14,76,96);
-    // 里面的人
-    const px = 52, py = 34 + Math.sin(t/500)*2;
-    g.fillStyle = '#0b1218'; g.fillRect(px+4, py, 16, 5);
-    g.fillStyle = '#a8dcff'; g.fillRect(px+4, py+5, 16, 16);
-    g.fillStyle = '#0b1218'; g.fillRect(px+2, py+5, 20, 6);
-    g.fillStyle = '#7ec8ff'; g.fillRect(px+3, py+21, 18, 26);
-    g.fillStyle = '#2a3644'; g.fillRect(px+5, py+47, 6, 14); g.fillRect(px+13, py+47, 6, 14);
-    g.fillStyle = 'rgba(126,200,255,.35)'; g.fillRect(28,16,72,2);
+    g.fillStyle = 'rgba(4,8,14,.55)'; g.beginPath(); g.ellipse(64,121,38,6,0,0,Math.PI*2); g.fill();
+    // 外框
+    g.fillStyle = '#232b36'; g.fillRect(6,4,116,116);
+    g.fillStyle = '#3b4657'; g.fillRect(6,4,116,2); g.fillRect(6,4,2,116);
+    g.fillStyle = '#10161e'; g.fillRect(9,7,110,110);
+    // 玻璃：左上角有一块反光，越往下越暗
+    const gr = g.createLinearGradient(10,8,110,116);
+    gr.addColorStop(0,'#39566d'); gr.addColorStop(.34,'#22384b');
+    gr.addColorStop(.72,'#142433'); gr.addColorStop(1,'#0b141d');
+    g.fillStyle = gr; g.fillRect(10,8,108,108);
+    const hi = g.createRadialGradient(38,30,2,38,30,64);
+    hi.addColorStop(0,'rgba(200,235,255,.22)'); hi.addColorStop(1,'rgba(200,235,255,0)');
+    g.fillStyle = hi; g.fillRect(10,8,108,108);
+    // 斜向反光
+    g.globalAlpha = .09; g.fillStyle = '#eaf7ff';
+    g.beginPath(); g.moveTo(18,8); g.lineTo(60,8); g.lineTo(20,116); g.lineTo(10,116); g.closePath(); g.fill();
+    g.globalAlpha = 1;
+
+    // 剪影：头、肩、大衣、腿。没有五官——镜子里的人不该看得太清。
+    const py = 26 + Math.sin(t/520)*1.4;
+    g.fillStyle = 'rgba(7,12,18,.92)';
+    g.beginPath(); g.ellipse(64, py+18, 17, 20, 0, 0, Math.PI*2); g.fill();       // 头
+    g.fillRect(48, py+2, 4, 8); g.fillRect(61, py, 5, 7); g.fillRect(72, py+3, 3, 7); // 几缕头发
+    g.fillStyle = 'rgba(7,12,18,.94)';
+    g.beginPath();
+    g.moveTo(50,py+34); g.lineTo(78,py+34); g.lineTo(92,py+96); g.lineTo(36,py+96);
+    g.closePath(); g.fill();                                                       // 大衣
+    g.fillRect(44, py+33, 40, 14);                                                 // 肩
+    // 腿 / 鞋
+    g.fillStyle = 'rgba(5,9,14,.95)';
+    g.fillRect(50, py+94, 11, 20); g.fillRect(68, py+94, 11, 20);
+    g.fillRect(47, py+112, 17, 4); g.fillRect(64, py+112, 17, 4);
+    // 左侧的冷色轮廓光：玻璃的反光落在人身上
+    g.strokeStyle = 'rgba(120,200,240,.17)'; g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(50,py+35); g.lineTo(48,py+58); g.lineTo(39,py+96);
+    g.stroke();
+    g.beginPath(); g.arc(64,py+18,18,Math.PI*0.86,Math.PI*1.36); g.stroke();
+    // 红围巾：画面里唯一的暖色
+    g.fillStyle = '#c8465c';
+    g.fillRect(46, py+30, 36, 6);
+    g.fillStyle = '#e0697e';
+    g.fillRect(46, py+30, 36, 2);
+    g.fillStyle = '#a8394c';
+    g.fillRect(47, py+39, 7, 24);
+    g.fillRect(50, py+60, 4, 6);
+    // 按在玻璃上的手（剪影 + 一点轮廓）
+    g.fillStyle = 'rgba(10,16,22,.92)';
+    g.fillRect(84, py+52, 13, 24);
+    g.fillRect(86, py+48, 3, 6); g.fillRect(90, py+47, 3, 7); g.fillRect(94, py+49, 3, 6);
+    g.strokeStyle = 'rgba(120,200,240,.22)'; g.lineWidth = 1;
+    g.strokeRect(84.5, py+52.5, 12, 23);
+
+    // 裂纹：从掌心（90,py+76）炸开，越往外越淡
+    const cx = 90, cy = py + 76;
+    g.lineCap = 'round';
+    const rays = [[18,-52],[34,-30],[40,15],[20,42],[-14,30],[-30,-8],[-12,-46],[4,-58]];
+    for (const [dx,dy] of rays){
+      g.strokeStyle = 'rgba(215,242,255,.42)'; g.lineWidth = .9;
+      g.beginPath(); g.moveTo(cx,cy);
+      const mx = cx + dx*.55 + (dx>0?3:-3), my = cy + dy*.55;
+      g.lineTo(mx, my);
+      g.lineTo(cx+dx, cy+dy);
+      g.stroke();
+      g.strokeStyle = 'rgba(215,242,255,.20)'; g.lineWidth = .7;
+      g.beginPath(); g.moveTo(mx,my); g.lineTo(mx+dy*.16, my-dx*.16); g.stroke();
+    }
+    g.fillStyle = 'rgba(235,250,255,.30)';
+    g.beginPath(); g.arc(cx,cy,2.2,0,Math.PI*2); g.fill();
     g.restore();
   }
 }
@@ -2063,7 +2447,35 @@ async function battle(key, cfg){
   el.battle.classList.add('on');
   $('#bEnemyName').textContent = src.name;
   $('#bHpN').textContent = S.hp + '/' + S.maxhp;
+  if ($('#bEnemyHpN')) $('#bEnemyHpN').textContent = st.hp + '/' + st.max;
+
+  let pickCmd = null;
+  const onKey = e => {
+    if (!pickCmd || e.repeat) return;
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 4){ e.preventDefault(); pickCmd(n - 1); }
+  };
+  try { window.addEventListener('keydown', onKey); } catch(e){}
+  const cleanup = () => {
+    pickCmd = null;
+    try { if (typeof window.removeEventListener === 'function') window.removeEventListener('keydown', onKey); } catch(e){}
+    if (battleAnimId){ clearInterval(battleAnimId); battleAnimId = 0; }
+    battleActive = false;
+    el.battle.classList.remove('on');
+  };
+
   const log = $('#bLog'); log.innerHTML = '';
+  // 战斗背景里飘着对方说过的话：不是装饰，是「这些话你没法反驳」
+  const vb = $('#bVoices');
+  if (vb){
+    const pos = [[5,16],[52,9],[2,44],[50,39],[12,64],[44,62],[26,3],[2,28]];
+    vb.innerHTML = src.lines.map((ln, i) => {
+      const [x, y] = pos[i % pos.length];
+      const side = x > 40 ? ('right:' + (96 - x) + '%;text-align:right;') : ('left:' + x + '%;');
+      return '<span style="' + side + 'top:' + y + '%;animation-delay:' + (i * .7) + 's">' +
+        esc(ln) + '</span>';
+    }).join('');
+  }
   blog(src.intro);
   drawEnemy(el.enemyCv.getContext('2d'), src.art, 0, false);
   if (battleAnimId) clearInterval(battleAnimId);
@@ -2083,6 +2495,7 @@ async function battle(key, cfg){
     $('#bEnemyHp').style.width = Math.max(0, st.hp/st.max*100) + '%';
     $('#bHp').style.width = Math.max(0, S.hp/S.maxhp*100) + '%';
     $('#bHpN').textContent = Math.max(0,S.hp) + '/' + S.maxhp;
+    if ($('#bEnemyHpN')) $('#bEnemyHpN').textContent = Math.max(0, st.hp) + '/' + st.max;
   }
   bars();
 
@@ -2093,10 +2506,14 @@ async function battle(key, cfg){
     list.forEach(([t, s], i) => {
       const b = document.createElement('button');
       b.className = 'bcmd';
-      b.innerHTML = '<b>'+t+'</b><span>'+s+'</span>';
-      b.onclick = () => { box.innerHTML=''; res(i); };
+      b.innerHTML = '<span class="bkey">' + (i+1) + '</span><b>'+t+'</b><span>'+s+'</span>';
+      b.onclick = () => { box.innerHTML=''; pickCmd = null; res(i); };
       box.appendChild(b);
     });
+    pickCmd = i => {
+      const b = box.querySelectorAll('.bcmd')[i];
+      if (b) b.click();
+    };
   });
 
   let won = false;
@@ -2116,9 +2533,7 @@ async function battle(key, cfg){
       chat('你关掉手机。世界安静了五秒。心力 +8。');
     } else {
       chat('你走开了。');
-      battleActive = false;
-      clearInterval(battleAnimId); battleAnimId = 0;
-      el.battle.classList.remove('on');
+      cleanup();
       return false;
     }
     bars();
@@ -2132,9 +2547,7 @@ async function battle(key, cfg){
     if (S.hp <= 0){
       chat('你被说服了。');
       await delay(700);
-      battleActive = false;
-      clearInterval(battleAnimId); battleAnimId = 0;
-      el.battle.classList.remove('on');
+      cleanup();
       S.zhi += 3; S.hp = 10; updateHUD();
       await delay(500);
       await say('', '你醒过来的时候，天已经亮了。有些话你没能反驳，于是它住进了你心里。');
@@ -2143,9 +2556,7 @@ async function battle(key, cfg){
     await delay(260);
   }
 
-  clearInterval(battleAnimId); battleAnimId = 0;
-  battleActive = false;
-  el.battle.classList.remove('on');
+  cleanup();
   if (won){
     S.qing += cfg.q || 2;
     S.zhi = Math.max(0, S.zhi - (cfg.zdown || 1));
@@ -2154,6 +2565,452 @@ async function battle(key, cfg){
   }
   return false;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   原创配乐 · 《不下车》
+   —— 主题动机（A 小调）：A4 C5 E5 D5 C5 B4 A4 G4
+   —— 72 BPM，八分音符网格；前瞻式调度：setInterval 25ms，提前 0.12s
+   —— 全部由 WebAudio 现场合成，不加载任何音频文件
+   —— 钢琴 / 弦垫 / 音盒 / 鼓 四种音色按规格实现
+   没有任何真实歌曲的旋律。这句动机是本作自己的。
+   ═══════════════════════════════════════════════════════════ */
+const MUSIC = (function(){
+  'use strict';
+
+  const AC = (typeof window !== 'undefined') && (window.AudioContext || window.webkitAudioContext);
+  const BPM = 72;
+  const BEAT = 60 / BPM;          // 0.8333s
+  const STEP = BEAT / 2;          // 一个八分音符
+  const STEPS = 64;               // 8 小节 × 8 个八分音符
+  const A4 = 69;
+  const MOTIF  = [0, 3, 7, 5, 3, 2, 0, -2];   // A C E D C B A G（相对 A4）
+  const MOTIF2 = [3, 7, 5, 3, 2, 0, -2, 0];   // 后半句回到 A
+
+  /* 和声：Am F C G | Am F Dm E —— 最后一小节用 E 大调，是那点「没说完」 */
+  const CHORDS = [
+    [45, 48, 52], [41, 45, 48], [48, 52, 55], [43, 47, 50],
+    [45, 48, 52], [41, 45, 48], [38, 41, 45], [40, 44, 47],
+  ];
+
+  /* 六个时代 = 同一个动机的六种配器。不是六首曲子，是同一句话在六年里被说出口。 */
+  const SCENES = {
+    '2006': { lead:'piano', oct:0,   every:2, pad:.95, cut:1400, arp:'eighth',  drum:'shaker', hiss:.004, wet:.20, bass:1, bright:1 },
+    '2007': { lead:'bell',  oct:12,  every:4, pad:1.0, cut:620,  arp:'none',    drum:'none',   hiss:.020, wet:.42, bass:0, bright:.7 },
+    '2014': { lead:'piano', oct:-12, every:2, pad:.75, cut:520,  arp:'none',    drum:'none',   hiss:.012, wet:.30, bass:1, bright:.6 },
+    '2020': { lead:'bell',  oct:0,   every:2, pad:.9,  cut:1000, arp:'quarter', drum:'stage',  hiss:.006, wet:.34, bass:1, bright:1 },
+    '2026': { lead:'bell',  oct:12,  every:2, pad:.9,  cut:900,  arp:'eighth',  drum:'soft',   hiss:.014, wet:.36, bass:1, bright:1 },
+    '????': { lead:'bell',  oct:12,  every:4, pad:.35, cut:420,  arp:'none',    drum:'none',   hiss:.008, wet:.62, bass:0, bright:.5 },
+  };
+
+  let ac = null, master = null, comp = null, revIn = null, rev = null, revOut = null;
+  let analyser = null, probeBuf = null;
+  let noiseW = null, noiseP = null, hissSrc = null, hissGain = null;
+  let chA = null, started = false, timer = 0, step = 0, nextT = 0;
+  let sceneNow = '2026', muted = false, armed = false, level = 0.18;
+
+  try { muted = localStorage.getItem('buxiache.mute') === '1'; } catch(e){}
+
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  /* 只给验收用：从主输出上取一小段波形算 RMS，证明「真的有声音」而不只是排了程 */
+  function rmsProbe(){
+    if (!analyser || !probeBuf) return 0;
+    try {
+      analyser.getFloatTimeDomainData(probeBuf);
+      let s = 0;
+      for (let i = 0; i < probeBuf.length; i++) s += probeBuf[i] * probeBuf[i];
+      return Math.round(Math.sqrt(s / probeBuf.length) * 100000) / 100000;
+    } catch(e){ return 0; }
+  }
+
+  /* ── 前瞻式调度器：每次只排未来 0.12s，绝不一个音一个 setTimeout ── */
+  function tick(){
+    if (!ac || !started) return;
+    const ahead = ac.currentTime + 0.12;
+    if (nextT < ac.currentTime - 0.05) nextT = ac.currentTime + 0.02;
+    let guard = 0;
+    while (nextT < ahead && guard++ < 32){
+      if (chA && chA.live) scheduleStep(chA, step, nextT);
+      nextT += STEP;
+      step = (step + 1) % STEPS;
+    }
+  }
+
+  function sceneCfg(){ return SCENES[sceneNow] || SCENES['2026']; }
+
+  /* 每个时代一条独立通道：换站时两条通道同时存在 1.5s，一条淡入一条淡出 */
+  function makeChannel(cfg){
+    const g = ac.createGain();
+    g.gain.value = 0.0001;
+    g.connect(master);
+    const send = ac.createGain();
+    send.gain.value = cfg.wet || .3;
+    g.connect(send); send.connect(revIn);
+
+    /* 音盒的短延迟：磁带空间里那一点点回声 */
+    const dIn = ac.createGain(); dIn.gain.value = 1;
+    const dly = ac.createDelay(1.0); dly.delayTime.value = BEAT * 0.75;
+    const fb = ac.createGain(); fb.gain.value = .26;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600;
+    const dOut = ac.createGain(); dOut.gain.value = .38;
+    dIn.connect(dly); dly.connect(lp); lp.connect(fb); fb.connect(dly);
+    lp.connect(dOut); dOut.connect(g);
+    return { gain:g, send, dIn, dly, fb, lp, dOut, cfg, live:true, lead:buildLead(cfg) };
+  }
+
+  function buildLead(cfg){
+    const map = new Array(STEPS);
+    const every = cfg.every || 2;
+    const n = Math.floor(STEPS / every);
+    for (let i = 0; i < n; i++){
+      let off = null;
+      if (i < 8) off = MOTIF[i];
+      else if (i < 16) off = MOTIF2[i - 8];
+      else if (i < 20) off = [0, 7, 3, 5][i - 16];       // 只留一个片段
+      else if (i < 24) continue;                          // 留白：乡愁需要空
+      else off = MOTIF[(i - 24) % 8] + (i >= 28 ? 12 : 0);
+      if (off === null) continue;
+      map[i * every] = {
+        midi: A4 + off + (cfg.oct || 0),
+        vel: (i % 8 === 0 ? .27 : .21) * (cfg.bright || 1),
+      };
+    }
+    return map;
+  }
+
+  function chordAt(bar){ return CHORDS[bar % 8]; }
+
+  /* ── 钢琴：sine + triangle，attack 0.004s / decay 0.9s ── */
+  function piano(dest, midi, t, vel, dur){
+    const f = mtof(midi);
+    const g = ac.createGain();
+    const a = .004, d = .9;
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(vel, t + a);
+    g.gain.exponentialRampToValueAtTime(.0001, t + a + d);
+    const o1 = ac.createOscillator(); o1.type = 'sine'; o1.frequency.value = f;
+    const o2 = ac.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f;
+    const g2 = ac.createGain(); g2.gain.value = .45;
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(dest);
+    const end = t + a + d + .03;
+    o1.start(t); o2.start(t); o1.stop(end); o2.stop(end);
+  }
+
+  /* ── 音盒：sine + 极短包络 0.25s，带一点高八度泛音 ── */
+  function bell(dest, midi, t, vel){
+    const f = mtof(midi);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(vel, t + .002);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .25);
+    const o1 = ac.createOscillator(); o1.type = 'sine'; o1.frequency.value = f;
+    const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2;
+    const g2 = ac.createGain(); g2.gain.value = .22;
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(dest);
+    o1.start(t); o2.start(t); o1.stop(t + .3); o2.stop(t + .3);
+  }
+
+  /* ── 弦垫：两个 detune 的 saw + lowpass 900 + 慢 attack 0.6s ── */
+  function pad(dest, notes, t, dur, cfg){
+    const lp = ac.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 900 * (cfg.cut / 900);
+    lp.Q.value = .6;
+    const g = ac.createGain();
+    const peak = .042 * (cfg.pad || 1);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + .6);
+    g.gain.setValueAtTime(peak, t + Math.max(.7, dur - .55));
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    lp.connect(g); g.connect(dest);
+    const end = t + dur + .05;
+    notes.forEach(m => {
+      const f = mtof(m);
+      for (const dt of [-7, 7]){
+        const o = ac.createOscillator();
+        o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt;
+        const og = ac.createGain(); og.gain.value = .35;
+        o.connect(og); og.connect(lp); o.start(t); o.stop(end);
+      }
+    });
+  }
+
+  function bassNote(dest, midi, t){
+    const f = mtof(midi);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(.12, t + .02);
+    g.gain.exponentialRampToValueAtTime(.0001, t + 2.4);
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+    o.connect(g); g.connect(dest); o.start(t); o.stop(t + 2.45);
+  }
+
+  /* ── 鼓：低音鼓 sine 120→45；其余用白噪声 + bandpass ── */
+  function kick(dest, t, vel){
+    const o = ac.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + .14);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(vel, t + .004);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .34);
+    o.connect(g); g.connect(dest); o.start(t); o.stop(t + .36);
+  }
+  function brush(dest, t, vel, freq){
+    if (!noiseW) return;
+    const s = ac.createBufferSource(); s.buffer = noiseW; s.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass';
+    bp.frequency.value = freq || 2200; bp.Q.value = .9;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(vel, t + .004);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .09);
+    s.connect(bp); bp.connect(g); g.connect(dest);
+    s.start(t); s.stop(t + .12);
+  }
+
+  /* 每 25ms 排一次：这里只被 tick 调用 */
+  function scheduleStep(ch, s, t){
+    const cfg = ch.cfg, bar = (s / 8) | 0, pos = s % 8;
+    const chord = chordAt(bar);
+
+    /* 换时代可能落在一小节中间：立刻补一个和弦，别让新通道等 3 秒才出声 */
+    if (pos === 0 || ch.padBar !== bar){
+      const left = pos === 0 ? BEAT * 4 : BEAT * 4 * (1 - pos / 8);
+      pad(ch.gain, chord, t, Math.max(BEAT, left * .98), cfg);
+      if (cfg.bass) bassNote(ch.gain, chord[0], t);
+      ch.padBar = bar;
+    }
+
+    const e = ch.lead[s];
+    if (e){
+      if (cfg.lead === 'piano') piano(ch.gain, e.midi, t, e.vel, BEAT);
+      else bell(ch.gain, e.midi, t, e.vel * .9);
+      if (cfg.lead === 'bell') bell(ch.dIn, e.midi, t, e.vel * .55);
+    }
+
+    if (cfg.arp === 'eighth' && (pos & 1)){
+      const n = chord[(s >> 1) % 3] + 12;
+      piano(ch.gain, n, t, .062 * (cfg.bright || 1), STEP);
+    } else if (cfg.arp === 'quarter' && pos === 4){
+      piano(ch.gain, chord[1] + 12, t, .08, BEAT * .5);
+    }
+
+    if (cfg.drum === 'soft'){
+      if (pos === 0 && bar % 2 === 0) kick(ch.gain, t, .40);
+      if (pos === 4) brush(ch.gain, t, .038, 1600);
+    } else if (cfg.drum === 'stage'){
+      if (pos === 0) kick(ch.gain, t, .44);
+      if (pos === 2 || pos === 6) brush(ch.gain, t, .046, 2400);
+    } else if (cfg.drum === 'shaker'){
+      if (pos === 2 || pos === 6) brush(ch.gain, t, .040, 3200);
+    }
+  }
+
+  /* ── 音频图 ── */
+  function makeNoise(sec, pink){
+    const n = Math.floor(ac.sampleRate * sec);
+    const b = ac.createBuffer(1, n, ac.sampleRate);
+    const d = b.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < n; i++){
+      const w = Math.random() * 2 - 1;
+      if (pink){ last = (last + .02 * w) / 1.02; d[i] = last * 3.2; }
+      else d[i] = w;
+    }
+    return b;
+  }
+  function makeIR(sec, decay){
+    const len = Math.floor(ac.sampleRate * sec);
+    const b = ac.createBuffer(2, len, ac.sampleRate);
+    for (let c = 0; c < 2; c++){
+      const d = b.getChannelData(c);
+      for (let i = 0; i < len; i++){
+        const x = i / len;
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - x, decay) * (i < 90 ? i / 90 : 1);
+      }
+    }
+    return b;
+  }
+
+  function ensure(){
+    if (ac || !AC) return;
+    try {
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = 0.0001;
+      comp = ac.createDynamicsCompressor();
+      comp.threshold.value = -18; comp.knee.value = 18; comp.ratio.value = 3;
+      comp.attack.value = .01; comp.release.value = .25;
+      analyser = ac.createAnalyser(); analyser.fftSize = 2048;
+      probeBuf = new Float32Array(analyser.fftSize);
+      master.connect(comp); comp.connect(analyser); analyser.connect(ac.destination);
+
+      rev = ac.createConvolver();
+      try { rev.buffer = makeIR(2.8, 2.3); } catch(e){}
+      revOut = ac.createGain(); revOut.gain.value = .85;
+      rev.connect(revOut); revOut.connect(master);
+      revIn = ac.createGain(); revIn.gain.value = .55; revIn.connect(rev);
+
+      noiseW = makeNoise(1.2, false);
+      const np = makeNoise(2.0, true);
+      hissSrc = ac.createBufferSource(); hissSrc.buffer = np; hissSrc.loop = true;
+      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
+      const hlp = ac.createBiquadFilter(); hlp.type = 'lowpass'; hlp.frequency.value = 2600;
+      hissGain = ac.createGain(); hissGain.gain.value = .01;
+      hissSrc.connect(hp); hp.connect(hlp); hlp.connect(hissGain); hissGain.connect(master);
+      hissSrc.start();
+
+      armGestureResume();
+    } catch(e){ ac = null; }
+  }
+
+  function resume(){
+    if (!ac) return;
+    if (ac.state === 'suspended'){ try { ac.resume(); } catch(e){} }
+  }
+  function armGestureResume(){
+    if (!ac) return;
+    if (ac.state === 'suspended'){ try { ac.resume(); } catch(e){} }
+  }
+
+  function start(){
+    ensure(); resume();
+    if (!ac || started) return;
+    started = true;
+    step = 0; nextT = ac.currentTime + .06;
+    chA = makeChannel(sceneCfg());
+    const now = ac.currentTime;
+    chA.gain.gain.setValueAtTime(.0001, now);
+    chA.gain.gain.linearRampToValueAtTime(1, now + 1.5);
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(.0001, now);
+    master.gain.linearRampToValueAtTime(muted ? .0001 : level, now + 1.2);
+    hissGain.gain.setTargetAtTime(muted ? .0001 : (sceneCfg().hiss || .008), now, .8);
+    if (timer) clearInterval(timer);
+    timer = setInterval(tick, 25);
+    tick();
+    updateUI();
+  }
+
+  /* 换时代：1.5 秒交叉淡入淡出，绝不硬切 */
+  function scene(id){
+    if (!SCENES[id]) id = '2026';
+    if (id === sceneNow && (chA || !started)) { updateUI(); return; }
+    sceneNow = id;
+    updateUI();
+    if (!started || !ac) return;
+    const cfg = sceneCfg();
+    const now = ac.currentTime;
+    const next = makeChannel(cfg);
+    next.gain.gain.setValueAtTime(.0001, now);
+    next.gain.gain.linearRampToValueAtTime(1, now + 1.5);
+    const old = chA;
+    chA = next;
+    if (old && old.live){
+      old.live = false;
+      old.gain.gain.cancelScheduledValues(now);
+      old.gain.gain.setValueAtTime(Math.max(.0001, old.gain.gain.value), now);
+      old.gain.gain.linearRampToValueAtTime(.0001, now + 1.5);
+      setTimeout(() => {
+        try {
+          old.gain.disconnect(); old.send.disconnect(); old.dIn.disconnect();
+          old.dly.disconnect(); old.fb.disconnect(); old.lp.disconnect(); old.dOut.disconnect();
+        } catch(e){}
+      }, 1900);
+    }
+    if (hissGain) hissGain.gain.setTargetAtTime(muted ? .0001 : (cfg.hiss || .008), now, .5);
+  }
+
+  function setMuted(v){
+    muted = !!v;
+    try { localStorage.setItem('buxiache.mute', muted ? '1' : '0'); } catch(e){}
+    if (ac && master){
+      const t = ac.currentTime;
+      const target = muted ? .0001 : level;
+      master.gain.cancelScheduledValues(t);
+      master.gain.setValueAtTime(Math.max(.0001, master.gain.value), t);
+      master.gain.linearRampToValueAtTime(target, t + .12);
+      if (hissGain) hissGain.gain.setTargetAtTime(muted ? .0001 : (sceneCfg().hiss || .008), t, .2);
+    }
+    updateUI();
+  }
+  function toggleMute(){ setMuted(!muted); }
+
+  function byId(id){
+    try {
+      if (typeof document.getElementById === 'function') return document.getElementById(id);
+      return document.querySelector ? document.querySelector('#' + id) : null;
+    } catch(e){ return null; }
+  }
+
+  function updateUI(){
+    const on = started && !muted;
+    const btns = [byId('btnMute'), byId('wkMute')];
+    for (const b of btns){
+      if (!b) continue;
+      try {
+        b.classList.toggle('muted', muted);
+        if (typeof b.setAttribute === 'function'){
+          b.setAttribute('aria-label', muted ? '打开声音' : '静音');
+          b.setAttribute('title', muted ? '打开声音 · M' : '静音 · M');
+        }
+      } catch(e){}
+      const g = b.querySelector('b'); if (g) g.textContent = muted ? '✕' : '♪';
+    }
+    const st = byId('wkState');
+    if (st) st.textContent = muted ? 'MUTE' : (started ? 'PLAY' : 'STANDBY');
+    const body = document.body;
+    if (body) body.classList.toggle('musicon', on);
+  }
+
+  function labels(year, sub){
+    const y = byId('wkYear');
+    const s = byId('wkSub');
+    if (y) y.textContent = year === '????' ? '？？？？' : year;
+    if (s) s.textContent = sub || '';
+  }
+
+  /* 首次点击/按键才合法出声：在第一次手势里 create/resume AudioContext */
+  function arm(){
+    if (armed) return; armed = true;
+    const go = () => { ensure(); resume(); };
+    try {
+      window.addEventListener('pointerdown', go, { once:true });
+      window.addEventListener('keydown', go, { once:true });
+    } catch(e){}
+    try {
+      window.addEventListener('keydown', e => {
+        if (e.key === 'm' || e.key === 'M'){ toggleMute(); }
+      });
+    } catch(e){}
+  }
+
+  function wire(){
+    arm();
+    const ids = ['btnMute', 'wkMute'];
+    for (const id of ids){
+      const b = byId(id);
+      if (!b) continue;
+      b.addEventListener('click', e => { e.preventDefault(); toggleMute(); });
+      b.addEventListener('pointerdown', e => e.stopPropagation());
+    }
+    updateUI();
+  }
+
+  if (typeof document !== 'undefined'){
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+    else wire();
+  }
+
+  return {
+    start, scene, setMuted, toggleMute, isMuted:() => muted, labels, ensure, updateUI,
+    /* 给验收探针看的状态，不参与任何玩法 */
+    info: () => ({ ctx: !!ac, state: ac ? ac.state : 'none', started, scene: sceneNow,
+                   step, muted, bpm: BPM, chord: CHORDS[((step / 8) | 0) % 8][0],
+                   rms: rmsProbe() }),
+  };
+})();
 </script>
 <script>
 /* ───── src/story.js ───── */
@@ -2224,8 +3081,8 @@ async function npcGuard(){
   await say('','大屏幕切到后台：灯光很亮，两个人站在台口。');
   await say('','主持人问厉娜：你这一票，投给谁？标准是什么？');
   await say('','她没看镜头。');
-  await say('厉娜','于公于私，于情于理。');
-  await say('','然后她举起了许飞的手。');
+  await say('厉娜','于公于私，于情于理，投票给许飞。');
+  await say('','说完，她举起了许飞的手。');
   await say('','整条街都在叫。你也在叫，叫到听不见自己。');
   await say('','那天晚上回去，你在随身听里塞进了第一盘磁带。');
   await say('','你也不记得自己是什么时候录的。');
@@ -2261,6 +3118,12 @@ async function npcWhisper(){
   await say('','一个戴口罩的人站在路灯下。');
   await say('口罩人','你也想知道是谁说的，对吧。');
   await say('口罩人','我告诉你。');
+  await say('口罩人','厉娜说，是许飞说的。');
+  await say('口罩人','许飞说：我没有动机，也没有能力。');
+  await say('口罩人','再问许飞，她只松了一句：可能说过，不止我一个人接私活。');
+  await say('口罩人','没有录音，没有第三个人。只有这两句话，和一个人的七年。');
+  await say('','他说的每一句，都能在某个帖子里找到。');
+  await say('','可是没有一句，能拼成那天下午真正发生的事。');
   const ok = await battle('whisper', { flee:true, q:3, zdown:2 });
   if (ok){
     await say('','你说：我不知道。而且，我可能永远都不会知道。');
@@ -2295,7 +3158,9 @@ async function npcWorker(){
     await say('加班的人','你手机屏保是06年超女？');
     await say('','你赶紧按灭了屏幕。');
     await say('加班的人','我当年也投过。一条一块，我投了三十条。');
-    await say('加班的人','后来她消失了七年。你算过吗，七年是多少天。');
+    await say('加班的人','厉娜。后来她消失了七年。2007 年底，到 2014。');
+    await say('加班的人','为什么，谁也不敢说死。有人说是许飞。许飞不认。');
+    await say('加班的人','你算过吗，七年是多少天。');
     S.flags.worker1 = 1;
   } else {
     await say('加班的人','两千五百五十五天。');
@@ -2328,9 +3193,9 @@ async function npcMod(){
   if (c === 1){ S.qing += 2; await say('群管','……你打了多久？'); await say('','四十分钟。你一个字都没发出去。'); }
   if (c === 2){ S.qing += 3; await say('','486个人，一瞬间安静。'); await say('群管','挺好的。'); }
   S.flags.mod1 = 1;
-  await say('','那天晚上，另一个人的回应只有六个字。');
-  await say('厉娜','我们不说别人了，乖。');
-  await say('','就这一句。热搜上没人转。');
+  await say('','那天晚上，另一个人的名字也被刷上了热搜。');
+  await say('','她没有回应。一个字都没有。');
+  await say('','第二天，群里有人说：这样也好。');
   unlockTape('2026','2026 · 秋');
   S.flags.got2026 = 1;
   updateHUD();
@@ -2353,6 +3218,9 @@ async function npcStation(){
   await say('站姐','你也来啦。');
   await say('站姐','从今天早上六点开始，这儿已经站了四十多个人。');
   await say('站姐','她们待会儿从那个门出来。就那一个门。');
+  await say('站姐','收官那期，两个人谁都没下车。整季，就她们这一对。');
+  await say('站姐','悬崖小屋那晚，厉娜回屋用 AI 查了「画地为牢」是什么意思。');
+  await say('站姐','查完，点了一份麦当劳。');
   await say('站姐','你说，我要是把相机放下，我还能干什么？');
   const c = await choose(['继续拍。','把相机放下。']);
   if (c === 0){ S.zhi += 2; await say('站姐','对，拍。拍到没得拍为止。'); }
@@ -2363,7 +3231,10 @@ async function npcStation(){
 async function npcPasserby(){
   await say('路人','这节目真好看。');
   await say('路人','我妈都看哭了。她说这两个人怎么这么犟。');
-  await say('','你笑了笑，没解释。');
+  await say('路人','悬崖上那句你记得吗——「我是被宣判的人，我能去哪儿啊。」');
+  await say('','「我画地为牢，厉娜。」');
+  await say('','你记得。你甚至记得她说这句话时，风把她的头发吹到了哪一边。');
+  await say('','但你不确定，你记住的是她，还是那一刻的你自己。');
   await say('路人','哎，你说她们到底怎么了？');
   const c = await choose(['一个人说了什么。','什么都没发生。','我不知道。']);
   if (c === 2){ S.qing += 2; }
@@ -2667,6 +3538,7 @@ async function playIntro(){
 
 async function startGame(){
   if (started && !endingShown) return;   // 防双击
+  if (typeof MUSIC !== 'undefined') MUSIC.start();   // 用户第一次手势之后才出声
   el.title.classList.add('gone');
   resetGame();
   await playIntro();

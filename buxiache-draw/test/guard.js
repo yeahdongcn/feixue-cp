@@ -111,5 +111,43 @@ chk(/ctx\.shadowColor = 'rgba\(7,5,4,\.92\)'; ctx\.shadowBlur = 7;/.test(html),
 chk(/state === 'left' \? '#d4c9b3'/.test(html), '放手的名字提到 ~4.5:1（原来 #a89d8a×.62 只有 3.3:1）');
 chk(/#btnAgain,#btnCopy\{[^}]*min-height:46px/.test(html), '手机结算卡按钮 46px（原来 44px，已经达标，这次多留 2px 余量）');
 
+console.log('\n— 这一轮：时代色 / 水印 / 圈内实时反馈 —');
+chk(/const ACCENTS = \['#ffc98a','#ff9e8a','#d5c489','#b9c6d8','#a9d2dc','#cec1ad'\]/.test(html),
+  '六站各有时代色（HUD / 绳长 / 纸面光池跟着换）');
+chk(/const PAPER_STOPS = \[/.test(html) && (html.match(/#[0-9a-f]{6}/gi) || []).length > 30,
+  '纸的温度也分年代：不是六套配色，是同一张纸的六种光');
+chk(/function drawWatermark/.test(html) && /G\.idx === LEVELS\.length - 1 \? '牢'/.test(html),
+  '每站把章节名淡淡压在纸里（末章一个“牢”字）');
+chk(/state === 'in'/.test(html) && /G\.liveIn = liveIn/.test(html),
+  '画的过程中圈内物件实时亮起（不再只有右上角数字变）');
+chk(/function failAnchor/.test(html) && /G\.failMsgX = anchor\.x/.test(html),
+  '失败提示浮在圈外最近的一块空地，不再只贴在屏幕最下面');
+chk(/\.scScore \.stat/.test(html) && /id="eOf"/.test(html),
+  '结算卡分数改成“数字 / 单位”两行，14 和 12 不再挤成一行');
+
+console.log('\n— 这一轮：原创配乐（现场合成、可静音、不突然出声）—');
+chk(/const TEMPO = 60;/.test(html), '本作 60 BPM，四作各有速度');
+chk(/const MUSIC_LEVEL = 0\.18;/.test(html), '配乐主输出默认 0.18');
+chk(/const LOOKAHEAD = 0\.12;/.test(html), '前瞻排程 0.12s');
+chk(/const MOTIF = \[69, 72, 76, 74, 72, 71, 69, 67\];/.test(html),
+  '共享动机 A4 C5 E5 D5 C5 B4 A4 G4（A 小调）');
+chk(/musicOut\.gain\.linearRampToValueAtTime\(MUSIC_LEVEL, t \+ 1\.2\)/.test(html),
+  '进游戏后 1.2s 线性淡入，不突然出声');
+chk(/musicTimer = setInterval\(musicTick, 25\)/.test(html) && !/setTimeout\([^)]*note/i.test(html),
+  '25ms lookahead 调度，不用逐音符 setTimeout');
+chk(/if \(!AC \|\| musicTimer\) return;/.test(html) && /if \(!AC\) return;/.test(html),
+  '没有 AudioContext 就不排程（首次加载 / 静音 / 测试桩都不出声）');
+chk(/function fadeScene/.test(html) && /now \+ 1\.5/.test(html) && /t0 \+ 1\.5/.test(html),
+  '换站 1.5s 交叉淡化（旧场景淡出、新场景淡入）');
+chk(/if \(!soundOn\) return;/.test(html) && /lsGet\(SOUND_KEY\) === '0'/.test(html) && /lsSet\(SOUND_KEY/.test(html),
+  '静音状态读/写 localStorage，下次打开保持');
+chk(/e\.key === 'm'/.test(html) && /els\.snd\.addEventListener\('click'/.test(html),
+  'M 键和屏幕按钮都能静音');
+chk(/type = 'sine'/.test(html) && /type = 'triangle'/.test(html) &&
+  /type = 'sawtooth'/.test(html) && /frequency\.value = 900/.test(html) &&
+  /setValueAtTime\(120, t\)/.test(html) && /exponentialRampToValueAtTime\(45, t \+ 0\.17\)/.test(html),
+  '钢琴（sine+triangle）/ 弦垫（双 saw+900Hz 低通）/ 鼓（120→45Hz）都是现场合成');
+chk(!/<audio|new Audio\(|\.mp3|\.wav|\.ogg/.test(html), '没有任何音频文件 / 音频标签');
+
 console.log(bad === 0 ? '\n=== GUARD PASS ===' : `\n=== FAIL ${bad} ===`);
 process.exit(bad ? 1 : 0);

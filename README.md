@@ -132,7 +132,7 @@
 ## 创作边界
 
 - **不使用任何真人照片、节目 LOGO、节目影像或音频。** 所有视觉元素都是抽象符号：白 T 恤、吉他弦、雪花、列车窗、一根鞋带。
-- **所有画面与声音由代码实时生成。** 噪点是 `ImageData` 随机像素，天空是着色器，音效是 WebAudio 现场合成。仓库里没有一个二进制素材文件。
+- **所有画面与声音由代码实时生成。** 噪点是 `ImageData` 随机像素，天空是着色器，音效是 WebAudio 现场合成。四款游戏里没有一个二进制素材文件。
 - **不写私生活，不对任何真人下判断。** 四款游戏里，「告密」都只呈现为说不清，不给答案。
 - **前三个游戏里，玩家是粉丝，不扮演真人。** 只有《各执一词》允许扮演，但那条设计是：你只能改你自己，她的反应锁死。
 
@@ -178,16 +178,54 @@ buxiache-3d/      3D 跑酷（src/ 是源码，dist/ 是构建产物）
 buxiache-draw/    画地为牢
 buxiache-two/     各执一词（含 DESIGN.md 设计稿）
 buxiache/         最早的文字 AVG 版 + 考据.md
+docs/promo/       传播物料（四套文案 / 分享卡 / 风险清单）
 index.html        入口页
 tools/            截图与版式探针（开发用，不参与发布）
 ```
 
 ---
 
+## 怎么传播
+
+四张分享卡、四套文案、一份底线清单。都是现成的，拿去就能发。
+
+<div align="center">
+
+<img src="docs/shots/qr.png" width="210" alt="扫码开始玩">
+
+<sub>扫码，或直接打开 <a href="https://yeahdongcn.github.io/feixue-cp/">yeahdongcn.github.io/feixue-cp</a></sub>
+
+</div>
+
+<table>
+<tr>
+<td width="50%"><a href="docs/promo/share-cards/01-入口-四个游戏一图说清.png"><img src="docs/promo/share-cards/01-入口-四个游戏一图说清.png" alt="入口卡"></a><br><sub><b>入口卡</b> · 四个游戏一图说清</sub></td>
+<td width="50%"><a href="docs/promo/share-cards/02-结局-你的版本她的版本.png"><img src="docs/promo/share-cards/02-结局-你的版本她的版本.png" alt="结局卡"></a><br><sub><b>结局卡</b> · 你的版本 / 她的版本，并排，不裁决</sub></td>
+</tr>
+<tr>
+<td width="50%"><a href="docs/promo/share-cards/03-金句-我画地为牢厉娜.png"><img src="docs/promo/share-cards/03-金句-我画地为牢厉娜.png" alt="金句卡"></a><br><sub><b>金句卡</b> · 许飞对厉娜说的那句原话</sub></td>
+<td width="50%"><a href="docs/promo/share-cards/04-考据-十二条料七条经得起查.png"><img src="docs/promo/share-cards/04-考据-十二条料七条经得起查.png" alt="考据卡"></a><br><sub><b>考据卡</b> · 12 条料，经得起查的 7 条</sub></td>
+</tr>
+</table>
+
+**文案在 [`docs/promo/launch.md`](docs/promo/launch.md)。** 微博、豆瓣小组、小红书、B 站专栏各一套，语气不同，不要一稿四投。
+
+**发布前读一遍 [`docs/promo/risks.md`](docs/promo/risks.md)。** 哪些话绝对不能说、被质疑「消费真人」怎么回、为什么不用真实歌曲——都在里面。
+
+三条最低限度的规矩：
+
+1. **不说「揭秘」「真相」「实锤」。** 告密那件事没有录音，没有第三方证据。说成悬案，它才是诚实的。
+2. **不 @ 当事人，不替她们判断关系，不拿雪藏玩梗。**
+3. **不用真人照片、节目影像、节目 LOGO、任何真实歌曲**——包括「只截一小段」。
+
+> 传播的时候，请把最后那句声明一起带上：**非官方同人，不构成对任何人的事实主张。**
+
+---
+
 <div align="center">
 <sub>
 
-非官方同人作品。人物是真实的公众人物，情节基于公开报道与节目画面改编，**不构成对任何人的事实主张**。<br>
+非官方同人作品。人物是真实的公众人物，情节基于公开报道与节目画面改编，<strong>不构成对任何人的事实主张</strong>。<br>
 请把她们当歌手——她们唱过歌，这就够了。
 
 </sub>

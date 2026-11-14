@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分享卡 · 入口</title>
+<link rel="stylesheet" href="cards.css">
+<style>
+  .card{ --w:1080px; --h:1440px; --pad:96px; --qrs:168px; }
+
+  /* 环：跑到终点折回来的那条轨道，也是圈住自己的那根绳 */
+  .arc{
+    position:absolute; z-index:1;
+    width:660px; height:660px; border-radius:50%;
+    border:1px solid rgba(255,201,138,.22);
+    left:748px; top:-186px;
+  }
+  .arc::after{
+    content:""; position:absolute; inset:38px; border-radius:50%;
+    border:1px solid rgba(255,201,138,.07);
+  }
+
+  .k{ font-size:19px; letter-spacing:.3em; color:var(--dim2); display:flex; align-items:center; gap:16px; }
+  .k i{ display:block; width:30px; height:1px; background:var(--gold); opacity:.85; }
+
+  h1{
+    margin-top:58px;
+    font-size:158px;
+    line-height:1;
+    letter-spacing:.1em;
+    color:var(--paper);
+    font-weight:400;
+  }
+  .sub{
+    margin-top:30px;
+    font-size:29px;
+    letter-spacing:.05em;
+    color:var(--dim);
+    line-height:1.7;
+  }
+  .sub b{ font-weight:400; color:var(--fg); }
+
+  .head-rule{ margin-top:44px; }
+
+  .games{
+    list-style:none; flex:1; display:flex; flex-direction:column;
+  }
+  .games li{
+    flex:1;
+    display:grid;
+    grid-template-columns:126px 1fr;
+    column-gap:34px;
+    align-items:center;
+    border-bottom:1px solid var(--line-soft);
+    padding:10px 0;
+  }
+  .games li:last-child{ border-bottom:none; }
+  .idx{ align-self:center; }
+  .no{
+    display:block;
+    font-size:16px; letter-spacing:.1em; color:var(--gold); opacity:.85;
+  }
+  .min{
+    display:block; margin-top:12px;
+    font-size:16px; letter-spacing:.08em; color:var(--dim2);
+  }
+  .t h2{
+    font-size:42px; font-weight:400; letter-spacing:.055em; line-height:1.2;
+  }
+  .t h2 small{
+    font-size:20px; letter-spacing:.2em; color:var(--gold);
+    margin-left:20px; vertical-align:4px; opacity:.9;
+  }
+  .t p{
+    margin-top:13px; font-size:24px; line-height:1.7;
+    letter-spacing:.02em; color:var(--dim);
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    margin-top:8px; padding-top:34px;
+    display:grid; grid-template-columns:198px 1fr;
+    column-gap:44px; align-items:center;
+  }
+  .ftxt{ padding-top:2px; }
+  .ftxt .url{ font-size:27px; margin-bottom:14px; }
+  .ftxt p{
+    font-size:22px; line-height:1.75; letter-spacing:.03em; color:var(--dim);
+  }
+  .ftxt p.tiny{
+    margin-top:16px; font-size:20px; letter-spacing:.04em;
+    color:#6f675b; line-height:1.75;
+  }
+  .qr span{ font-size:20px; letter-spacing:.22em; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="arc"></div>
+  <div class="inner">
+    <div class="k"><i></i>非官方同人 · 四个网页小游戏</div>
+
+    <h1>不下车</h1>
+    <p class="sub"><b>许飞</b> <em>×</em> <b>厉娜</b>　同一段往事，四种回去的方式</p>
+    <div class="rule head-rule"></div>
+
+    <ol class="games">
+      <li>
+        <div class="idx"><span class="no">01</span><span class="min">20 分钟</span></div>
+        <div class="t">
+          <h2>不下车<small>像素 RPG</small></h2>
+          <p>六个时代，六盘磁带，六个结局。捡得越多，越像你自己。</p>
+        </div>
+      </li>
+      <li>
+        <div class="idx"><span class="no">02</span><span class="min">3 分钟</span></div>
+        <div class="t">
+          <h2>不下车<small>3D 跑酷</small></h2>
+          <p>七十秒跑过二十年。跑到终点，轨道折回来，是一个环。</p>
+        </div>
+      </li>
+      <li>
+        <div class="idx"><span class="no">03</span><span class="min">8 分钟</span></div>
+        <div class="t">
+          <h2>画地为牢<small>绳与圈</small></h2>
+          <p>绳子就是周长。圈住什么，就只剩什么。</p>
+        </div>
+      </li>
+      <li>
+        <div class="idx"><span class="no">04</span><span class="min">15 分钟</span></div>
+        <div class="t">
+          <h2>各执一词<small>可扮演</small></h2>
+          <p>扮演许飞，或厉娜。你能改的，只有你自己。</p>
+        </div>
+      </li>
+    </ol>
+
+    <footer>
+      <div class="qr">
+        <img src="qr-plate.png" alt="二维码">
+        <span>扫 码 开 始</span>
+      </div>
+      <div class="ftxt">
+        <div class="url">yeahdongcn.github.io/feixue-cp</div>
+        <p>不用下载，不用注册，手机上也能玩。</p>
+        <p class="tiny">无真人照片 · 无节目影像 · 无真实歌曲<br>画面与声音全部由代码实时生成</p>
+      </div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

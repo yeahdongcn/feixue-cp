@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分享卡 · 考据</title>
+<link rel="stylesheet" href="cards.css">
+<style>
+  .card{ --w:1080px; --h:1350px; --pad:110px; --qrs:132px; }
+
+  .k{ font-size:17px; letter-spacing:.3em; color:var(--dim2); display:flex; align-items:center; gap:16px; }
+  .k i{ display:block; width:30px; height:1px; background:var(--gold); opacity:.85; }
+
+  h1{
+    margin-top:52px;
+    font-size:112px; line-height:1.05; letter-spacing:.06em;
+    color:var(--paper); font-weight:400;
+  }
+  .sub{
+    margin-top:26px; font-size:29px; line-height:1.7;
+    letter-spacing:.05em; color:var(--dim);
+  }
+  .sub b{ font-weight:400; color:var(--gold); }
+
+  .bars{
+    margin-top:74px;
+    display:grid; grid-template-columns:repeat(12,1fr); gap:26px;
+  }
+  .bar{ display:flex; flex-direction:column; gap:16px; }
+  .bar i{
+    display:block; height:186px; width:100%;
+    background:transparent; border:1px solid #4a4437;
+  }
+  .bar.on i{
+    background:#e8e4dc; opacity:.86;
+    border-color:transparent;
+  }
+  .bar span{
+    font-size:16px; letter-spacing:.06em; color:#6b6357; text-align:left;
+  }
+  .bar.on span{ color:var(--paper); opacity:.5; }
+
+  .legend{
+    margin-top:26px; font-size:18px; letter-spacing:.1em; color:var(--dim2);
+    display:flex; gap:34px;
+  }
+  .legend em{ font-style:normal; display:inline-block; width:15px; height:15px; vertical-align:-1px; margin-right:12px; }
+  .legend em.on{ background:#e8e4dc; opacity:.86; }
+  .legend em.off{ border:1px solid #4a4437; }
+
+  .stmt{
+    margin-top:66px; font-size:27px; line-height:1.95; letter-spacing:.02em; color:var(--dim);
+  }
+  .stmt b{ font-weight:400; color:var(--fg); }
+  .thesis{
+    margin-top:auto; padding-top:44px;
+    font-size:36px; letter-spacing:.05em; color:var(--paper);
+  }
+  .thesis .a{ color:var(--dim); }
+  .thesis .b{ color:var(--paper); }
+
+  footer{
+    border-top:1px solid var(--line);
+    margin-top:40px; padding-top:30px;
+    display:grid; grid-template-columns:1fr var(--qrs); column-gap:44px; align-items:center;
+  }
+  .url{ font-size:23px; letter-spacing:.05em; color:#b3ab9d; }
+  .sig{ margin-top:12px; font-size:16px; letter-spacing:.12em; color:#7a7265; }
+  .qr span{ font-size:17px; letter-spacing:.22em; text-align:right; color:#7a7265; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="inner">
+    <div class="k"><i></i>《不下车》· 考据</div>
+
+    <h1>十二条料</h1>
+    <p class="sub">七条经得起查。五条，到今天也说不清。</p>
+
+    <div class="bars">
+      <div class="bar on"><i></i><span>01</span></div>
+      <div class="bar on"><i></i><span>02</span></div>
+      <div class="bar on"><i></i><span>03</span></div>
+      <div class="bar on"><i></i><span>04</span></div>
+      <div class="bar on"><i></i><span>05</span></div>
+      <div class="bar on"><i></i><span>06</span></div>
+      <div class="bar on"><i></i><span>07</span></div>
+      <div class="bar"><i></i><span>08</span></div>
+      <div class="bar"><i></i><span>09</span></div>
+      <div class="bar"><i></i><span>10</span></div>
+      <div class="bar"><i></i><span>11</span></div>
+      <div class="bar"><i></i><span>12</span></div>
+    </div>
+    <p class="legend"><span><em class="on"></em> 公开可查 7</span><span><em class="off"></em> 说不清、查不到的 5</span></p>
+
+    <p class="stmt"><b>「告密」那一条，没有录音，没有第三方证据。</b><br>四个游戏里，这一格永远是空的——不是回避，是它本来就是空的。</p>
+
+    <p class="thesis"><span class="a">感受可以是真的。</span><span class="b">事实得另算。</span></p>
+
+    <footer>
+      <div>
+        <p class="url">yeahdongcn.github.io/feixue-cp</p>
+        <p class="sig">四 个 网 页 小 游 戏 · 无 真 人 影 像</p>
+      </div>
+      <div class="qr">
+        <img src="qr-plate.png" alt="二维码">
+        <span>扫 码 玩</span>
+      </div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

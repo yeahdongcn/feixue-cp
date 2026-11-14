@@ -10,16 +10,20 @@ const fs = require('fs');
 const path = require('path');
 
 const DIR = __dirname;
-const PARTS = ['game.js', 'ui.js', 'story.js'];
+/* 每个元素是一「段」脚本，可以合并多个源文件；产量仍然是 3 段（测试按 3 段校验） */
+const PARTS = [['game.js'], ['ui.js', 'music.js'], ['story.js']];
 const MARK = '<!--BUILD:SCRIPTS-->';
 
 function render(){
   const shell = fs.readFileSync(path.join(DIR, 'src', 'shell.html'), 'utf8');
   if (!shell.includes(MARK)) throw new Error('shell.html 里找不到 ' + MARK);
-  const blocks = PARTS.map(name => {
-    const code = fs.readFileSync(path.join(DIR, 'src', name), 'utf8');
-    if (/<\/script/i.test(code)) throw new Error(name + ' 里出现了 </script，内联会截断');
-    return '<script>\n/* ───── src/' + name + ' ───── */\n' + code.replace(/\s*$/, '') + '\n</script>';
+  const blocks = PARTS.map(group => {
+    const code = group.map(name => {
+      const src = fs.readFileSync(path.join(DIR, 'src', name), 'utf8');
+      if (/<\/script/i.test(src)) throw new Error(name + ' 里出现了 </script，内联会截断');
+      return src.replace(/\s*$/, '');
+    }).join('\n\n');
+    return '<script>\n/* ───── src/' + group.join(' + ') + ' ───── */\n' + code + '\n</script>';
   }).join('\n');
   const out = shell.replace(MARK, blocks);
   // 产物里不允许再有任何外部资源引用（只看标签，不看脚本正文）
@@ -43,5 +47,6 @@ if (process.argv.includes('--check')){
 }
 
 fs.writeFileSync(target, out);
-console.log('built index.html  ' + Buffer.byteLength(out) + ' bytes  （' +
-  PARTS.map(p => p + ' ' + fs.statSync(path.join(DIR, 'src', p)).size).join(', ') + '）');
+const sizes = [];
+for (const group of PARTS) for (const name of group) sizes.push(name + ' ' + fs.statSync(path.join(DIR, 'src', name)).size);
+console.log('built index.html  ' + Buffer.byteLength(out) + ' bytes  （' + sizes.join(', ') + '）');

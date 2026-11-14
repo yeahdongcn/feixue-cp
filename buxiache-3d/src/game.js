@@ -41,7 +41,7 @@ function bondMult(){
 }
 function pairLabel(){
   if (pair.mode === 'none') return '框不住了';
-  if (pair.mode === 'one')  return '这一站只有一个人';
+  if (pair.mode === 'one')  return '没有对照';
   if (pair.bond >= 88) return '线是紧的';
   if (pair.bond >= 60) return '还连着';
   if (pair.bond >= 35) return '有点松了';
@@ -56,12 +56,12 @@ function audioInit(){
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ AC = null; }
 }
 function blip(freq, dur, type, gain, slideTo){
-  if (!AC) return;
+  if (!AC || MUSIC.isMuted()) return;
   const o = AC.createOscillator(), g = AC.createGain();
   o.type = type || 'square';
   o.frequency.setValueAtTime(freq, AC.currentTime);
   if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, AC.currentTime + dur);
-  g.gain.setValueAtTime(gain || 0.06, AC.currentTime);
+  g.gain.setValueAtTime((gain || 0.06) * 1.25, AC.currentTime);   // 配乐占了动态余量，音效跟着抬一点
   g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
   o.connect(g); g.connect(AC.destination);
   o.start(); o.stop(AC.currentTime + dur + 0.02);
@@ -75,6 +75,293 @@ function sfxNear(){ blip(1180, 0.05, 'sine', 0.028, 1500); }
 function sfxShield(){ blip(520, 0.30, 'sine', 0.07, 900); }
 function sfxRumor(){ blip(340, 0.36, 'triangle', 0.055, 240); }
 function sfxBondBreak(){ blip(140, 0.5, 'sine', 0.05, 90); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   配乐 ·《绕圈》 —— 原创 · WebAudio 现场合成 · 不加载任何音频文件
+
+   主题动机（A 小调）：A4 C5 E5 D5 | C5 B4 A4 G4（每音一拍）
+   128 BPM：一拍 0.46875s，两小节一句，16 小节绕一圈（约 30 秒）。
+   70 秒跑完二十年 = 这句话要绕两圈半；每圈都停在 G 上，落不回主音。
+   前半圈动机拉成两小节（循环），后半圈提速一倍（冲刺），鼓和贝斯一直往前推。
+
+   配器：钢琴 sine+triangle（attack .004 / decay .9）
+        弦垫 两个 detune sawtooth + lowpass 900 + attack .6
+        音盒 sine + 高八度泛音（.25 秒短包络）
+        鼓   白噪声 + bandpass 短包络；底鼓 sine 120→45Hz 下滑
+   调度：前瞻式，setInterval 25ms / 提前 0.12s 排程（不是逐音 setTimeout）。
+   ════════════════════════════════════════════════════════════════════════ */
+const MUSIC = (() => {
+  const BPM = 128, SPB = 60 / BPM, STEP = SPB / 2;
+  const LOOK = 0.12, TICK = 25, SWING = 0.017, MASTER = 0.18, BARS = 16;
+  const MEL  = [69, 72, 76, 74, 72, 71, 69, 67];                 // A4 C5 E5 D5 C5 B4 A4 G4
+  const PROG = [[57,60,64],[55,59,62],[53,57,60],[55,59,62]];    // Am G F G
+  const ROOT = [45, 43, 41, 43];                                 // A2 G2 F2 G2
+  // 六个时代各一层配器 + 结果页「下车」
+  const ARR = [
+    { kick:.86, snare:.40, hat:.075, bass:.30, piano:.34, box:.085, pad:.105, half:0, busy:1 }, // 2006 夏
+    { kick:.50, snare:.17, hat:.045, bass:.22, piano:.20, box:.080, pad:.130, half:0, busy:0 }, // 2007 冬
+    { kick:.42, snare:0,   hat:.030, bass:.17, piano:.15, box:.050, pad:.120, half:1, busy:0 }, // 2014 灰
+    { kick:.94, snare:.46, hat:.095, bass:.34, piano:.32, box:.060, pad:.060, half:0, busy:1 }, // 2020 台上
+    { kick:.44, snare:.10, hat:.030, bass:.17, piano:.24, box:.070, pad:.115, half:1, busy:0 }, // 2026 灯灭
+    { kick:.16, snare:0,   hat:0,    bass:.10, piano:.12, box:.070, pad:.150, half:1, busy:0 }, // ????
+    { kick:0,   snare:0,   hat:0,    bass:0,   piano:.16, box:.075, pad:.165, half:1, busy:0 }, // 下车
+  ];
+  const f = n => 440 * Math.pow(2, (n - 69) / 12);
+  // 整体电平：母带固定 0.18，各层再抬 1.45 倍，实测峰值约 -10dBFS，还有余量
+  for (const a of ARR) for (const k in a) if (typeof a[k] === 'number' && k !== 'half' && k !== 'busy') a[k] *= 1.45;
+
+  let ctx=null, master=null, ana=null, busA=null, busB=null, busOn=0;
+  let ready=false, playing=false, timer=null, nextT=0, step=0, era=0, ending=false;
+  let muted=false, noiseBuf=null;
+
+  const lsGet = () => { try { return localStorage.getItem('bx3d.mute'); } catch(e){ return null; } };
+  const lsSet = v => { try { localStorage.setItem('bx3d.mute', v); } catch(e){} };
+  function gainNode(v){ const g = ctx.createGain(); g.gain.value = v; return g; }
+  function filt(type, hz, q){ const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = hz; b.Q.value = q || 0.7; return b; }
+  function noiseBufGet(){
+    if (!noiseBuf){
+      const n = Math.max(256, Math.floor(ctx.sampleRate * 0.6));
+      noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuf;
+  }
+  function env(g, t, a, d, peak, hold){
+    const p = Math.max(0.0002, peak);
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(0.0002, t);
+    g.gain.linearRampToValueAtTime(p, t + a);
+    if (hold > 0) g.gain.setValueAtTime(p, t + a + hold);
+    g.gain.exponentialRampToValueAtTime(0.0002, t + a + (hold > 0 ? hold : 0) + d);
+  }
+  const cur = () => (busOn ? busB : busA);
+  const alt = () => (busOn ? busA : busB);
+
+  /* ── 钢琴：sine + triangle，快起 / 0.9s 衰减 ── */
+  function piano(t, m, dec, amp){
+    const b = cur(); if (!b) return;
+    const g = gainNode(0), g2 = gainNode(0.40);
+    const o1 = ctx.createOscillator(); o1.type = 'sine';     o1.frequency.value = f(m);
+    const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f(m); o2.detune.value = 5;
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(b);
+    env(g, t, 0.004, dec || 0.9, amp);
+    const stop = t + (dec || 0.9) + 0.12;
+    o1.start(t); o2.start(t); o1.stop(stop); o2.stop(stop);
+  }
+  /* ── 音盒：sine + 高八度泛音，0.25s ── */
+  function musicBox(t, m, amp){
+    const b = cur(); if (!b) return;
+    const g = gainNode(0), g2 = gainNode(0.30);
+    const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = f(m);
+    const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f(m + 12);
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(b);
+    env(g, t, 0.002, 0.25, amp);
+    o1.start(t); o2.start(t); o1.stop(t + 0.34); o2.stop(t + 0.34);
+  }
+  /* ── 弦垫：两个 detune 的 saw + lowpass 900 + 慢起 ── */
+  function padChord(t, notes, dur, amp){
+    const b = cur(); if (!b) return;
+    const lp = filt('lowpass', 900, 0.6), g = gainNode(0);
+    lp.connect(g); g.connect(b);
+    for (const m of notes) for (const det of [-7, 7]){
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.value = f(m); o.detune.value = det;
+      o.connect(lp); o.start(t); o.stop(t + dur + 1.0);
+    }
+    env(g, t, 0.6, 0.9, amp, dur - 1.5);
+  }
+  /* ── 鼓 ── */
+  function kick(t, amp){
+    const b = cur(); if (!b) return;
+    const o = ctx.createOscillator(), g = gainNode(0);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+    env(g, t, 0.003, 0.20, amp);
+    o.connect(g); g.connect(b); o.start(t); o.stop(t + 0.30);
+  }
+  function snare(t, amp){
+    const b = cur(); if (!b) return;
+    const s = ctx.createBufferSource(); s.buffer = noiseBufGet();
+    const bp = filt('bandpass', 1900, 0.9), g = gainNode(0);
+    s.connect(bp); bp.connect(g); g.connect(b);
+    env(g, t, 0.002, 0.11, amp);
+    s.start(t); s.stop(t + 0.16);
+    const o = ctx.createOscillator(), g2 = gainNode(0);
+    o.type = 'triangle'; o.frequency.value = 190;
+    env(g2, t, 0.002, 0.07, amp * 0.45);
+    o.connect(g2); g2.connect(b); o.start(t); o.stop(t + 0.12);
+  }
+  function hat(t, amp, open){
+    const b = cur(); if (!b) return;
+    const s = ctx.createBufferSource(); s.buffer = noiseBufGet();
+    const bp = filt('bandpass', open ? 7000 : 9000, 0.8), g = gainNode(0);
+    s.connect(bp); bp.connect(g); g.connect(b);
+    env(g, t, 0.001, open ? 0.20 : 0.035, amp);
+    s.start(t); s.stop(t + 0.26);
+  }
+  function bass(t, m, dur, amp){
+    const b = cur(); if (!b) return;
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+    o1.type = 'triangle'; o1.frequency.value = f(m);
+    o2.type = 'sine';     o2.frequency.value = f(m - 12);
+    const lp = filt('lowpass', 320, 0.9), g = gainNode(0);
+    o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(b);
+    env(g, t, 0.006, 0.16, amp, dur);
+    const stop = t + dur + 0.22;
+    o1.start(t); o2.start(t); o1.stop(stop); o2.stop(stop);
+  }
+  function crash(t, amp){
+    const b = cur(); if (!b) return;
+    const s = ctx.createBufferSource(); s.buffer = noiseBufGet(); s.loop = true;
+    const hp = filt('highpass', 3200, 0.7), g = gainNode(0);
+    s.connect(hp); hp.connect(g); g.connect(b);
+    env(g, t, 0.004, 0.9, amp);
+    s.start(t); s.stop(t + 1.0);
+  }
+
+  /* ── 一步（八分音符网格） ── */
+  function playStep(i, t, cfg){
+    const bar = (i / 8) | 0, s = i & 7, sec = bar >= BARS / 2, hum = 0.86 + Math.random() * 0.28;
+    const ci = bar & 3;
+    if (cfg.kick && (s === 0 || s === 4 || (cfg.busy && s === 6 && (bar & 3) === 3)))
+      kick(t, cfg.kick * (s === 0 ? 1 : 0.86) * hum);
+    if (cfg.snare && (s === 2 || s === 6 || (cfg.busy && s === 7 && (bar & 7) === 7)))
+      snare(t, cfg.snare * (s === 6 ? 1 : 0.6) * hum);
+    if (cfg.hat && (!cfg.half || (s & 1) === 0))
+      hat(t, cfg.hat * ((s & 1) ? 1 : 0.45) * hum, s === 7 && (bar & 3) === 3);
+    if (cfg.bass && (s & 1) === 0){
+      const r = ROOT[ci];
+      bass(t, s === 6 ? r + 12 : (s === 4 ? r + 7 : r), SPB * 0.42, cfg.bass * hum);
+    }
+    if (cfg.pad && s === 0) padChord(t, PROG[ci], SPB * 4, cfg.pad);
+    if (sec){
+      // 后半圈：动机提速一倍，八分音符连奏 —— 冲刺
+      if (cfg.piano) piano(t, MEL[i & 7], 0.9, cfg.piano * 0.52 * hum);
+      if (cfg.box && (s & 1) === 0) musicBox(t + 0.01, MEL[(i >> 1) & 7] + 12, cfg.box * 0.95);
+    } else {
+      // 前半圈：动机拉成两小节一句 —— 循环
+      if ((s & 1) === 0){
+        const mi = (bar * 4 + (s >> 1)) & 7;
+        if (cfg.piano) piano(t, MEL[mi], 0.9, cfg.piano * (mi === 0 ? 1 : 0.9) * hum);
+        if (cfg.box && (mi === 2 || mi === 6)) musicBox(t + 0.01, MEL[mi] + 12, cfg.box * 0.8);
+      }
+    }
+    if (s === 0 && (bar === 0 || bar === 8)) crash(t, 0.13);
+  }
+
+  /* ── 前瞻式调度：25ms 心跳，提前 0.12s 排程 ── */
+  function tick(){
+    if (!playing || !ctx) return;
+    const now = ctx.currentTime;
+    if (nextT < now - 0.25) nextT = now + 0.03;     // 切后台回来不补一串音
+    let guard = 0;
+    while (nextT < now + LOOK && guard++ < 32){
+      const cfg = ending ? ARR[6] : (ARR[era] || ARR[0]);
+      playStep(step % (BARS * 8), nextT + ((step & 1) ? SWING : 0), cfg);
+      nextT += STEP; step++;
+    }
+  }
+
+  function applyMute(instant){
+    if (!ready || !master) return;
+    const now = ctx.currentTime, g = muted ? 0 : MASTER;
+    master.gain.cancelScheduledValues(now);
+    if (instant){ master.gain.setValueAtTime(g, now); return; }
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(g, now + 0.15);
+  }
+  function fadeIn(){
+    if (!ready || !master) return;
+    const now = ctx.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(0, now);
+    master.gain.linearRampToValueAtTime(muted ? 0 : MASTER, now + 1.2);   // 1.2 秒淡入
+  }
+  function cross(){
+    if (!ready) return;
+    const now = ctx.currentTime, T = 1.5;                                  // 1.5 秒交叉淡入
+    const from = cur(), to = alt();
+    to.gain.cancelScheduledValues(now);
+    to.gain.setValueAtTime(Math.max(0, to.gain.value), now);
+    to.gain.linearRampToValueAtTime(1, now + T);
+    from.gain.cancelScheduledValues(now);
+    from.gain.setValueAtTime(Math.max(0, from.gain.value), now);
+    from.gain.linearRampToValueAtTime(0, now + T);
+    busOn = busOn ? 0 : 1;
+  }
+  function syncBtn(){
+    const b = document.getElementById('mute');
+    if (!b) return;
+    if (b.classList) b.classList.toggle('off', muted);
+    if (b.setAttribute) b.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    b.title = muted ? '打开音乐（M）' : '静音（M）';
+  }
+  function init(){
+    if (ready) return true;
+    if (!ctx){
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return false; }
+    }
+    if (!ctx || !ctx.createBiquadFilter || !ctx.createBufferSource || !ctx.createBuffer || !ctx.createGain) return false;
+    try {
+      master = ctx.createGain(); master.gain.value = MASTER; master.connect(ctx.destination);
+      busA = ctx.createGain(); busA.gain.value = 1; busA.connect(master);
+      busB = ctx.createGain(); busB.gain.value = 0; busB.connect(master);
+      if (ctx.createAnalyser){ ana = ctx.createAnalyser(); ana.fftSize = 1024; master.connect(ana); }
+      muted = lsGet() === '1';
+      ready = true;
+      applyMute(true);
+      syncBtn();
+    } catch(e){ ready = false; return false; }
+    return true;
+  }
+
+  return {
+    /* 首次点击 / 按键后调用：只建图，不出声 */
+    attach(c){ if (c) ctx = c; return init(); },
+    start(){
+      if (!init()) return;
+      if (ctx.resume && ctx.state !== 'running') { try { ctx.resume(); } catch(e){} }
+      if (!playing){ playing = true; timer = setInterval(tick, TICK); }
+      // 重开一局：从头绕圈，别把上一局的「下车」尾声带进来
+      step = 0; ending = false; era = 0;
+      busA.gain.value = 1; busB.gain.value = 0; busOn = 0;
+      nextT = Math.max(nextT, ctx.currentTime + 0.08);
+      fadeIn();
+    },
+    stop(){ if (timer){ clearInterval(timer); timer = null; } playing = false; },
+    setEra(e){
+      e = e | 0;
+      if (e < 0 || e > 5) return;
+      if (e === era && !ending) return;
+      era = e;
+      if (ending){ ending = false; if (playing) cross(); return; }
+      if (playing) cross();
+    },
+    setEnd(){ if (ending) return; ending = true; if (playing) cross(); },
+    toggleMute(){ muted = !muted; lsSet(muted ? '1' : '0'); applyMute(); syncBtn(); },
+    isMuted(){ return muted; },
+    syncBtn,
+    meter(){
+      if (!ana) return null;
+      const d = new Uint8Array(ana.fftSize);
+      ana.getByteTimeDomainData(d);
+      let p = 0, sum = 0;
+      for (let i = 0; i < d.length; i++){ const v = (d[i] - 128) / 128; p = Math.max(p, Math.abs(v)); sum += v * v; }
+      return { peak: +p.toFixed(3), rms: +Math.sqrt(sum / d.length).toFixed(3) };
+    },
+    debug(){
+      return {
+        ready, playing, muted, era, ending, step,
+        state: ctx ? ctx.state : 'none',
+        master: master ? +master.gain.value.toFixed(3) : null,
+        busA: busA ? +busA.gain.value.toFixed(2) : null,
+        busB: busB ? +busB.gain.value.toFixed(2) : null,
+      };
+    },
+  };
+})();
 
 /* ══════════ 玩家角色 ══════════ */
 function makePlayer(){
@@ -199,14 +486,14 @@ function makePairFigure(which){
   };
   const legL = leg(-1), legR = leg(1);
 
-  const halo = makeGlowSprite(trimC, 1.45, 0.30);
+  const halo = makeGlowSprite(trimC, 2.10, 0.50);
   halo.position.set(0, .95, -.22);
   g.add(halo);
 
   // 脚下的一滩软光：别再画硬边圆环，那样像站在展台上
   const foot = new THREE.Mesh(
     new THREE.CircleGeometry(0.95, 28),
-    new THREE.MeshBasicMaterial({ map:glowTex(), color:trimC, transparent:true, opacity:0.20,
+    new THREE.MeshBasicMaterial({ map:glowTex(), color:trimC, transparent:true, opacity:0.26,
       blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, fog:false })
   );
   foot.rotation.x = -Math.PI/2;
@@ -220,8 +507,8 @@ function buildPair(){
   pair.group = new THREE.Group();
   pair.a = makePairFigure(0);
   pair.b = makePairFigure(1);
-  pair.a.g.scale.setScalar(1.16);
-  pair.b.g.scale.setScalar(1.16);
+  pair.a.g.scale.setScalar(1.30);
+  pair.b.g.scale.setScalar(1.30);
   pair.group.add(pair.a.g);
   pair.group.add(pair.b.g);
   pair.haloA = pair.a.halo;
@@ -720,6 +1007,7 @@ function bindInput(){
     if (e.code === 'ArrowDown' || e.code === 'KeyS'){ e.preventDefault(); trySlide(); }
     if (e.code === 'ArrowLeft' || e.code === 'KeyA'){ e.preventDefault(); tryLane(-1); }
     if (e.code === 'ArrowRight' || e.code === 'KeyD'){ e.preventDefault(); tryLane(1); }
+    if (e.code === 'KeyM'){ e.preventDefault(); MUSIC.toggleMute(); }
   });
   window.addEventListener('blur', () => { player.slideHold = 0; for (const k in keys) keys[k] = false; });
   window.addEventListener('keyup', e => {
@@ -801,6 +1089,7 @@ function update(dt){
   const newEra = Math.min(5, Math.floor(G.dist / ERA_LEN));
   if (newEra !== G.era){
     G.era = newEra;
+    MUSIC.setEra(newEra);
     eraMix = { from: eraMix.to, to: newEra, t: 0 };
     sfxEra(); G.flash = 0.9;
     showCaption(ERAS[newEra].year, ERAS[newEra].tag);
@@ -1358,7 +1647,8 @@ function updateHUD(){
   if (HUD.mult)  HUD.mult.textContent = '×' + bondMult();
   if (HUD.tape)  HUD.tape.textContent = st.tapes;
   if (HUD.comboMini) HUD.comboMini.textContent = '连 ' + st.combo;
-  if (HUD.hearts) HUD.hearts.textContent = '●'.repeat(Math.max(0,st.hearts)) + '○'.repeat(Math.max(0,3-st.hearts));
+  if (HUD.hearts) HUD.hearts.innerHTML = '<span>♥</span>'.repeat(Math.max(0,st.hearts)) +
+    '<span class="off">♥</span>'.repeat(Math.max(0,3-st.hearts));
   if (HUD.bar) HUD.bar.style.width = Math.min(100, G.dist/(ERA_LEN*6)*100) + '%';
 
   if (HUD.bondFill){
@@ -1366,9 +1656,12 @@ function updateHUD(){
     HUD.bondFill.classList.toggle('low', pair.bond < 22);
     HUD.bondFill.classList.toggle('armed', pair.armed);
   }
+  if (HUD.bondNum){
+    HUD.bondNum.textContent = pair.mode === 'none' ? '—' : Math.round(pair.bond);
+  }
   if (HUD.bondGap){
     HUD.bondGap.textContent = (pair.mode === 'both') ? ('间距 ' + pair.gap.toFixed(1) + 'm') :
-      (pair.mode === 'one' ? '间距 —' : '间距 —');
+      (pair.mode === 'one' ? '一个人' : '空台');
   }
   if (HUD.bondTag) HUD.bondTag.textContent = pairLabel();
   if (HUD.bondWrap){
@@ -1503,6 +1796,7 @@ function updateReveal(dt){
 
 function endRun(crashed){
   G.state = 'result';
+  MUSIC.setEnd();
   RUN++;
   document.getElementById('revealText').classList.remove('on');
   document.getElementById('choiceRow').classList.remove('on');
@@ -1516,6 +1810,7 @@ function endRun(crashed){
 
 function pickEnding(off){
   G.state = 'result';
+  MUSIC.setEnd();
   RUN++;
   G.endPick = off ? 'off' : 'stay';
   document.getElementById('choiceRow').classList.remove('on');
@@ -1601,7 +1896,7 @@ function showResult(crashed){
   const eras = document.getElementById('rEras');
   if (eras){
     const years = ERAS.map(e=> e.id);
-    eras.textContent = years.map((y,i)=> (st.perEra[i] ? '●' : '○') + y).join('  ');
+    eras.textContent = years.map((y,i)=> y + ' ' + (st.perEra[i] ? '●' : '○')).join('   ');
   }
   // 2007 那三种说法：只带走一种
   const rr = document.getElementById('rRumor');
@@ -1731,6 +2026,7 @@ function boot(){
   HUD.bar = document.getElementById('eraBar');
   HUD.bondFill = document.getElementById('bondFill');
   HUD.bondGap = document.getElementById('bondGap');
+  HUD.bondNum = document.getElementById('bondNum');
   HUD.bondTag = document.getElementById('bondTag');
   HUD.bondWrap = document.getElementById('bondWrap');
   HUD.rumor = document.getElementById('hudRumor');
@@ -1748,6 +2044,9 @@ function boot(){
   document.getElementById('btnOff').addEventListener('click', ()=> pickEnding(true));
   document.getElementById('btnStay').addEventListener('click', ()=> pickEnding(false));
   document.getElementById('btnAgain').addEventListener('click', ()=>{ resetRun(); startGame(); });
+  const muteBtn = document.getElementById('mute');
+  if (muteBtn) muteBtn.addEventListener('click', e => { e.preventDefault(); MUSIC.toggleMute(); });
+  MUSIC.syncBtn();
 
   window.addEventListener('resize', onResize);
   onResize();
@@ -1767,6 +2066,8 @@ function onResize(){
 
 function startGame(){
   audioInit();
+  MUSIC.attach(AC);
+  MUSIC.start();
   if (AC && AC.resume) { try { AC.resume(); } catch(e){} }
   document.getElementById('title').classList.add('gone');
   document.getElementById('hud').classList.add('on');

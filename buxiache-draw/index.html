@@ -9,6 +9,8 @@
   :root{
     --ink:#f0e8d8; --ink2:#c2b7a2; --dim:#ab9e86;
     --warm:#ffc98a; --warm2:#ff9d5c; --bad:#ff8f78;
+    /* 每一站换一个很轻的时代色：只染 HUD、光池和背景水印，纸还是那张纸 */
+    --accent:#ffc98a;
     --paper:#0d0c0a;
     --rule:rgba(255,201,138,.16);
   }
@@ -25,9 +27,9 @@
 
   /* ── 左上：年份 ── */
   #top{position:absolute;left:clamp(18px,2.3vw,30px);top:clamp(16px,2.4vh,24px)}
-  #year{font-size:17px;letter-spacing:.3em;color:var(--ink);font-variant-numeric:tabular-nums}
+  #year{font-size:17px;letter-spacing:.3em;color:var(--accent);font-variant-numeric:tabular-nums}
   #yearRule{width:26px;height:1px;margin:9px 0 8px;
-    background:linear-gradient(90deg,var(--warm),rgba(255,201,138,0));opacity:.9}
+    background:linear-gradient(90deg,var(--accent),rgba(255,201,138,0));opacity:.9}
   #sub{font-size:13px;letter-spacing:.13em;color:var(--ink2)}
 
   /* ── 右上：绳 ── */
@@ -36,9 +38,9 @@
   #ropeBar{width:132px;height:3px;background:rgba(255,255,255,.12);margin:9px 0 7px auto;
     position:relative;overflow:hidden;border-radius:2px}
   #ropeBar i{position:absolute;left:0;top:0;bottom:0;width:100%;
-    background:linear-gradient(90deg,rgba(255,157,92,.85),var(--warm));transition:width .08s linear}
+    background:var(--accent);opacity:.9;transition:width .08s linear}
   #ropeBar.low i{background:linear-gradient(90deg,#ff5c48,var(--bad))}
-  #ropeNum{font-size:13px;letter-spacing:.05em;color:var(--warm);
+  #ropeNum{font-size:13px;letter-spacing:.05em;color:var(--accent);
     font-variant-numeric:tabular-nums;transition:color .2s}
   #ropeNum b{font-weight:400}
   #ropeNum i{font-style:normal;color:var(--dim);margin-left:4px;letter-spacing:.02em}
@@ -46,7 +48,7 @@
   #ropeNum.low i{color:rgba(255,143,120,.72)}
   #needLine{font-size:13px;letter-spacing:.07em;color:var(--ink2);margin-top:11px;
     font-variant-numeric:tabular-nums;transition:color .2s}
-  #needLine b{color:var(--warm);font-weight:400}
+  #needLine b{color:var(--accent);font-weight:400}
   #needLine.ok{color:var(--warm)}
 
   /* ── 底部 ── */
@@ -58,7 +60,7 @@
     border:1px solid rgba(255,220,180,.16);border-radius:2px;padding:0 12px;
     min-height:44px;display:inline-flex;align-items:center;justify-content:center;
     cursor:pointer;pointer-events:auto;transition:border-color .25s,color .25s,opacity .35s,visibility .35s}
-  #snd:hover{border-color:rgba(255,201,138,.5);color:var(--warm)}
+  #snd:hover{border-color:rgba(255,201,138,.5);color:var(--accent)}
   #snd.off{color:var(--dim)}
 
   /* ── 提示条：固定贴在底部提示行上方，永远不压物件 / 圈 ── */
@@ -66,7 +68,8 @@
     font-size:16px;letter-spacing:.18em;color:var(--warm);opacity:0;transition:opacity .22s;
     text-shadow:0 0 30px rgba(255,170,90,.55)}
   #toast.on{opacity:1}
-  #toast.bad{color:var(--bad);text-shadow:0 0 30px rgba(255,90,60,.5)}
+  #toast.bad{color:var(--bad);font-size:17px;letter-spacing:.16em;
+    text-shadow:0 0 34px rgba(255,90,60,.62)}
 
   /* ── 章节卡 ── */
   #card{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
@@ -89,7 +92,7 @@
   #card .in::before{content:'';position:absolute;left:18%;right:18%;top:0;height:1px;
     background:linear-gradient(90deg,transparent,rgba(255,201,138,.5),transparent)}
   @keyframes cardIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
-  #card .y{font-size:13px;letter-spacing:.44em;color:#ffd9ab}
+  #card .y{font-size:13px;letter-spacing:.44em;color:var(--accent)}
   #card .t{font-size:clamp(27px,5.6vw,38px);letter-spacing:.16em;margin:16px 0 18px;
     color:var(--ink);font-weight:400;text-shadow:0 0 46px rgba(255,180,110,.12)}
   #card .l{font-size:15px;line-height:2.05;color:var(--ink2);letter-spacing:.04em}
@@ -122,12 +125,14 @@
   .scTitle{font-size:clamp(30px,4.2vw,44px);letter-spacing:.2em;margin:9px 0 7px;
     font-weight:400;color:#f7f0e2;line-height:1.4}
   .scSub{font-size:13px;letter-spacing:.13em;color:#ffd9ab;margin-bottom:15px}
-  .scScore{display:flex;align-items:flex-end;gap:9px;padding-bottom:13px;margin-bottom:14px;
+  .scScore{display:flex;align-items:flex-end;gap:26px;padding-bottom:13px;margin-bottom:14px;
     border-bottom:1px solid rgba(255,201,138,.14)}
-  .scScore .num{font-size:clamp(40px,5.6vw,60px);line-height:1.45;color:#ffd9ab;
+  .scScore .stat{display:flex;flex-direction:column;align-items:flex-start}
+  .scScore .stat + .stat{border-left:1px solid rgba(255,201,138,.14);padding-left:24px}
+  .scScore .num{font-size:clamp(40px,5.6vw,60px);line-height:1.42;color:#ffd9ab;
     font-variant-numeric:tabular-nums}
-  .scScore .lab{font-size:13px;color:var(--ink2);letter-spacing:.08em;padding-bottom:5px}
-  .scScore .of{margin-left:auto;font-size:13px;color:var(--dim);letter-spacing:.08em;padding-bottom:6px}
+  .scScore .lab{font-size:13px;color:var(--ink2);letter-spacing:.08em;margin-top:5px}
+  .scScore .of{margin-left:auto;font-size:13px;color:var(--dim);letter-spacing:.08em;padding-bottom:3px}
   .scYears{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;
     background:rgba(255,201,138,.11);border:1px solid rgba(255,201,138,.11)}
   .cell{background:#241d15;padding:8px 9px 7px}
@@ -161,7 +166,8 @@
     #shareCard{width:calc(100vw - 24px);max-height:calc(100vh - 24px);
       padding:18px 16px 15px}
     .scTitle{font-size:32px;margin:8px 0 6px}
-    .scScore{gap:7px;padding-bottom:11px;margin-bottom:12px}
+    .scScore{gap:16px;padding-bottom:11px;margin-bottom:12px}
+    .scScore .stat + .stat{padding-left:16px}
     .scScore .num{font-size:42px}
     .scScore .of{font-size:13px}
     .scYears{grid-template-columns:repeat(3,1fr)}
@@ -177,7 +183,8 @@
     #end{padding:10px}
     #shareCard{width:calc(100vw - 16px);max-height:none;padding:16px 13px 12px}
     .scTitle{font-size:28px;margin:6px 0 5px}
-    .scScore{gap:6px;padding-bottom:9px;margin-bottom:10px}
+    .scScore{gap:12px;padding-bottom:9px;margin-bottom:10px}
+    .scScore .stat + .stat{padding-left:12px}
     .scScore .num{font-size:36px}
     .cell{padding:4px 6px 3px}
     .cell b{font-size:19px;margin-top:1px}
@@ -186,20 +193,26 @@
     .scFoot{margin-top:8px}
   }
 
+  /* 稍矮的屏（≤620 高，典型是 320×568）：尾注让位，保证整张卡不用滚 */
+  @media (max-height:620px){
+    .scFoot{display:none}
+    .scActions{margin-top:8px}
+  }
+
   /* 矮屏（≤520 高，典型是手机横屏）：整张卡压进一屏，放不下时 #end 可滚动 */
   @media (max-height:520px){
     #end{padding:8px}
     #shareCard{width:min(720px,calc(100vw - 16px));max-height:none;padding:12px 20px 10px}
-    .scTitle{font-size:26px;line-height:1.3;margin:4px 0 2px}
-    .scSub{margin-bottom:8px}
-    .scScore{padding-bottom:7px;margin-bottom:8px}
-    .scScore .num{font-size:32px;line-height:1.3}
+    .scTitle{font-size:24px;line-height:1.34;margin:2px 0 0}
+    .scSub{margin-bottom:5px}
+    .scScore{padding-bottom:5px;margin-bottom:6px}
+    .scScore .num{font-size:30px;line-height:1.42}
     .scScore .lab{padding-bottom:3px}
     .scScore .of{padding-bottom:4px}
     .scYears{grid-template-columns:repeat(6,1fr)}
-    .cell{padding:4px 7px 3px}
-    .scLine{font-size:13px;line-height:1.6;margin-top:8px}
-    .scActions{margin-top:8px}
+    .cell{padding:3px 6px 2px}
+    .scLine{font-size:12.5px;line-height:1.5;margin-top:6px}
+    .scActions{margin-top:6px}
     #btnAgain,#btnCopy{padding:11px 12px}
     .scFoot{display:none}
   }
@@ -239,8 +252,8 @@
   <div class="scTitle">画地为牢</div>
   <div class="scSub" id="eStat">称号 · 一路在放手</div>
   <div class="scScore">
-    <div class="num" id="eKept">14</div><div class="lab">样圈住</div>
-    <div class="num" id="eLeft">12</div><div class="lab">样放手</div>
+    <div class="stat"><div class="num" id="eKept">14</div><div class="lab">样圈住</div></div>
+    <div class="stat"><div class="num" id="eLeft">12</div><div class="lab">样放手</div></div>
     <div class="of" id="eOf">共 26 样</div>
   </div>
   <div class="scYears" id="eYears"></div>
@@ -260,7 +273,7 @@
     "title": "宿舍",
     "rope": 1120,
     "need": 3,
-    "line": "那年夏天，你们住同一间宿舍。<br>一个拿了冠军，一个拿了季军。",
+    "line": "那年夏天，她们住同一间宿舍。<br>一个拿了冠军，一个拿了季军。",
     "objs": [
       {
         "x": 310,
@@ -299,7 +312,7 @@
     "title": "台上台下",
     "rope": 1060,
     "need": 3,
-    "line": "三句话，两千一百层楼。<br>谁也没想到，这一烧就是小半年。",
+    "line": "三句话。<br>原帖已删，只剩截图。",
     "objs": [
       {
         "x": 330,
@@ -377,7 +390,7 @@
     "title": "麦克风前",
     "rope": 820,
     "need": 2,
-    "line": "那天台上，你问了一句。<br>有些东西，从那以后就没再回来。",
+    "line": "那天台上，她问了一句。<br>有些东西，从那以后就没再回来。",
     "objs": [
       {
         "x": 380,
@@ -416,7 +429,7 @@
     "title": "四千米",
     "rope": 740,
     "need": 2,
-    "line": "海拔四千米，她说：<br>我是被宣判的人，我画地为牢。",
+    "line": "海拔四千米，许飞说：<br>我是被宣判的人。我画地为牢，厉娜。",
     "objs": [
       {
         "x": 390,
@@ -495,8 +508,38 @@ const els = {
   eOf:$('eOf'), eYears:$('eYears'), btnAgain:$('btnAgain'), btnCopy:$('btnCopy'),
 };
 
-/* ══════════════════ 声音：全部现场合成，不加载任何文件 ══════════════════ */
-let AC = null, master = null, soundOn = true, noiseBuf = null, lastScratch = 0;
+/* ══════════════════ 声音：全部现场合成，不加载任何文件 ══════════════════
+   两层总线：
+     master   0.62  音效（落笔 / 封口 / 失败 / 按钮）
+     musicOut 0.18  配乐主输出 —— 进游戏后 1.2s 线性淡入，绝不突然出声
+   两路都先过 muteGate（M 键 / 屏幕按钮，状态存 localStorage）。
+
+   配乐：A 小调主题 A4 C5 E5 D5 C5 B4 A4 G4，60 BPM，八分音符一步。
+   六站共用这一句，但每站抽掉一些音、换配器：越往后越薄，最后一站只剩尾巴。
+   ══════════════════════════════════════════════════════════════ */
+const SOUND_KEY = 'buxiache-draw.sound';
+const MUSIC_LEVEL = 0.18;      // 配乐主输出默认值
+const LOOKAHEAD = 0.12;        // 前瞻排程窗口（秒）
+const TEMPO = 60;
+const BEAT = 60 / TEMPO;       // 1 秒
+const STEP = BEAT / 2;         // 八分音符 = 0.5 秒
+const MOTIF = [69, 72, 76, 74, 72, 71, 69, 67];   // A4 C5 E5 D5 C5 B4 A4 G4
+
+let AC = null, master = null, musicOut = null, muteGate = null;
+let soundOn = true, noiseBuf = null, lastScratch = 0;
+let musicTimer = null, musicFaded = false, pendingIdx = 0;
+const scenes = [];
+const musicStats = { notes:0, bars:0 };
+
+/* ── localStorage：读写都兜底，file:// 或测试桩里不会炸 ── */
+function lsGet(k){
+  try { return (typeof localStorage !== 'undefined') ? localStorage.getItem(k) : null; }
+  catch(_){ return null; }
+}
+function lsSet(k, v){
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); } catch(_){}
+}
+try { if (lsGet(SOUND_KEY) === '0') soundOn = false; } catch(_){}
 
 function audioCtx(){
   if (AC) return AC;
@@ -504,17 +547,270 @@ function audioCtx(){
   if (!Ctor) return null;
   try {
     AC = new Ctor();
+    muteGate = AC.createGain();
+    muteGate.gain.value = soundOn ? 1 : 0.0001;
+    muteGate.connect(AC.destination);
     master = AC.createGain();
     master.gain.value = 0.62;
-    master.connect(AC.destination);
+    master.connect(muteGate);
+    musicOut = AC.createGain();
+    musicOut.gain.value = 0;      // 等第一次手势后再淡入
+    musicOut.connect(muteGate);
   } catch(_){ AC = null; }
   return AC;
+}
+function ensureNoise(){
+  if (!AC) return null;
+  if (!noiseBuf){
+    const n = Math.floor(AC.sampleRate * 0.4);
+    noiseBuf = AC.createBuffer(1, n, AC.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i=0;i<n;i++) d[i] = Math.random()*2 - 1;
+  }
+  return noiseBuf;
 }
 function unlockAudio(){
   if (!soundOn) return;
   const a = audioCtx();
-  if (a && a.state === 'suspended'){ try { a.resume(); } catch(_){} }
+  if (!a) return;
+  if (a.state === 'suspended'){ try { a.resume(); } catch(_){} }
+  // 主输出 0 → 0.18，1.2 秒线性淡入（只做一次）
+  if (!musicFaded){
+    musicFaded = true;
+    const t = a.currentTime;
+    try {
+      musicOut.gain.cancelScheduledValues(t);
+      musicOut.gain.setValueAtTime(0, t);
+      musicOut.gain.linearRampToValueAtTime(MUSIC_LEVEL, t + 1.2);
+    } catch(_){}
+  }
+  musicStart();
 }
+function applyMute(){
+  if (!AC || !muteGate) return;
+  const t = AC.currentTime, g = muteGate.gain;
+  try {
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(soundOn ? 1 : 0.0001, t + (soundOn ? 0.25 : 0.08));
+  } catch(_){}
+}
+
+/* ── 四件乐器：全部现场合成 ── */
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+function pianoNote(freq, t, vel, out, dur){
+  if (!AC || !out || vel <= 0) return;
+  try {
+    const env = AC.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(vel, t + 0.004);          // attack 0.004s
+    env.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.9));  // decay 0.9s
+    env.connect(out);
+    const s = AC.createOscillator(); s.type = 'sine'; s.frequency.value = freq;
+    const tr = AC.createOscillator(); tr.type = 'triangle';
+    tr.frequency.value = freq; tr.detune.value = 4;
+    const tg = AC.createGain(); tg.gain.value = 0.34;
+    s.connect(env); tr.connect(tg); tg.connect(env);
+    s.start(t); tr.start(t);
+    s.stop(t + (dur || 0.9) + 0.05); tr.stop(t + (dur || 0.9) + 0.05);
+  } catch(_){}
+}
+function boxNote(freq, t, vel, out){
+  if (!AC || !out || vel <= 0) return;
+  try {
+    const env = AC.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(vel, t + 0.003);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);   // 极短包络 0.25s
+    env.connect(out);
+    const a = AC.createOscillator(); a.type = 'sine'; a.frequency.value = freq;
+    const b = AC.createOscillator(); b.type = 'sine'; b.frequency.value = freq * 2;
+    const bg = AC.createGain(); bg.gain.value = 0.2;            // 一点高八度泛音
+    a.connect(env); bg.connect(env);
+    b.connect(bg);
+    a.start(t); b.start(t); a.stop(t + 0.3); b.stop(t + 0.3);
+  } catch(_){}
+}
+function padChord(notes, t, dur, vel, out){
+  if (!AC || !out || vel <= 0) return;
+  try {
+    const filter = AC.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 900; filter.Q.value = 0.6;
+    const env = AC.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(vel, t + 0.6);            // 慢 attack 0.6s
+    env.gain.setValueAtTime(vel, t + dur);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur + 1.6);
+    filter.connect(env); env.connect(out);
+    for (const m of notes){
+      for (const det of [-6, 6]){
+        const o = AC.createOscillator(); o.type = 'sawtooth';
+        o.frequency.value = mtof(m); o.detune.value = det;
+        const g = AC.createGain(); g.gain.value = 1 / (notes.length * 2);
+        o.connect(g); g.connect(filter);
+        o.start(t); o.stop(t + dur + 1.7);
+      }
+    }
+  } catch(_){}
+}
+function kickDrum(t, vel, out){
+  if (!AC || !out || vel <= 0) return;
+  try {
+    const o = AC.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.17);    // 120 → 45Hz
+    const env = AC.createGain();
+    env.gain.setValueAtTime(vel, t);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(env); env.connect(out);
+    o.start(t); o.stop(t + 0.32);
+  } catch(_){}
+}
+function tickDrum(t, vel, freq, out){
+  const buf = ensureNoise();
+  if (!AC || !out || !buf || vel <= 0) return;
+  try {
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const f = AC.createBiquadFilter(); f.type = 'bandpass';
+    f.frequency.value = freq || 2200; f.Q.value = 1.4;
+    const env = AC.createGain();
+    env.gain.setValueAtTime(vel, t);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+    src.connect(f); f.connect(env); env.connect(out);
+    src.start(t); src.stop(t + 0.08);
+  } catch(_){}
+}
+
+/* ── 六站的配器。主题不动，只动“留下多少音”和“谁在说” ──
+   masks 每小节换一条（1 = 这一句里的这个音要发声）。 */
+const FULL = [1,1,1,1,1,1,1,1];
+const SOFT = [1,0,1,1,0,1,1,1];
+const HALF = [1,0,1,0,0,1,0,1];
+const TAIL = [0,0,0,0,0,0,1,1];
+const NONE = [0,0,0,0,0,0,0,0];
+
+const ARR = [
+  { // 2006 宿舍：音乐盒 + 弦垫，没有鼓 —— 夏天是暖的
+    lead:'box', leadOct:12, leadVel:.16,
+    masks:[FULL, FULL, SOFT, HALF],
+    pad:{ chords:[[57,60,64],[53,57,60],[55,60,64],[55,59,62]], every:2, vel:.13 },
+    bass:{ notes:[45,41,48,43], every:2, vel:.12 },
+  },
+  { // 2007 台上台下：钢琴接过主题，心跳一样的低鼓 + 很轻的噪声
+    lead:'piano', leadOct:0, leadVel:.20,
+    masks:[FULL, SOFT, FULL, HALF],
+    pad:{ chords:[[57,60,64],[53,57,60],[50,53,57],[52,56,59]], every:2, vel:.13 },
+    bass:{ notes:[45,41,38,40], every:2, vel:.12 },
+    kick:[.14,0,0,0,.09,0,0,0],
+    tick:[0,0,.03,0,0,0,.024,0], tickFreq:2300,
+  },
+  { // 2014 小场子：盒 + 琴一起，声音最小的一场，鼓只剩一下
+    lead:'both', leadOct:0, leadVel:.15,
+    masks:[SOFT, FULL, SOFT, HALF],
+    pad:{ chords:[[57,60,64],[53,57,60],[55,59,62],[55,60,64]], every:2, vel:.11 },
+    bass:{ notes:[45,41,43,48], every:2, vel:.10 },
+    kick:[.10,0,0,0,0,0,0,0],
+    tick:[0,.022,0,0,0,.022,0,0], tickFreq:2700,
+  },
+  { // 2020 麦克风前：克制。半句主题，四小节才换一次和声
+    lead:'piano', leadOct:0, leadVel:.16,
+    masks:[HALF, HALF, SOFT, HALF],
+    pad:{ chords:[[57,60,64],[53,57,60,64],[50,53,57],[52,56,59]], every:4, vel:.12 },
+    bass:{ notes:[45,41,38,40], every:4, vel:.11 },
+    tick:[.016,0,0,0,0,0,0,0], tickFreq:3300,
+  },
+  { // 2026 四千米：主题只剩碎片，高音盒像结冰
+    lead:'box', leadOct:12, leadVel:.11,
+    masks:[HALF, TAIL, HALF, TAIL],
+    pad:{ chords:[[57,60,64],[53,57,60,64]], every:4, vel:.10 },
+    bass:{ notes:[45,41], every:4, vel:.08 },
+    tick:[0,0,0,0,.012,0,0,0], tickFreq:3600,
+  },
+  { // ???? 牢：只剩主题的最后两个音、一下心跳、一个低音
+    lead:'piano', leadOct:0, leadVel:.14,
+    masks:[TAIL, NONE, TAIL, NONE],
+    pad:{ chords:[[45,52,57]], every:4, vel:.12 },
+    bass:{ notes:[33], every:4, vel:.09 },
+    kick:[.13,0,0,0,0,0,0,0],
+  },
+];
+
+function makeScene(idx, t0){
+  const bus = AC.createGain();
+  bus.gain.setValueAtTime(0.0001, t0);
+  bus.gain.linearRampToValueAtTime(1, t0 + 1.5);   // 1.5 秒交叉淡入
+  bus.connect(musicOut);
+  return { idx, bus, next:t0, step:0, bar:0, end:Infinity, killAt:Infinity, fading:false };
+}
+function fadeScene(sc, now){
+  if (sc.fading) return;
+  sc.fading = true; sc.end = now; sc.killAt = now + 1.75;
+  try {
+    const g = sc.bus.gain;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(Math.max(0.0001, g.value), now);
+    g.linearRampToValueAtTime(0.0001, now + 1.5);   // 1.5 秒淡出
+  } catch(_){}
+}
+function musicStart(){
+  if (!AC || musicTimer) return;
+  musicTimer = setInterval(musicTick, 25);          // 前瞻式：25ms 一次
+  scenes.push(makeScene(pendingIdx, AC.currentTime + 0.06));
+}
+function musicGo(idx){
+  pendingIdx = idx;
+  if (!AC || !musicTimer) return;
+  const now = AC.currentTime;
+  const last = scenes[scenes.length - 1];
+  if (last && last.idx === idx && !last.fading) return;
+  for (const sc of scenes) fadeScene(sc, now);
+  scenes.push(makeScene(idx, now + 0.03));
+}
+function scheduleStep(sc, t){
+  const cfg = ARR[sc.idx] || ARR[0];
+  const step = sc.step, bar = sc.bar;
+  const mask = cfg.masks[bar % cfg.masks.length];
+  const midi = MOTIF[step];
+  const vel = cfg.leadVel * (mask[step] || 0);
+  if (vel > 0){
+    if (cfg.lead === 'box' || cfg.lead === 'both')
+      boxNote(mtof(midi + cfg.leadOct), t, vel, sc.bus);
+    if (cfg.lead === 'piano' || cfg.lead === 'both')
+      pianoNote(mtof(midi + cfg.leadOct), t, cfg.lead === 'both' ? vel * 0.55 : vel, sc.bus);
+  }
+  if (step === 0){
+    if (bar % cfg.pad.every === 0){
+      const chord = cfg.pad.chords[(bar / cfg.pad.every) % cfg.pad.chords.length];
+      padChord(chord, t, BEAT * 4 * cfg.pad.every, cfg.pad.vel, sc.bus);
+    }
+    if (cfg.bass && bar % cfg.bass.every === 0){
+      const n = cfg.bass.notes[(bar / cfg.bass.every) % cfg.bass.notes.length];
+      pianoNote(mtof(n), t, cfg.bass.vel, sc.bus, 2.4);
+    }
+  }
+  if (cfg.kick && cfg.kick[step]) kickDrum(t, cfg.kick[step], sc.bus);
+  if (cfg.tick && cfg.tick[step]) tickDrum(t, cfg.tick[step], cfg.tickFreq, sc.bus);
+  musicStats.notes++;
+  if (step === 0) musicStats.bars++;
+}
+function musicTick(){
+  if (!AC) return;
+  const now = AC.currentTime, horizon = now + LOOKAHEAD;
+  for (const sc of scenes){
+    if (sc.next < now - 0.3) sc.next = now + 0.01;   // 掉帧后追上，不补一长串
+    let guard = 0;
+    while (sc.next < horizon && sc.next < sc.end && guard++ < 8){
+      scheduleStep(sc, sc.next);
+      sc.next += STEP;
+      sc.step++;
+      if (sc.step >= 8){ sc.step = 0; sc.bar++; }
+    }
+  }
+  for (let i = scenes.length - 1; i >= 0; i--) if (now > scenes[i].killAt) scenes.splice(i, 1);
+}
+
+/* ── 音效：走 master（0.62），和配乐分开 ── */
 function tone(freq, dur, type, gain, delay, slideTo){
   if (!soundOn || !AC) return;
   const t0 = AC.currentTime + (delay || 0);
@@ -531,13 +827,9 @@ function tone(freq, dur, type, gain, delay, slideTo){
 function noiseBurst(dur, freq, q, gain, delay, type){
   if (!soundOn || !AC) return;
   try {
-    if (!noiseBuf){
-      const n = Math.floor(AC.sampleRate * 0.4);
-      noiseBuf = AC.createBuffer(1, n, AC.sampleRate);
-      const d = noiseBuf.getChannelData(0);
-      for (let i=0;i<n;i++) d[i] = Math.random()*2 - 1;
-    }
-    const src = AC.createBufferSource(); src.buffer = noiseBuf;
+    const buf = ensureNoise();
+    if (!buf) return;
+    const src = AC.createBufferSource(); src.buffer = buf;
     const f = AC.createBiquadFilter(); f.type = type || 'bandpass';
     f.frequency.value = freq; f.Q.value = q || 1;
     const g = AC.createGain();
@@ -572,6 +864,21 @@ function sfxFail(){
 function vibrate(p){
   try { if (navigator.vibrate) navigator.vibrate(p); } catch(_){}
 }
+
+/* 首屏：按钮先按存档显示；AudioContext 等第一次手势再建 */
+els.snd.textContent = soundOn ? '声音 · 开' : '声音 · 关';
+els.snd.classList.toggle('off', !soundOn);
+try { if (els.snd.setAttribute) els.snd.setAttribute('aria-pressed', String(soundOn)); } catch(_){}
+
+/* 给自动化测试 / 耳朵之外的验收用 */
+window.__audio = {
+  getState: () => AC ? {
+    ctx: AC.state, master: musicOut ? musicOut.gain.value : 0,
+    muted: !soundOn, notes: musicStats.notes, bars: musicStats.bars,
+    scenes: scenes.map(s => ({ idx:s.idx, gain:s.bus.gain.value, fading:s.fading })),
+  } : { ctx:null, master:0, muted:!soundOn, notes:0, bars:0, scenes:[] },
+  motif: MOTIF.slice(), tempo: TEMPO, level: MUSIC_LEVEL, lookahead: LOOKAHEAD,
+};
 
 /* ══════════════════ 视图 ══════════════════
    不再固定把 1000×1000 的盘塞进屏幕：每一关按本关物件的包围盒
@@ -651,7 +958,9 @@ function fitView(){
     const d = Math.hypot(L.objs[i].x - L.objs[j].x, L.objs[i].y - L.objs[j].y) * s;
     if (d < md) md = d;
   }
-  G.objR = Math.max(15, Math.min(OBJ_R, md*0.42));
+  // 320 宽的纸很窄：圈放大到 28 会压到纸边，窄屏退回 24
+  const maxR = safe.w < 360 ? 24 : OBJ_R;
+  G.objR = Math.max(15, Math.min(maxR, md*0.42));
   planGhosts();
 }
 
@@ -676,12 +985,14 @@ function planGhosts(){
   const maxdx = Math.max(...rel.map(r => Math.abs(r.dx))) || 1;
   const maxdy = Math.max(...rel.map(r => Math.abs(r.dy))) || 1;
   const ax = Math.max(80, safe.w/2 - 38), ay = Math.max(80, safe.h/2 - 38);
-  const k = Math.min(.64, ax/maxdx, ay/maxdy);
+  const k = Math.min(.80, ax/maxdx, ay/maxdy);
 
   let pts = rel.map(r => ({ o:r.o, x:view.cx + r.dx*k, y:view.cy + r.dy*k }));
   // 中心留白：不让旧物件压住“你自己”和它的名字
-  const voidR = Math.min(104, Math.max(70, Math.min(ax, ay)*.42));
-  pts = pts.filter(q => Math.hypot(q.x - view.cx, q.y - view.cy) > voidR);
+  // 留白要留到“你自己”那行名字下面：圈的半径 24，只留 70 会让圈压住字
+  const voidR = Math.min(126, Math.max(92, Math.min(ax, ay)*.44));
+  pts = pts.filter(q => Math.hypot(q.x - view.cx, q.y - view.cy) > voidR &&
+    !(Math.abs(q.x - view.cx) < 62 && q.y > view.cy + 16 && q.y < view.cy + 70));
 
   const gap = 60;
   for (let it = 0; it < 40; it++){
@@ -733,6 +1044,9 @@ const G = {
   sealT:0, failT:0, dim:0, flash:0, flashBad:false, flashX:0, flashY:0,
   shake:0, particles:[], ripples:[], motes:[],
   hover:{x:0, y:0, on:false},
+  // 实时“圈到谁” / 失败浮字
+  liveIn:[], enough:false,
+  failMsg:'', failMsgT:0, failMsgX:0, failMsgY:0,
 };
 
 /* ══════════════════ 几何 ══════════════════ */
@@ -789,6 +1103,23 @@ function seedMotes(w, h){
 }
 
 /* ══════════════════ 关卡 ══════════════════ */
+/* 每站的时代色：染 HUD、绳长、光池和背景水印；纸的温度也跟着变 */
+const ACCENTS = ['#ffc98a','#ff9e8a','#d5c489','#b9c6d8','#a9d2dc','#cec1ad'];
+const ACCENT_RGB = ACCENTS.map(c => [
+  parseInt(c.slice(1,3), 16), parseInt(c.slice(3,5), 16), parseInt(c.slice(5,7), 16),
+]);
+function accentRGB(){ return ACCENT_RGB[G.idx] || ACCENT_RGB[0]; }
+// 纸的温度也换：不是六种配色，是同一张纸在六个年代的光
+const PAPER_STOPS = [
+  ['#2e251b','#1d1813','#14110d','#0a0908'],  // 2006 夏天
+  ['#2f241e','#1e1814','#14110e','#0a0807'],  // 2007 台上
+  ['#2b281d','#1c1913','#13110d','#090908'],  // 2014 小场
+  ['#23262b','#191b1f','#121416','#08090a'],  // 2020 冷灯
+  ['#22292e','#181d21','#111517','#080a0b'],  // 2026 雪线
+  ['#272524','#1c1a19','#131211','#090808'],  // ???? 牢
+];
+function paperStops(){ return PAPER_STOPS[G.idx] || PAPER_STOPS[0]; }
+
 function loadLevel(i){
   G.idx = i;
   const L = LEVELS[i];
@@ -796,16 +1127,19 @@ function loadLevel(i){
   G.path = []; G.drawing = false; G.len = 0; G.turn = 0; G.over = false;
   G.area = 0; G.inside = []; G.sealedAt = 0; G.sealPulse = 0;
   G.sealT = 0; G.failT = 0; G.dim = 0; G.flash = 0; G.shake = 0;
-  G.nearStart = false; G.speed = 0;
+  G.nearStart = false; G.speed = 0; G.liveIn = []; G.enough = false;
+  G.failMsg = ''; G.failMsgT = 0;
   G.particles.length = 0; G.ripples.length = 0;
   G.toastT = 0; els.toast.classList.remove('on'); els.toast.classList.remove('bad');
   els.year.textContent = L.year;
   els.sub.textContent = `第 ${i+1} 站 / ${LEVELS.length}`;
+  try { document.documentElement.style.setProperty('--accent', ACCENTS[i] || ACCENTS[0]); } catch(_){}
   G.needAt = 0;
   syncNeed();
   els.hint.classList.remove('gone');
   syncHud();
   fitView();
+  musicGo(i);          // 换站：1.5 秒交叉淡入，不硬切
 }
 function syncHud(){
   const k = Math.max(0, G.rope/G.ropeFull);
@@ -834,9 +1168,10 @@ function syncNeed(){
     return;
   }
   els.need.classList.remove('ok');
+  G.enough = false;
   if (G.drawing && G.path.length > 5 && G.len > 90){
     const d = L.need - insideCount(G.path);
-    if (d <= 0){ els.need.classList.add('ok'); els.need.innerHTML = '够了 · 松手封口'; }
+    if (d <= 0){ G.enough = true; els.need.classList.add('ok'); els.need.innerHTML = '够了 · 松手封口'; }
     else els.need.innerHTML = `还差 <b>${d}</b> 样`;
   } else {
     els.need.innerHTML = `还需圈住 <b>${L.need}</b> 样`;
@@ -889,7 +1224,8 @@ function startStroke(x, y){
   const p = toWorld(x, y);
   G.path = [{x:p.x, y:p.y, w:.55}];
   G.drawing = true; G.over = false; G.len = 0; G.turn = 0;
-  G.rope = G.ropeFull; G.area = 0; G.inside = [];
+  G.rope = G.ropeFull; G.area = 0; G.inside = []; G.liveIn = []; G.enough = false;
+  G.failMsgT = 0;
   G.nearStart = false; G.lastMove = Date.now(); G.lastEmit = G.t; G.needAt = 0;
   els.hint.classList.add('gone');
   syncHud();
@@ -967,13 +1303,45 @@ function endStroke(){
     fail('没接上');
   } else {
     G.path = []; G.rope = G.ropeFull; G.len = 0; G.turn = 0;
+    G.liveIn = []; G.enough = false;
     G.nearStart = false; syncHud(); syncNeed(); els.hint.classList.remove('gone');
   }
 }
 function resetStroke(){
   G.path = []; G.drawing = false; G.rope = G.ropeFull;
   G.len = 0; G.turn = 0; G.over = false; G.nearStart = false; G.dim = 0;
+  G.liveIn = []; G.enough = false;
   syncHud(); syncNeed(); els.hint.classList.remove('gone');
+}
+/* 失败浮字放哪：圈的上 / 下 / 右 / 左四个空位里挑一个离物件最远的，
+   不要压在刚画的那一圈中间（那里正好是物件和名字）。 */
+function failAnchor(){
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const q of G.path){
+    const s = toScreen(q);
+    if (s.x < x0) x0 = s.x; if (s.x > x1) x1 = s.x;
+    if (s.y < y0) y0 = s.y; if (s.y > y1) y1 = s.y;
+  }
+  if (!isFinite(x0)) return { x:innerWidth/2, y:innerHeight/2 };
+  const mx = (x0+x1)/2, my = (y0+y1)/2;
+  const cands = [
+    { x:mx, y:y0-34 }, { x:mx, y:y1+42 },
+    { x:x1+100, y:my }, { x:x0-100, y:my },
+  ];
+  const L = LEVELS[G.idx];
+  let best = null, bs = Infinity;
+  for (const c of cands){
+    const x = Math.max(frame.x+95, Math.min(frame.x+frame.w-95, c.x));
+    const y = Math.max(safe.y+30, Math.min(innerHeight-165, c.y));
+    let sc = 0;
+    for (const o of L.objs){
+      const p = toScreen(o);
+      sc += Math.max(0, 150 - Math.hypot(p.x-x, p.y-y)) * 2.0;
+    }
+    if (c.y < safe.y+30 || c.y > innerHeight-165) sc += 260;
+    if (sc < bs){ bs = sc; best = { x, y }; }
+  }
+  return best || { x:innerWidth/2, y:innerHeight/2 };
 }
 function showToast(text, bad, dur){
   els.toast.textContent = text;
@@ -998,7 +1366,11 @@ function fail(msg){
                 Math.random()<.4 ? '#ff8f78' : '#c8614c', 60);
   }
   G.ripples.push({x:tip.x, y:tip.y, r0:8, r1:78, life:.45, max:.45, col:'rgba(255,110,90,.32)'});
-  showToast(msg, true, .85);
+  // 失败的话要出现在“你正在看的地方”：圈外最近的一块空地，而不是屏幕最下面
+  const anchor = failAnchor();
+  G.failMsg = msg; G.failMsgT = 1.35;
+  G.failMsgX = anchor.x; G.failMsgY = anchor.y;
+  // 只说一次：圈外那块空地上有字了，底部就不再重复一遍
   syncHud(); syncNeed();
   vibrate([12,40,12]);
   sfxFail();
@@ -1071,6 +1443,7 @@ function beginPlay(){
   els.card.classList.remove('on');
   document.body.classList.remove('card-open');
   G.state = 'play';
+  G.hover.on = false;       // 刚点完卡片的那一下不要留一个“幽灵笔尖”
   els.hint.classList.remove('gone');
   unlockAudio(); sfxCard();
 }
@@ -1136,24 +1509,61 @@ function drawBg(w, h){
   // 顶灯跟着本关物件的重心，画面重心才落得住
   const cx = view.cx || w/2, cy = view.cy || h*0.46;
   const R = Math.max(w, h);
+  const ps = paperStops();
   let g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R*0.84);
-  g.addColorStop(0, '#2e251b');
-  g.addColorStop(0.40, '#1d1813');
-  g.addColorStop(0.72, '#14110d');
-  g.addColorStop(1, '#0a0908');
+  g.addColorStop(0, ps[0]);
+  g.addColorStop(0.40, ps[1]);
+  g.addColorStop(0.72, ps[2]);
+  g.addColorStop(1, ps[3]);
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
 
   const flick = 0.92 + Math.sin(G.t*0.9)*0.016;
+  const [ar, ag, ab] = accentRGB();
   g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h)*0.68);
-  g.addColorStop(0, `rgba(255,172,96,${0.10*flick})`);
-  g.addColorStop(0.45, `rgba(255,150,80,${0.042*flick})`);
-  g.addColorStop(1, 'rgba(255,140,70,0)');
+  g.addColorStop(0, `rgba(${ar},${ag},${ab},${0.10*flick})`);
+  g.addColorStop(0.45, `rgba(${ar},${ag},${ab},${0.042*flick})`);
+  g.addColorStop(1, `rgba(${ar},${ag},${ab},0)`);
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
 
   g = ctx.createLinearGradient(0, 0, 0, h*0.42);
-  g.addColorStop(0, 'rgba(255,205,150,.035)');
-  g.addColorStop(1, 'rgba(255,205,150,0)');
+  g.addColorStop(0, `rgba(${ar},${ag},${ab},.035)`);
+  g.addColorStop(1, `rgba(${ar},${ag},${ab},0)`);
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, h*0.42);
+}
+
+/* 每一站的“大字水印”：把章节名写成一张压在纸里的淡字。
+   四字站名在窄屏拆成两行；末章只剩一个「牢」，放到最大。
+   它不抢物件，只是让每一站的空处也有话说。 */
+function drawWatermark(){
+  const L = LEVELS[G.idx];
+  if (!L || !safe.w) return;
+  const raw = G.idx === LEVELS.length - 1 ? '牢' : L.title;
+  const narrow = safe.w < 520;
+  const chars = [...raw];
+  const lines = (narrow && chars.length > 2)
+    ? [chars.slice(0, 2).join(''), chars.slice(2).join('')]
+    : [raw];
+  const longest = Math.max(...lines.map(t => [...t].length));
+  // 四字站名在桌面上会铺满整屏：把总宽收一点，让字是“底纹”不是“标题”
+  const fs = Math.min(safe.h * 0.42,
+                      (safe.w * (narrow ? 0.88 : 0.66)) / Math.max(1, longest),
+                      narrow ? 190 : 250);
+  if (!(fs > 20)) return;
+  const [ar, ag, ab] = accentRGB();
+  ctx.save();
+  const finalStation = G.idx === LEVELS.length - 1;
+  // 小屏上水印只有桌面的 1/3 宽，同样的不透明度会看不见：窄屏单独提一档
+  const wa = G.state === 'sealed'
+    ? (finalStation ? (narrow ? 0.056 : 0.045) : (narrow ? 0.040 : 0.028))
+    : (finalStation ? (narrow ? 0.096 : 0.080) : (narrow ? 0.062 : 0.045));
+  ctx.globalAlpha = wa;
+  ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
+  ctx.font = `400 ${Math.round(fs)}px "Songti SC","Noto Serif SC","Source Han Serif SC",STSong,SimSun,serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lh = fs * 1.02;
+  const y0 = view.cy - (lines.length - 1) * lh / 2;
+  lines.forEach((t, i) => ctx.fillText(t, view.cx, y0 + i * lh));
+  ctx.restore();
 }
 
 function drawGrid(alpha){
@@ -1163,7 +1573,8 @@ function drawGrid(alpha){
   const cell = Math.max(40, Math.min(54, Math.min(p.w, p.h)/14));
   const nx = Math.max(3, Math.round(p.w/cell)), ny = Math.max(3, Math.round(p.h/cell));
   ctx.save();
-  ctx.strokeStyle = `rgba(255,228,190,${alpha})`;
+  const [gr, gg2, gb] = accentRGB();
+  ctx.strokeStyle = `rgba(${gr},${gg2},${gb},${alpha})`;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let i=1;i<nx;i++){ const x = Math.round(p.x + p.w*i/nx) + .5; ctx.moveTo(x, p.y); ctx.lineTo(x, p.y+p.h); }
@@ -1177,12 +1588,13 @@ function drawPaperEdge(alpha){
   const p = frame;
   if (!p.w || !p.h || alpha <= 0) return;
   ctx.save();
-  ctx.strokeStyle = `rgba(255,214,170,${alpha})`;
+  const [er, eg, eb] = accentRGB();
+  ctx.strokeStyle = `rgba(${er},${eg},${eb},${alpha})`;
   ctx.lineWidth = 1;
   ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
 
   const t = 18;
-  ctx.strokeStyle = `rgba(255,214,170,${Math.min(.5, alpha*1.5)})`;
+  ctx.strokeStyle = `rgba(${er},${eg},${eb},${Math.min(.5, alpha*1.5)})`;
   [[p.x,p.y,1,1],[p.x+p.w,p.y,-1,1],[p.x,p.y+p.h,1,-1],[p.x+p.w,p.y+p.h,-1,-1]].forEach(([x,y,sx,sy])=>{
     ctx.beginPath();
     ctx.moveTo(x+sx*t, y); ctx.lineTo(x, y); ctx.lineTo(x, y+sy*t);
@@ -1199,10 +1611,11 @@ function drawBoard(pcx, pcy){
 
   // 光池：本关物件重心处提亮（范围收紧一点，纸面才有明暗）
   const R = Math.min(p.w, p.h) * 0.74;
+  const [ar, ag, ab] = accentRGB();
   let g = ctx.createRadialGradient(pcx, pcy, 10, pcx, pcy, R);
-  g.addColorStop(0, 'rgba(255,232,196,.078)');
-  g.addColorStop(0.45, 'rgba(255,220,180,.032)');
-  g.addColorStop(1, 'rgba(255,210,170,0)');
+  g.addColorStop(0, `rgba(${Math.min(255, ar + 24)},${Math.min(255, ag + 20)},${Math.min(255, ab + 18)},.074)`);
+  g.addColorStop(0.45, `rgba(${ar},${ag},${ab},.030)`);
+  g.addColorStop(1, `rgba(${ar},${ag},${ab},0)`);
   ctx.fillStyle = g; ctx.fillRect(p.x, p.y, p.w, p.h);
   ctx.restore();
 
@@ -1262,6 +1675,8 @@ function drawPath(P){
   const sealed = G.state === 'sealed' || G.dim > .02;
   const bad = G.over;
   const base = sealed ? 4.2 : 3.6;
+  // 绳子快用完了：线自己先变暖、变紧，不用等右上角的数字
+  const tight = !sealed && !bad && G.ropeFull > 0 && G.rope / G.ropeFull < 0.19;
 
   if (P.length === 1){
     ctx.save(); ctx.fillStyle = '#ffeccf';
@@ -1274,8 +1689,9 @@ function drawPath(P){
   ctx.globalCompositeOperation = 'lighter';
   traceLine(P);
   ctx.strokeStyle = bad ? 'rgba(255,80,60,.16)'
-                    : sealed ? 'rgba(255,178,110,.20)' : 'rgba(255,235,205,.10)';
-  ctx.lineWidth = sealed ? 18 : 12;
+                    : sealed ? 'rgba(255,178,110,.20)'
+                    : tight ? 'rgba(255,120,84,.20)' : 'rgba(255,235,205,.10)';
+  ctx.lineWidth = sealed ? 18 : (tight ? 15 : 12);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.stroke();
   ctx.restore();
@@ -1283,7 +1699,7 @@ function drawPath(P){
   // 主体（粗细随速度变化）
   ctx.save();
   ribbonPath(P, base);
-  ctx.fillStyle = bad ? 'rgba(255,126,102,.92)' : sealed ? '#ffd39c' : '#efe7d7';
+  ctx.fillStyle = bad ? 'rgba(255,126,102,.92)' : sealed ? '#ffd39c' : tight ? '#ffc9ab' : '#efe7d7';
   ctx.fill();
   const cap0 = base*(P[0].w||1)/2, capN = base*(P[P.length-1].w||1)/2;
   ctx.beginPath(); ctx.arc(P[0].x, P[0].y, cap0, 0, Math.PI*2); ctx.fill();
@@ -1296,19 +1712,22 @@ function drawPath(P){
   ctx.stroke();
   ctx.restore();
 
-  // 收口提示：虚线 + 起点环
+  // 收口提示：虚线 + 起点环；圈够了的时候起点环自己亮起来，等于说“可以松手了”
   if (!sealed && G.drawing && G.path.length > 4 && !G.over){
     const st = P[0], en = P[P.length-1];
     const near = G.nearStart;
+    const enough = G.enough;
     ctx.save();
-    ctx.setLineDash([5, 7]);
+    ctx.setLineDash(near || enough ? [] : [5, 7]);
     ctx.lineDashOffset = -G.t*10;
-    ctx.strokeStyle = near ? 'rgba(255,201,138,.8)' : 'rgba(255,201,138,.28)';
+    ctx.strokeStyle = near || enough ? 'rgba(255,201,138,.8)' : 'rgba(255,201,138,.28)';
     ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(en.x, en.y); ctx.lineTo(st.x, st.y); ctx.stroke();
     ctx.setLineDash(near ? [] : [3, 5]);
-    ctx.strokeStyle = near ? 'rgba(255,214,160,.95)' : 'rgba(255,201,138,.4)';
-    ctx.beginPath(); ctx.arc(st.x, st.y, near ? 11 + Math.sin(G.t*6)*1.6 : 9, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = near || enough ? 'rgba(255,214,160,.95)' : 'rgba(255,201,138,.4)';
+    // 圈够了只亮一个小环；真正回到起点了才叠第二圈，避免和物件自己的圈叠成一团
+    ctx.beginPath(); ctx.arc(st.x, st.y, near ? 11 + Math.sin(G.t*6)*1.6
+                                      : enough ? 10 + Math.sin(G.t*6)*1.2 : 9, 0, Math.PI*2); ctx.stroke();
     if (near){
       ctx.setLineDash([]);
       ctx.strokeStyle = 'rgba(255,214,160,.35)';
@@ -1403,6 +1822,9 @@ function planLabels(pts, ref, states, rope){
         box.x += ux*k; box.y += uy*k; lx += ux*k; ly += uy*k;
       }
       let sc = c * 4;                                   // 越靠前的方向越优先
+      // 名字离自己的圈越远，越像在说别人：每多 1px 收一点分（不会压过出纸边的 500）
+      const ownGap = boxGap(box, p.x, p.y);
+      sc += Math.max(0, ownGap - (R + CLEAR)) * 0.55;
       if (box.x < frame.x + 6 || box.x + box.w > frame.x + frame.w - 6 ||
           box.y < frame.y + 6 || box.y + box.h > frame.y + frame.h - 6) sc += 500;
       for (let j = 0; j < pts.length; j++){
@@ -1423,7 +1845,7 @@ function planLabels(pts, ref, states, rope){
       const pad = { x:box.x-12, y:box.y-6, w:box.w+24, h:box.h+12 };
       for (const b of boxes) sc += area(pad, b) * 2.2;
       if (ropeHit){ const h = ropeHit(box); if (h) sc += 26 + h*8; }   // 线从字里穿过去
-      if (sc < bestScore){ bestScore = sc; best = { x:lx, y:ly, align, box }; }
+      if (sc < bestScore){ bestScore = sc; best = { x:lx, y:ly, align, box, lead: ownGap > R + 9 }; }
     }
     boxes.push(best.box);
     out.push(best);
@@ -1431,15 +1853,17 @@ function planLabels(pts, ref, states, rope){
   return out;
 }
 
-const OBJ_R = 24;
+const OBJ_R = 28;
 
 function drawObj(o, state, idx, lab, sp){
   const sx = sp ? sp.x : o.x*view.s + view.ox;
   const sy = sp ? sp.y : o.y*view.s + view.oy;
-  const r = sp ? OBJ_R : G.objR;
-  const col = state === 'kept' ? '#ffd7a6' : state === 'live' ? '#f2ebdc'
-            : state === 'ghost' ? '#ffffff' : '#9d9382';
-  const alpha = state === 'left' ? .62 : state === 'ghost' ? .16 : 1;
+  const r = sp ? (state === 'ghost' ? 24 : OBJ_R) : G.objR;
+  const col = state === 'kept' ? '#ffd7a6' : state === 'in' ? '#ffe0b0'
+            : state === 'live' ? '#f2ebdc'
+            : state === 'ghost' ? '#e6d9c2' : '#9d9382';
+  const alpha = state === 'left' ? .62 : state === 'ghost' ? .10
+              : (state === 'live' && G.drawing ? .86 : 1);
 
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -1450,26 +1874,61 @@ function drawObj(o, state, idx, lab, sp){
     const dt = G.sealT - idx*.085;
     if (dt > 0 && dt < .65) glow = 1 - dt/.65;
   }
-  if (state === 'live' || state === 'kept'){
-    const hr = 50 + glow*30;
+  if (state === 'in'){
+    // 还在画的时候，圈里的东西先亮起来 —— 手指下面看得见“已经圈到谁”
+    const pulse = .16 + Math.sin(G.t*3.2 + idx)*.035;
+    const hr = 56;
     const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, hr);
-    g.addColorStop(0, state === 'kept' ? `rgba(255,180,110,${.17 + glow*.42})` : 'rgba(255,220,180,.055)');
+    g.addColorStop(0, `rgba(255,201,138,${pulse})`);
+    g.addColorStop(1, 'rgba(255,190,120,0)');
+    ctx.fillStyle = g; ctx.fillRect(sx-hr, sy-hr, hr*2, hr*2);
+  }
+  if (state === 'live' || state === 'kept'){
+    const isFinal = G.idx === LEVELS.length - 1;
+    const hr = (isFinal ? 130 : 50) + glow*30;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, hr);
+    g.addColorStop(0, state === 'kept' ? `rgba(255,180,110,${.17 + glow*.42})`
+              : isFinal ? 'rgba(255,214,160,.13)' : 'rgba(255,220,180,.055)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.fillRect(sx-hr, sy-hr, hr*2, hr*2);
   }
 
-  if (state === 'kept'){
-    ctx.shadowColor = '#ffb36b'; ctx.shadowBlur = 16;
+  if (state === 'kept' || state === 'in'){
+    ctx.shadowColor = '#ffb36b'; ctx.shadowBlur = state === 'in' ? 13 : 16;
   }
   // 一个环就够：原来外面那圈同心环像扫描仪的准星
-  const breathe = state === 'live' ? 1 + Math.sin(G.t*1.6 + idx)*.03 : 1;
+  const breathe = state === 'in' ? 1 + Math.sin(G.t*3.2 + idx)*.035
+                : state === 'live' ? 1 + Math.sin(G.t*1.6 + idx)*.03 : 1;
   ctx.strokeStyle = col;
-  ctx.lineWidth = state === 'kept' ? 1.5 : 1.1;
+  ctx.lineWidth = state === 'kept' ? 1.5 : state === 'in' ? 1.7 : 1.1;
   ctx.beginPath(); ctx.arc(sx, sy, r*breathe, 0, Math.PI*2); ctx.stroke();
   ctx.shadowBlur = 0;
 
+  // 名字被挤远时补一条极细的墨线：五件东西挤在一起，光靠“离得最近”会认错
+  if (state !== 'ghost' && lab && lab.lead && lab.box){
+    const b = lab.box;
+    const qx = Math.max(b.x, Math.min(sx, b.x + b.w));
+    const qy = Math.max(b.y, Math.min(sy, b.y + b.h));
+    let dx = qx - sx, dy = qy - sy;
+    const dd = Math.hypot(dx, dy) || 1;
+    dx /= dd; dy /= dd;
+    const x0 = sx + dx*(r + 2), y0 = sy + dy*(r + 2);
+    const x1 = qx - dx*2, y1 = qy - dy*2;
+    if (Math.hypot(x1-x0, y1-y0) > 3){
+      ctx.save();
+      ctx.strokeStyle = state === 'kept' || state === 'in'
+        ? 'rgba(255,201,138,.58)' : state === 'left'
+        ? 'rgba(190,179,155,.32)' : 'rgba(205,193,170,.46)';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath(); ctx.arc(x0, y0, 1.6, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   ctx.fillStyle = col;
-  ctx.font = `${Math.max(15, Math.round(r*.76))}px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
+  ctx.font = `${Math.max(16, Math.round(r*.8))}px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(o.ch, sx, sy + 1);
 
@@ -1489,7 +1948,8 @@ function drawObj(o, state, idx, lab, sp){
     ctx.globalAlpha = alpha * .98;
     // 放手的名字原来用 #a89d8a 再乘 .62，落到 3.3:1 —— 13px 这样太淡了，
     // 提一档到 ~4.5:1：圈和字形继续退到暗面，但“你放手了什么”要读得出来
-    ctx.fillStyle = state === 'kept' ? '#ffd9a3' : state === 'left' ? '#d4c9b3' : '#e4d8c2';
+    ctx.fillStyle = state === 'kept' || state === 'in' ? '#ffd9a3'
+                  : state === 'left' ? '#d4c9b3' : '#e4d8c2';
     ctx.fillText(o.name, lx, ly);
   }
   ctx.restore();
@@ -1572,6 +2032,7 @@ function draw(){
     pcx = ax/G.inside.length; pcy = ay/G.inside.length;
   }
   drawBoard(pcx, pcy);
+  drawWatermark();          // 时代水印：把章节名淡淡压在纸里，空处也有话说
   drawMotes(w, h);
 
   const P = G.path.map(toScreen);
@@ -1592,8 +2053,12 @@ function draw(){
     // 否则按本关包围盒放大会把旧物件甩到屏幕外、压到 HUD 上
     for (const q of ghostPts) drawObj(q.o, 'ghost', 0, null, q);
   }
-  const sts = L.objs.map(o =>
-    G.state === 'sealed' ? (G.inside.indexOf(o) >= 0 ? 'kept' : 'left') : 'live');
+  const drawing = G.state === 'play' && G.drawing && G.path.length > 3;
+  const liveIn = drawing ? L.objs.map(o => inPoly(o, G.path)) : [];
+  G.liveIn = liveIn;
+  const sts = L.objs.map((o, i) =>
+    G.state === 'sealed' ? (G.inside.indexOf(o) >= 0 ? 'kept' : 'left')
+                         : (liveIn[i] ? 'in' : 'live'));
   const pts = L.objs.map(o => ({ x:o.x*view.s + view.ox, y:o.y*view.s + view.oy }));
   const labs = planLabels(pts, ref, sts, G.state === 'sealed' ? P : null);
   L.objs.forEach((o, i) => {
@@ -1650,6 +2115,31 @@ function draw(){
   vg.addColorStop(1, 'rgba(0,0,0,.30)');
   ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
 
+  // 失败的话浮在圈外最近的一块空地：眼睛在看圈，就不会漏掉屏幕最下面那行字
+  if (G.failMsgT > 0 && G.failMsg){
+    const k = Math.min(1, G.failMsgT / 0.3);
+    const rise = (1.35 - G.failMsgT) * 10;
+    const fx = G.failMsgX, fy = G.failMsgY - rise;
+    ctx.save();
+    ctx.globalAlpha = k;
+    // 一层很淡的暗晕：压在暖光或水印上也读得清，又不是一个 UI 盒子
+    const gg = ctx.createRadialGradient(fx, fy + 4, 0, fx, fy + 4, 105);
+    gg.addColorStop(0, 'rgba(10,8,6,.66)');
+    gg.addColorStop(.72, 'rgba(10,8,6,.34)');
+    gg.addColorStop(1, 'rgba(10,8,6,0)');
+    ctx.fillStyle = gg; ctx.fillRect(fx-112, fy-46, 224, 104);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.font = '600 17px "Songti SC","Noto Serif SC",STSong,SimSun,serif';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(9,7,5,.9)';
+    ctx.strokeText(G.failMsg, fx, fy);
+    ctx.fillStyle = '#ff8f78'; ctx.fillText(G.failMsg, fx, fy);
+    ctx.font = '13px "Songti SC","Noto Serif SC",STSong,SimSun,serif';
+    ctx.fillStyle = 'rgba(255,160,140,.82)';
+    ctx.fillText('这一笔重来', fx, fy + 24);
+    ctx.restore();
+  }
+
   // 纸边最后画：暗角压不掉的“画框”
   drawPaperEdge(.20 + .10*G.dim);
 }
@@ -1665,6 +2155,7 @@ function loop(ts){
     G.toastT -= dt;
     if (G.toastT <= 0) els.toast.classList.remove('on');
   }
+  if (G.failMsgT > 0) G.failMsgT = Math.max(0, G.failMsgT - dt);
   if (G.sealPulse > 0) G.sealPulse = Math.max(0, G.sealPulse - dt*1.6);
   if (G.state === 'sealed') G.dim = Math.min(1, G.dim + dt*4.5);
   else G.dim = Math.max(0, G.dim - dt*3);
@@ -1713,23 +2204,34 @@ window.addEventListener('pointermove', e => {
 
 function toggleSound(){
   soundOn = !soundOn;
+  lsSet(SOUND_KEY, soundOn ? '1' : '0');     // 状态存 localStorage，下次打开还是这个选择
+  if (AC) applyMute();
   if (soundOn){ unlockAudio(); sfxTick(); }
   els.snd.textContent = soundOn ? '声音 · 开' : '声音 · 关';
   els.snd.classList.toggle('off', !soundOn);
   try { if (els.snd.setAttribute) els.snd.setAttribute('aria-pressed', String(soundOn)); } catch(_){}
 }
+els.snd.addEventListener('pointerdown', e => {
+  // 点“声音”按钮时不要先触发全局 unlock：想静音的人不该先听到一声
+  if (e && e.stopPropagation) e.stopPropagation();
+});
 els.snd.addEventListener('click', e => {
   if (e && e.stopPropagation) e.stopPropagation();
   toggleSound();
 });
 
 window.addEventListener('keydown', e => {
+  // M 先处理：第一次打开就按 M 静音时，不能先 unlock 再静音（会漏一声）
+  if (e.key === 'm' || e.key === 'M'){ toggleSound(); return; }
+  unlockAudio();     // 第一次按键也算“用户手势”，之后才允许出声
   if (e.key === 'r' || e.key === 'R'){
     if (G.state === 'play'){ G.failId++; els.toast.classList.remove('on'); resetStroke(); }
   }
   if ((e.key === ' ' || e.key === 'Enter') && G.state === 'card'){ beginPlay(); }
-  if (e.key === 'm' || e.key === 'M'){ toggleSound(); }
 });
+
+// 第一次点击 / 按键才 resume AudioContext（浏览器自动播放策略）
+document.addEventListener('pointerdown', () => unlockAudio(), { passive:true });
 
 /* 章节卡：轻触继续 */
 els.card.addEventListener('click', () => { if (G.state === 'card') beginPlay(); });
@@ -1777,7 +2279,8 @@ requestAnimationFrame(loop);
 /* 供自动化测试使用 */
 window.__game = { G, LEVELS, polyArea, polyLen, inPoly, seal, loadLevel, beginPlay, shareText, finish, showCard, nextChapter,
   getView: () => ({ s:view.s, ox:view.ox, oy:view.oy, cx:view.cx, cy:view.cy }),
-  getFrame: () => ({ ...frame }), getSafe: () => ({ ...safe }), toScreen };
+  getFrame: () => ({ ...frame }), getSafe: () => ({ ...safe }), toScreen,
+  planLabels, failAnchor };
 </script>
 </body>
 </html>

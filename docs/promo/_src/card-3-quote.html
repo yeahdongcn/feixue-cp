@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分享卡 · 金句</title>
+<link rel="stylesheet" href="cards.css">
+<style>
+  .card{ --w:1080px; --h:1350px; --pad:118px; --qrs:132px; }
+  .inner{ padding-right:112px; }
+
+  .top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .k{ font-size:17px; letter-spacing:.3em; color:var(--dim2); }
+  .tag{ font-size:17px; letter-spacing:.22em; color:var(--gold); opacity:.78; }
+
+  .body{ flex:1; display:flex; flex-direction:column; justify-content:center; padding-bottom:26px; }
+
+  blockquote{
+    font-size:96px;
+    line-height:1.58;
+    letter-spacing:.015em;
+    color:var(--paper);
+    font-weight:400;
+  }
+  blockquote .nm{
+    display:block;
+    text-align:right;
+    color:var(--gold);
+    margin-top:6px;
+  }
+
+  .attr{ margin-top:66px; }
+  .attr .who{ font-size:26px; letter-spacing:.05em; color:#b3ab9d; }
+  .attr .when{ margin-top:12px; font-size:19px; letter-spacing:.1em; color:#7a7265; }
+  .after{
+    margin-top:40px; font-size:22px; line-height:1.8; letter-spacing:.02em;
+    color:var(--dim);
+  }
+  .after b{ font-weight:400; color:var(--fg); }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding-top:30px;
+    display:grid; grid-template-columns:1fr var(--qrs); column-gap:44px; align-items:center;
+  }
+  .url{ font-size:24px; letter-spacing:.06em; color:var(--dim); }
+  .sig{ margin-top:12px; font-size:16px; letter-spacing:.14em; color:#6f675b; }
+  .qr span{ font-size:17px; letter-spacing:.22em; text-align:right; color:#7a7265; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="inner">
+    <div class="top">
+      <span class="k">《不下车》· 各执一词</span>
+      <span class="tag">节 目 原 话</span>
+    </div>
+
+    <div class="body">
+      <blockquote>
+        我是被宣判的人，<br>
+        我能去哪儿啊。<br>
+        我画地为牢，<span class="nm">厉娜</span>
+      </blockquote>
+
+      <div class="attr">
+        <p class="who">—— 许飞，对厉娜说</p>
+        <p class="when">2026 年 10 月 · 海拔约四千米 · 悬崖小屋</p>
+      </div>
+
+      <p class="after">回屋以后，<b>厉娜</b>用 AI 查了这四个字是什么意思，然后点了麦当劳。</p>
+    </div>
+
+    <footer>
+      <div>
+        <p class="url">yeahdongcn.github.io/feixue-cp</p>
+        <p class="sig">四 个 网 页 小 游 戏 · 无 真 人 影 像</p>
+      </div>
+      <div class="qr">
+        <img src="qr-plate.png" alt="二维码">
+        <span>扫 码 玩</span>
+      </div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

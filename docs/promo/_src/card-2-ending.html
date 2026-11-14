@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分享卡 · 结局</title>
+<link rel="stylesheet" href="cards.css">
+<style>
+  .card{ --w:1080px; --h:1440px; --pad:96px; --qrs:132px; }
+
+  .k{ font-size:18px; letter-spacing:.3em; color:var(--dim2); display:flex; align-items:center; gap:16px; }
+  .k i{ display:block; width:30px; height:1px; background:var(--gold); opacity:.85; }
+
+  h1{
+    margin-top:48px;
+    font-size:96px; line-height:1.1; letter-spacing:.12em;
+    color:var(--paper); font-weight:400;
+  }
+  .sub{
+    margin-top:28px; font-size:24px; line-height:1.95;
+    letter-spacing:.04em; color:var(--dim);
+  }
+  .stat{
+    margin-top:26px; font-size:17px; letter-spacing:.18em; color:var(--dim2);
+  }
+  .stat b{ font-weight:400; color:var(--gold); opacity:.8; }
+
+  .head-rule{ margin-top:36px; }
+
+  .cols{
+    flex:1; position:relative;
+    display:grid; grid-template-columns:1fr 1fr; gap:0 76px;
+    padding-top:44px;
+  }
+  .cols::before{
+    content:""; position:absolute; left:50%; top:52px; bottom:112px;
+    width:1px; background:var(--line); transform:translateX(-.5px);
+  }
+  .col{ display:flex; flex-direction:column; }
+  .col + .col{ padding-left:76px; }
+  .who{
+    font-size:30px; letter-spacing:.2em; color:var(--paper); font-weight:400;
+  }
+  .note{
+    margin-top:14px; font-size:18px; letter-spacing:.14em; color:var(--dim2);
+  }
+  .col ul{ list-style:none; margin-top:38px; display:flex; flex-direction:column; gap:30px; }
+  .col li{ }
+  .yr{ display:block; font-size:15px; letter-spacing:.2em; color:var(--gold); opacity:.72; margin-bottom:9px; }
+  .col p{
+    font-size:24px; line-height:1.85; letter-spacing:.02em; color:#ddd7cb;
+  }
+  .col .gone{ color:var(--dim2); }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding-top:36px;
+    display:grid; grid-template-columns:1fr var(--qrs); column-gap:52px; align-items:end;
+  }
+  .close1{ font-size:23px; letter-spacing:.06em; color:var(--dim); }
+  .url-sm{ margin-top:24px; font-size:21px; letter-spacing:.08em; color:var(--dim); }
+  .close2{ margin-top:14px; font-size:38px; letter-spacing:.05em; color:var(--paper); }
+  .qr span{ font-size:17px; letter-spacing:.22em; text-align:right; color:#7a7265; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="inner">
+    <div class="k"><i></i>《不下车》· 第四个游戏</div>
+
+    <h1>各 执 一 词</h1>
+    <p class="sub">回到任何一年，重新决定当时的自己。<br>另一方不归你管——她的反应锁在档案里。</p>
+    <p class="stat">裂痕 <b>3</b>　·　沉默 <b>1</b>　·　没说出口 <b>2</b></p>
+    <div class="rule head-rule"></div>
+
+    <div class="cols">
+      <div class="col">
+        <h2 class="who">你 的 版 本</h2>
+        <p class="note">你做的选择 · 可以重来</p>
+        <ul>
+          <li><span class="yr">2006 · 夏</span><p>镜头扫过去的时候，<br>你们的手是握着的。</p></li>
+          <li><span class="yr">2007 · 冬</span><p>你说的是真话。<br>至少你自己这么认为。</p></li>
+          <li><span class="yr">2026 · 10</span><p>风把这句话吹散了。<br>她看着你，没有接。</p></li>
+        </ul>
+      </div>
+      <div class="col">
+        <h2 class="who">她 的 版 本</h2>
+        <p class="note">档案 · 不随你的选择改变</p>
+        <ul>
+          <li><span class="yr">2006 · 夏</span><p>她举起了手，说<br>「于公于私，于情于理」，<br>投给了你。</p></li>
+          <li><span class="yr">2007 · 冬</span><p>她认定是你说的。十九年，<br>她没有问过你一次。</p></li>
+          <li><span class="yr">2026 · 10</span><p>她回屋查了「画地为牢」，<br>然后点了麦当劳。</p></li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>
+      <div>
+        <p class="close1">两栏并排，不裁决。</p>
+        <p class="close2">你重来一百次，她还是她。</p>
+        <p class="url-sm">yeahdongcn.github.io/feixue-cp</p>
+      </div>
+      <div class="qr">
+        <img src="qr-plate.png" alt="二维码">
+        <span>扫 码 进 去</span>
+      </div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

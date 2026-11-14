@@ -65,8 +65,8 @@ async function npcGuard(){
   await say('','大屏幕切到后台：灯光很亮，两个人站在台口。');
   await say('','主持人问厉娜：你这一票，投给谁？标准是什么？');
   await say('','她没看镜头。');
-  await say('厉娜','于公于私，于情于理。');
-  await say('','然后她举起了许飞的手。');
+  await say('厉娜','于公于私，于情于理，投票给许飞。');
+  await say('','说完，她举起了许飞的手。');
   await say('','整条街都在叫。你也在叫，叫到听不见自己。');
   await say('','那天晚上回去，你在随身听里塞进了第一盘磁带。');
   await say('','你也不记得自己是什么时候录的。');
@@ -102,6 +102,12 @@ async function npcWhisper(){
   await say('','一个戴口罩的人站在路灯下。');
   await say('口罩人','你也想知道是谁说的，对吧。');
   await say('口罩人','我告诉你。');
+  await say('口罩人','厉娜说，是许飞说的。');
+  await say('口罩人','许飞说：我没有动机，也没有能力。');
+  await say('口罩人','再问许飞，她只松了一句：可能说过，不止我一个人接私活。');
+  await say('口罩人','没有录音，没有第三个人。只有这两句话，和一个人的七年。');
+  await say('','他说的每一句，都能在某个帖子里找到。');
+  await say('','可是没有一句，能拼成那天下午真正发生的事。');
   const ok = await battle('whisper', { flee:true, q:3, zdown:2 });
   if (ok){
     await say('','你说：我不知道。而且，我可能永远都不会知道。');
@@ -136,7 +142,9 @@ async function npcWorker(){
     await say('加班的人','你手机屏保是06年超女？');
     await say('','你赶紧按灭了屏幕。');
     await say('加班的人','我当年也投过。一条一块，我投了三十条。');
-    await say('加班的人','后来她消失了七年。你算过吗，七年是多少天。');
+    await say('加班的人','厉娜。后来她消失了七年。2007 年底，到 2014。');
+    await say('加班的人','为什么，谁也不敢说死。有人说是许飞。许飞不认。');
+    await say('加班的人','你算过吗，七年是多少天。');
     S.flags.worker1 = 1;
   } else {
     await say('加班的人','两千五百五十五天。');
@@ -169,9 +177,9 @@ async function npcMod(){
   if (c === 1){ S.qing += 2; await say('群管','……你打了多久？'); await say('','四十分钟。你一个字都没发出去。'); }
   if (c === 2){ S.qing += 3; await say('','486个人，一瞬间安静。'); await say('群管','挺好的。'); }
   S.flags.mod1 = 1;
-  await say('','那天晚上，另一个人的回应只有六个字。');
-  await say('厉娜','我们不说别人了，乖。');
-  await say('','就这一句。热搜上没人转。');
+  await say('','那天晚上，另一个人的名字也被刷上了热搜。');
+  await say('','她没有回应。一个字都没有。');
+  await say('','第二天，群里有人说：这样也好。');
   unlockTape('2026','2026 · 秋');
   S.flags.got2026 = 1;
   updateHUD();
@@ -194,6 +202,9 @@ async function npcStation(){
   await say('站姐','你也来啦。');
   await say('站姐','从今天早上六点开始，这儿已经站了四十多个人。');
   await say('站姐','她们待会儿从那个门出来。就那一个门。');
+  await say('站姐','收官那期，两个人谁都没下车。整季，就她们这一对。');
+  await say('站姐','悬崖小屋那晚，厉娜回屋用 AI 查了「画地为牢」是什么意思。');
+  await say('站姐','查完，点了一份麦当劳。');
   await say('站姐','你说，我要是把相机放下，我还能干什么？');
   const c = await choose(['继续拍。','把相机放下。']);
   if (c === 0){ S.zhi += 2; await say('站姐','对，拍。拍到没得拍为止。'); }
@@ -204,7 +215,10 @@ async function npcStation(){
 async function npcPasserby(){
   await say('路人','这节目真好看。');
   await say('路人','我妈都看哭了。她说这两个人怎么这么犟。');
-  await say('','你笑了笑，没解释。');
+  await say('路人','悬崖上那句你记得吗——「我是被宣判的人，我能去哪儿啊。」');
+  await say('','「我画地为牢，厉娜。」');
+  await say('','你记得。你甚至记得她说这句话时，风把她的头发吹到了哪一边。');
+  await say('','但你不确定，你记住的是她，还是那一刻的你自己。');
   await say('路人','哎，你说她们到底怎么了？');
   const c = await choose(['一个人说了什么。','什么都没发生。','我不知道。']);
   if (c === 2){ S.qing += 2; }
@@ -508,6 +522,7 @@ async function playIntro(){
 
 async function startGame(){
   if (started && !endingShown) return;   // 防双击
+  if (typeof MUSIC !== 'undefined') MUSIC.start();   // 用户第一次手势之后才出声
   el.title.classList.add('gone');
   resetGame();
   await playIntro();

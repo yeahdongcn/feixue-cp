@@ -353,8 +353,16 @@ function drawTile(g, t, X, Y, tx, ty, p, e){
     // 车辙：横穿整条马路，所以按行画、跨格连成一条
     if (ty === 15 || ty === 16) dot(0, 5, TS, 3, 'rgba(0,0,0,.14)');
     if (ty === 17) dot(0, 11, TS, 2, 'rgba(0,0,0,.10)');
-    // 中线（被雪盖掉一半，才像是深夜的街）
-    if (ty === 15 && (tx % 4 < 2)){
+    // 斑马线：广电门口正对着的那个路口。没有它，这四行马路就是一整屏空灰。
+    if (tx >= 18 && tx <= 25){
+      if (tx % 2 === 0){
+        dot(4, 0, 5, 16, 'rgba(238,240,244,.34)');
+        dot(4, 0, 5, 1, 'rgba(255,255,255,.10)');
+        if (amt > 0.2 && th(tx,ty,61) > .55) dot(4, 2+(th(tx,ty,62)*9|0), 5, 2, 'rgba(238,240,244,.12)');
+      }
+    }
+    // 中线（被雪盖掉一半，才像是深夜的街）；斑马线上不画中线
+    else if (ty === 15 && (tx % 4 < 2)){
       dot(2,7,12,2, '#b9a464');
       dot(2,7,5,1, sn2);
     }
@@ -895,7 +903,10 @@ function eraObjs(){
 
 /* ───────── 相机 / 渲染 ───────── */
 function updateCamera(){
-  const tx = P.x + 8 - CW/2, ty = P.y + 8 - CH/2;
+  /* 镜头往上抬 18px：这是一个「往前走」的游戏，玩家面朝北。
+     原来镜头把人钉在正中心，上半屏永远是空地；抬起来之后，楼、路灯、
+     门脸先入画，人站在画面下方三分之一——走廊感才成立。 */
+  const tx = P.x + 8 - CW/2, ty = P.y + 8 - CH/2 - 18;
   cam.x = clamp(tx, 0, MAPW*TS - CW);
   cam.y = clamp(ty, 0, MAPH*TS - CH);
 }
@@ -933,6 +944,11 @@ function render(dt){
     } else {
       drawObj(g, sx, sy, e.ref);
     }
+  }
+
+  // 可拾取物的信标：雪地里那盘 16px 的磁带原本几乎看不见
+  for (const o of OBJS){
+    if (o.type === 'tape' || o.type === 'door') drawBeacon(g, o.x - cam.x, o.y - cam.y, o.type);
   }
 
   drawLights(g, p);
@@ -1127,6 +1143,37 @@ function paintBackdrop(){
 function rgba(hex, a){
   const n = parseInt(hex.slice(1), 16);
   return 'rgba(' + (n>>16&255) + ',' + (n>>8&255) + ',' + (n&255) + ',' + a + ')';
+}
+
+/* 一件小东西躺在 320×180 的雪地里，玩家找不到不是玩家的问题。
+   信标只有三样东西：脚下一圈很淡的光池、一粒向上飘的光、头顶一个 3px 的箭头。
+   它必须看起来像「这个世界在呼吸」，不能像 UI 贴在画面上。 */
+function drawBeacon(g, x, y, type){
+  const t = performance.now();
+  const pulse = .5 + .5 * Math.sin(t / 680);
+  const cx = x + 8;
+  if (type === 'door'){
+    const bob = Math.sin(t / 520) * 1.6;
+    g.globalAlpha = .34 + .34 * pulse;
+    g.fillStyle = '#ffe6c0';
+    g.fillRect(Math.round(cx) - 2, Math.round(y - 24 + bob), 5, 1);
+    g.fillRect(Math.round(cx) - 1, Math.round(y - 23 + bob), 3, 1);
+    g.fillRect(Math.round(cx), Math.round(y - 22 + bob), 1, 1);
+    g.globalAlpha = 1;
+    return;
+  }
+  groundPool(g, cx, y + 17, 20, 7, '#ffd479', .09 + .07 * pulse);
+  const ry = y + 11 - ((t / 62) % 16);
+  g.globalAlpha = .10 + .45 * pulse;
+  g.fillStyle = '#fff2cc';
+  g.fillRect(Math.round(cx + Math.sin(t / 900) * 4), Math.round(ry), 1, 1);
+  g.globalAlpha = 1;
+  const bob = Math.sin(t / 420) * 1.4;
+  g.globalAlpha = .40 + .34 * pulse;
+  g.fillStyle = '#ffe6ae';
+  g.fillRect(Math.round(cx) - 1, Math.round(y - 8 + bob), 3, 1);
+  g.fillRect(Math.round(cx), Math.round(y - 7 + bob), 1, 1);
+  g.globalAlpha = 1;
 }
 
 function drawObj(g, x, y, o){
