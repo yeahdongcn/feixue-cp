@@ -100,24 +100,76 @@ console.log('\n— 版式 —');
   });
   chk(ok, '物件都在盘内、名字 ≤ 4 字');
 
-  const viewports = [[390,844,'iPhone 竖'],[768,1024,'iPad 竖'],[1440,900,'笔记本'],[1920,1080,'桌面']];
-  for (const [w,h,name] of viewports){
-    const s = Math.min(w*0.94, h*0.78) / 1000;
-    const ox = (w - 1000*s)/2, oy = (h - 1000*s)*0.52;
-    // HUD 区域（左侧 18px / 右侧 18px，顶部 60px）
-    const hudBottom = 72;
-    const overlap = oy < hudBottom;
-    // 物件在屏幕上的最小间距
-    let minPx = Infinity;
+  /* 和 index.html 的 layout() / fitView() 同一套算法：
+     纸边 = 整屏内缩 14/20px；安全区让开 HUD 和底部提示条；
+     物件包围盒等比放进安全区、居中。这里复算一遍，防止“改宽了圆圈又缩回四分之一”。 */
+  const MIN_SPAN = 360, OBJ_R = 24;
+  const frameOf = (w,h) => { const n = w <= 560, side = n ? 14 : 20;
+    return { x:side, y:n?12:16, w:w-side*2, h:h-(n?24:32) }; };
+  const safeOf = (w,h) => { const n = w <= 560, top = h < 520 ? 84 : 108, tb = n ? 110 : 84;
+    const inf = Math.max(n?12:30, (n?14:20)+6);
+    return { x:inf, y:top, w:w-inf*2, h:Math.max(120, h-top-(tb+46)), tb }; };
+  function fitOf(L, w, h){
+    let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity;
+    L.objs.forEach(o => { x0=Math.min(x0,o.x); y0=Math.min(y0,o.y); x1=Math.max(x1,o.x); y1=Math.max(y1,o.y); });
+    const sf = safeOf(w,h);
+    const padX = Math.min(46, Math.max(24, sf.w*.08));
+    const padY = Math.max(26, Math.min(38, sf.h*.07));
+    const bw = Math.max(x1-x0, MIN_SPAN), bh = Math.max(y1-y0, MIN_SPAN);
+    const s = Math.min((sf.w-padX*2)/bw, (sf.h-padY*2)/bh);
+    const cx = (x0+x1)/2, cy = (y0+y1)/2;
+    const sx = sf.x + sf.w/2 - cx*s, sy = sf.y + sf.h/2 - cy*s;
+    let md = Infinity;
+    for (let i=0;i<L.objs.length;i++) for (let j=i+1;j<L.objs.length;j++)
+      md = Math.min(md, Math.hypot(L.objs[i].x-L.objs[j].x, L.objs[i].y-L.objs[j].y)*s);
+    return { s, sf, md, ox:sx, oy:sy, objR: Math.max(15, Math.min(OBJ_R, md*0.42)),
+             box: { x0:x0*s+sx, y0:y0*s+sy, x1:x1*s+sx, y1:y1*s+sy } };
+  }
+
+  const viewports = [
+    [390,844,'iPhone 竖',true], [320,568,'小屏竖',true], [768,1024,'iPad 竖',true],
+    [1280,800,'桌面',true], [1920,1080,'大桌面',true], [844,390,'横屏',false],
+  ];
+  for (const [w,h,name,fills] of viewports){
+    const fr = frameOf(w,h), safe = safeOf(w,h);
+    const toastTop = h - (w <= 560 ? 112 : 84) - 24;   // toast 的上沿
+    let minS = Infinity, maxS = 0, worstGap = Infinity, bad2 = [];
     LEVELS.forEach(L => {
-      for (let i=0;i<L.objs.length;i++) for (let j=i+1;j<L.objs.length;j++){
-        const d = Math.hypot(L.objs[i].x-L.objs[j].x, L.objs[i].y-L.objs[j].y) * s;
-        if (d < minPx) minPx = d;
+      const f = fitOf(L,w,h);
+      minS = Math.min(minS, f.s); maxS = Math.max(maxS, f.s);
+      if (f.md < worstGap) worstGap = f.md;
+      // ① 物件圈要在纸边以内（名字另判，见下）
+      const m = f.objR + 4;
+      if (f.box.x0-m < fr.x || f.box.x1+m > fr.x+fr.w ||
+          f.box.y0-m < fr.y || f.box.y1+m > fr.y+fr.h) bad2.push(`${L.year} 出纸边`);
+      // ② 物件不许伸进底部提示条
+      if (f.box.y1 + m > toastTop) bad2.push(`${L.year} 压提示条`);
+      // ②b 每个名字至少有一个方向放得下（和 index.html planLabels 的候选集一致）
+      for (const o of L.objs){
+        const X = o.x*f.s + f.ox, Y = o.y*f.s + f.oy;
+        const w2 = [...o.name].length*13.4 + 4, h2 = 16, pad = f.objR + 17;
+        const fits = [[0,1],[0,-1],[1,0],[-1,0]].some(([ux,uy]) => {
+          let bx = X - w2/2;
+          if (ux > 0) bx = X + pad; else if (ux < 0) bx = X - pad - w2;
+          const by = Y + uy*pad + 3 - h2/2;
+          return bx > fr.x+4 && bx+w2 < fr.x+fr.w-4 && by > fr.y+4 && by+h2 < fr.y+fr.h-4;
+        });
+        if (!fits) bad2.push(`${L.year} ${o.name} 名字无处可放`);
       }
+      // ③ 两个物件圈不许叠在一起
+      if (L.objs.length > 1 && f.md < 2*f.objR - 2) bad2.push(`${L.year} 圈叠一起`);
     });
-    const line = `  ${name} ${w}×${h}: 缩放 ${s.toFixed(2)}，物件最近 ${minPx.toFixed(0)}px，棋盘顶部 y=${oy.toFixed(0)}${overlap?' ⚠ 压 HUD':''}`;
-    console.log(line);
-    chk(minPx >= 40, `${name} 标签不打架（≥40px）`);
+    // ④ 至少一个方向把安全区填掉 7 成半（“别再只占四分之一”的回归线）
+    //    末章只有一个点，包围盒是 0，不比它
+    const cover = Math.min(...LEVELS.filter(L => L.objs.length > 1).map(L => {
+      const f = fitOf(L,w,h);
+      return Math.max((f.box.x1-f.box.x0)/safe.w, (f.box.y1-f.box.y0)/safe.h);
+    }));
+    console.log(`  ${name} ${w}×${h}: 缩放 ${minS.toFixed(2)}–${maxS.toFixed(2)}，物件最近 ${worstGap.toFixed(0)}px，圈半径 ${Math.max(15,Math.min(24,worstGap*0.42)).toFixed(0)}px，覆盖 ${(cover*100).toFixed(0)}%`);
+    chk(bad2.length === 0, `${name} 物件/名字不出纸、不压提示条、圈不叠${bad2.length?'（'+bad2.join('，')+'）':''}`);
+    chk(worstGap >= 30, `${name} 物件最近 ≥30px`);
+    if (fills) chk(cover >= 0.75, `${name} 画面撑满安全区 ≥75%`);
+    else chk(minS >= 0.2, `${name} 缩放没有被压没`);
   }
 }
 

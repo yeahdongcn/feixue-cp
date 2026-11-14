@@ -17,23 +17,49 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
 #stage{position:fixed;inset:0;overflow:hidden;background:#04060b}
 /* 「环境光」：把游戏画面放大模糊后铺满整块屏，竖屏/宽屏的黑边不再是死黑 */
 #cvBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;
-  filter:blur(16px) saturate(1.22) brightness(.72);opacity:.95}
+  /* 模糊 + 压暗 + 降饱和：这一层要读成「夜色还在继续」，不是「一张糊掉的照片」。
+     原来 saturate(1.22) 把暖光放大成一团土黄，铺满竖屏 60% 的面积就是一片泥。 */
+  filter:blur(34px) saturate(.72) brightness(.52);opacity:.92}
 #cv{position:absolute;left:0;top:0;width:100%;height:100%;display:block;
   image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:auto}
 #screen{position:absolute;pointer-events:none;z-index:1;
   box-shadow:0 0 0 1px #ffffff14,0 24px 90px #000a}
 #stage{background:radial-gradient(120% 90% at 50% 40%,#0a1020,#03050a 70%)}
 
-/* ── HUD ── */
-#hud{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:11px 14px;
-  font-size:11px;letter-spacing:.12em;color:var(--dim);pointer-events:none;z-index:5}
-.hchip{border:1px solid #ffffff22;background:#0008;padding:3px 9px;border-radius:3px;color:#c8d2e4;
+/* ── HUD ──
+   顶层压一条渐变暗角：HUD 浮在场景上，但一眼要能看出「这是 UI」。
+   右半边是 6 个真的磁带槽位（和磁带盒里的六格、六盘磁带是同一套语言），
+   原来那两条 52px 的空白条没有任何标签，删掉。 */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:9px;padding:9px 13px 16px;
+  font-size:11px;letter-spacing:.12em;color:var(--dim);pointer-events:none;z-index:5;
+  background:linear-gradient(180deg,#04070cd9 0%,#04070c73 58%,#04070c00 100%)}
+.hchip{border:1px solid #ffffff22;background:#0009;padding:3px 9px;border-radius:3px;color:#c8d2e4;
   font-variant-numeric:tabular-nums;white-space:nowrap;backdrop-filter:blur(4px)}
 #hudEra{color:var(--accent);border-color:#ffd47944;font-weight:600}
-.hbars{display:flex;gap:7px;margin-left:auto}
-.hb{width:52px;height:4px;background:#ffffff1a;border-radius:2px;position:relative;overflow:hidden}
-.hb i{position:absolute;inset:0 auto 0 0;width:0;background:var(--danger);transition:width .45s cubic-bezier(.3,1,.4,1)}
-.hb.q i{background:var(--accent2)}
+.hsub{color:#9fb0c9;letter-spacing:.16em;font-size:11px;white-space:nowrap;text-shadow:0 1px 4px #000}
+#hud .htapes{display:flex;align-items:center;gap:8px;margin-left:auto;white-space:nowrap}
+.hlabel{font-size:11px;color:#8492a8;letter-spacing:.18em}
+.hslots{display:flex;gap:4px}
+.hslot{position:relative;width:15px;height:11px;border:1px solid #2b3648;border-radius:2px;
+  background:#080c13;box-shadow:inset 0 0 0 1px #0006}
+.hslot::before,.hslot::after{content:"";position:absolute;top:3px;width:4px;height:4px;border-radius:50%;
+  border:1px solid #2b3648;background:transparent}
+.hslot::before{left:2px}.hslot::after{right:2px}
+.hslot.on{background:#1d1710;border-color:#ffd47970;box-shadow:0 0 7px #ffd47926,inset 0 0 0 1px #0006}
+.hslot.on::before,.hslot.on::after{background:#d8c48b;border-color:#8a7442}
+.hslot.cur{box-shadow:0 0 0 1px #7fd7ff88,0 0 8px #7fd7ff33}
+.hcount{font-variant-numeric:tabular-nums;color:#c8d2e4;font-size:11px;letter-spacing:.1em}
+
+/* ── 头顶聚焦名牌：告诉你「离谁最近、按什么」──
+   世界画面里不放文字（6px 中文在 320×180 上会糊），交给这一层 DOM。 */
+#focus{position:absolute;left:0;top:0;z-index:6;pointer-events:none;
+  transform:translate(-50%,-100%);opacity:0;transition:opacity .16s;white-space:nowrap}
+#focus.on{opacity:1}
+#focus b{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.08em;color:#f6e9cb;
+  background:#060a10d9;border:1px solid #ffd47955;border-radius:3px;padding:2px 7px;
+  box-shadow:0 2px 12px #000c}
+#focus::after{content:"";position:absolute;left:50%;bottom:-4px;margin-left:-3px;
+  border:3px solid transparent;border-top-color:#ffd47999}
 #hint{position:absolute;left:14px;bottom:10px;font-size:11.5px;letter-spacing:.12em;color:#a6b1c8;
   pointer-events:none;z-index:5;text-shadow:0 1px 6px #000,0 0 12px #000}
 #hint::before{content:"▸ ";color:var(--accent)}
@@ -96,13 +122,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
 #touch .abtn #btnT{width:46px;height:46px;font-size:11.5px;margin-top:34px}
 body.touch #touch{display:block}
 body.choosing #touch{display:none}
+/* 选项框在 #bottombar（z-index 20），toast 是 38 —— 提示条会横着压在选项上。
+   选项比提示重要，选边的时候把提示收起来。 */
+body.choosing #toast{opacity:0;visibility:hidden}
 /* 标题阶段不显示 HUD / 提示 / 虚拟手柄，避免透过半透明标题露出 */
 body:not(.started) #hud,body:not(.started) #hint,body:not(.started) #touch{display:none}
-/* 竖屏：画面上移到顶部，手柄落在画面与对话框之间；横屏：手柄贴左右中段 */
+/* 竖屏：手柄贴着对话框落在拇指区（原来钉在「画面高度+118px」，也就是屏幕中段，
+   拇指要往上够 300px）；横屏：手柄贴左右中段 */
 body.touch:not(.portrait) #touch .pad{top:50%;bottom:auto;transform:translateY(-50%);left:14px}
 body.touch:not(.portrait) #touch .abtn{top:50%;bottom:auto;transform:translateY(-50%);right:14px}
-body.portrait #touch .pad{top:calc(var(--sh, 220px) + 118px);bottom:auto;left:16px}
-body.portrait #touch .abtn{top:calc(var(--sh, 220px) + 148px);bottom:auto;right:16px}
+body.portrait #touch .pad{top:auto;bottom:calc(130px + env(safe-area-inset-bottom));left:16px}
+body.portrait #touch .abtn{top:auto;bottom:calc(146px + env(safe-area-inset-bottom));right:16px}
 
 /* ── 磁带盒 ── */
 .sheet{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;
@@ -216,6 +246,11 @@ body.portrait #touch .abtn{top:calc(var(--sh, 220px) + 148px);bottom:auto;right:
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:520px){
+  #hud{gap:7px;padding:7px 10px 14px}
+  .hsub{display:none}
+  .hlabel{display:none}
+  .hslot{width:13px;height:10px}
+  .hslots{gap:3px}   /* gap 原来写在 .hslot 上，那是空元素、不起作用 */
   #dtext{font-size:14px;line-height:1.9}
   #dlg{padding:14px 14px 14px;min-height:88px}
   #tapeList{grid-template-columns:repeat(2,1fr)}
@@ -235,7 +270,10 @@ body.portrait #touch .abtn{top:calc(var(--sh, 220px) + 148px);bottom:auto;right:
 @media (max-height:430px){ .tin{transform:scale(.64);transform-origin:center center} }
 /* 竖屏手机：画面上移贴顶，给中段手柄和底部对话框让位 */
 body.portrait #screen{box-shadow:0 6px 40px #000c}
-body.portrait #hud{padding-top:8px}
+body.portrait #hud{padding-top:8px;
+  /* 竖屏时 HUD 正压在楼房的窗格上（一排小暗方块），磁带槽会跟窗户长在一起；
+     顶栏的压暗加重一档，槽位才有「浮在画面之上」的层次 */
+  background:linear-gradient(180deg,#04070cee 0%,#04070cd0 62%,#04070c00 100%)}
 body.portrait #hint{bottom:8px;font-size:11px}
 </style>
 </head>
@@ -247,12 +285,14 @@ body.portrait #hint{bottom:8px;font-size:11px}
     <canvas id="cv"></canvas>
     <div id="hud">
       <div class="hchip" id="hudEra">2026</div>
-      <div class="hbars">
-        <div class="hb"><i id="hudZhi"></i></div>
-        <div class="hb q"><i id="hudQing"></i></div>
+      <div class="hsub" id="hudSub">秋 · 站台</div>
+      <div class="htapes">
+        <span class="hlabel">磁带</span>
+        <div class="hslots" id="hudSlots"></div>
+        <span class="hcount" id="hudTape">0/6</span>
       </div>
-      <div class="hchip" id="hudTape">磁带 0/6</div>
     </div>
+    <div id="focus"><b></b></div>
     <div id="hint"></div>
   </div>
 

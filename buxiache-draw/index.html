@@ -168,7 +168,7 @@
     .cell{padding:6px 8px 5px}
     .scLine{font-size:14px;line-height:1.85;margin-top:13px}
     .scActions{margin-top:14px;gap:8px}
-    #btnAgain,#btnCopy{font-size:14px;padding:11px 10px;letter-spacing:.12em}
+    #btnAgain,#btnCopy{font-size:14px;padding:11px 10px;letter-spacing:.12em;min-height:46px}
     .scFoot{margin-top:10px;font-size:13px}
   }
 
@@ -489,7 +489,7 @@ const $ = id => document.getElementById(id);
 const els = {
   year:$('year'), sub:$('sub'), ropeBar:$('ropeBar'), ropeFill:$('ropeFill'), ropeNum:$('ropeNum'),
   ropeLeft:$('ropeLeft'), ropeOf:$('ropeOf'),
-  need:$('needLine'), hint:$('hint'), toast:$('toast'), snd:$('snd'),
+  need:$('needLine'), hint:$('hint'), toast:$('toast'), snd:$('snd'), top:$('top'), side:$('side'),
   card:$('card'), cYear:$('cYear'), cTitle:$('cTitle'), cLine:$('cLine'), cMeta:$('cMeta'), cDots:$('cDots'),
   end:$('end'), eStat:$('eStat'), eBig:$('eBig'), eKept:$('eKept'), eLeft:$('eLeft'),
   eOf:$('eOf'), eYears:$('eYears'), btnAgain:$('btnAgain'), btnCopy:$('btnCopy'),
@@ -583,6 +583,7 @@ let view = { s:1, ox:0, oy:0, cx:0, cy:0 };
 let frame = { x:0, y:0, w:0, h:0 };
 let safe = { x:0, y:0, w:0, h:0 };
 let levelCen = { x:500, y:500 };
+let ghostPts = [];        // 末章：前五站的旧物件在屏幕上的位置（已排开、不叠字）
 let dpr = 1;
 
 function layout(){
@@ -599,12 +600,20 @@ function layout(){
   }
   els.toast.style.bottom = tb + 'px';
 
+  // HUD 永远离纸边 14px：不靠 vw 的魔数，否则 560–870px 宽时文字会骑在纸边上
+  const hudIn = side + 14;
+  els.top.style.left = hudIn + 'px';
+  els.side.style.right = hudIn + 'px';
+  els.snd.style.right = hudIn + 'px';
+
   const top = h < 520 ? 84 : 108;          // 顶部 HUD 高度
   const bottom = tb + 46;                  // 提示条 + 一行余量
+  // 安全区必须整个落在纸边以内（否则物件圈会压到纸上那道边线）
+  const inf = Math.max(narrow ? 12 : 30, frame.x + 6);
   safe = {
-    x: narrow ? 12 : 30,
+    x: inf,
     y: top,
-    w: w - (narrow ? 24 : 60),
+    w: w - inf*2,
     h: Math.max(120, h - top - bottom),
   };
   fitView();
@@ -636,6 +645,67 @@ function fitView(){
   const ox = safe.x + safe.w/2 - levelCen.x*s;
   const oy = safe.y + safe.h/2 - levelCen.y*s;
   view = { s, ox, oy, cx:levelCen.x*s + ox, cy:levelCen.y*s + oy };
+  // 物件圈的大小跟着屏幕密度走：密的时候缩小，不然两个圈会叠在一起
+  let md = Infinity;
+  for (let i = 0; i < L.objs.length; i++) for (let j = i+1; j < L.objs.length; j++){
+    const d = Math.hypot(L.objs[i].x - L.objs[j].x, L.objs[i].y - L.objs[j].y) * s;
+    if (d < md) md = d;
+  }
+  G.objR = Math.max(15, Math.min(OBJ_R, md*0.42));
+  planGhosts();
+}
+
+/* 末章不把旧物件按原坐标甩得到处都是：以“你自己”为圆心重排成一圈淡淡的年轮，
+   让开中心、互相推开、夹进安全区——按原坐标直接放大，名字会叠成一团糊字 */
+function planGhosts(){
+  ghostPts = [];
+  if (G.idx !== LEVELS.length - 1) return;
+  const f = LEVELS[G.idx].objs[0];
+  let src = [];
+  G.kept.forEach(k => { if (k.i !== G.idx) src.push(k.o); });
+  G.left.forEach(k => { if (k.i !== G.idx) src.push(k.o); });
+  if (!src.length) return;
+  // 手机上少放一半：26 个圈在 362px 宽里必然挤成一团
+  if (safe.w < 520) src = src.filter((_, i) => i % 2 === 0);
+
+  // 先减掉旧物件的平均偏移，云团才会围着“你”而不是偏到一边
+  let mx = 0, my = 0;
+  src.forEach(o => { mx += o.x - f.x; my += o.y - f.y; });
+  mx /= src.length; my /= src.length;
+  const rel = src.map(o => ({ o, dx:(o.x - f.x - mx)*view.s, dy:(o.y - f.y - my)*view.s }));
+  const maxdx = Math.max(...rel.map(r => Math.abs(r.dx))) || 1;
+  const maxdy = Math.max(...rel.map(r => Math.abs(r.dy))) || 1;
+  const ax = Math.max(80, safe.w/2 - 38), ay = Math.max(80, safe.h/2 - 38);
+  const k = Math.min(.64, ax/maxdx, ay/maxdy);
+
+  let pts = rel.map(r => ({ o:r.o, x:view.cx + r.dx*k, y:view.cy + r.dy*k }));
+  // 中心留白：不让旧物件压住“你自己”和它的名字
+  const voidR = Math.min(104, Math.max(70, Math.min(ax, ay)*.42));
+  pts = pts.filter(q => Math.hypot(q.x - view.cx, q.y - view.cy) > voidR);
+
+  const gap = 60;
+  for (let it = 0; it < 40; it++){
+    let moved = 0;
+    for (let i = 0; i < pts.length; i++) for (let j = i+1; j < pts.length; j++){
+      const a = pts[i], b = pts[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.hypot(dx, dy) || .01;
+      if (d < gap){
+        const push = (gap - d) * .28;
+        dx /= d; dy /= d;
+        a.x -= dx*push; a.y -= dy*push;
+        b.x += dx*push; b.y += dy*push;
+        moved++;
+      }
+    }
+    // 每一轮都夹回安全区，否则被墙推回来的点会排成一列
+    for (const q of pts){
+      q.x = Math.max(safe.x + 30, Math.min(safe.x + safe.w - 30, q.x));
+      q.y = Math.max(safe.y + 30, Math.min(safe.y + safe.h - 30, q.y));
+    }
+    if (!moved) break;
+  }
+  ghostPts = pts;
 }
 
 function resize(){
@@ -779,12 +849,12 @@ function addParticle(x,y,vx,vy,life,r,col,g){
   G.particles.push({x,y,vx,vy,life,max:life,r,col:col||'#ffcf9a',g:g||0,a:.9});
 }
 function burstSeam(sx,sy){
-  for (let i=0;i<52;i++){
+  for (let i=0;i<34;i++){
     const a = Math.random()*Math.PI*2, sp = 24 + Math.random()*150;
     addParticle(sx, sy, Math.cos(a)*sp, Math.sin(a)*sp - 24, .45+Math.random()*.8,
                 1+Math.random()*2.1, Math.random()<.25 ? '#fff3dd' : '#ffb46b', 90);
   }
-  for (let i=0;i<14;i++){
+  for (let i=0;i<9;i++){
     addParticle(sx + (Math.random()-.5)*14, sy + (Math.random()-.5)*14,
                 (Math.random()-.5)*12, -12-Math.random()*26, .9+Math.random()*1.1,
                 .9+Math.random()*1.4, '#ffd7a4', -6);
@@ -921,13 +991,13 @@ function fail(msg){
   const tip = G.path.length ? toScreen(G.path[G.path.length-1]) : {x:innerWidth/2, y:innerHeight/2};
   G.flashX = tip.x; G.flashY = tip.y;
   G.shake = Math.max(G.shake, 4.5);
-  for (let i=0;i<20;i++){
+  for (let i=0;i<14;i++){
     const a = Math.random()*Math.PI*2, sp = 12+Math.random()*56;
     addParticle(tip.x, tip.y, Math.cos(a)*sp, Math.sin(a)*sp-8,
                 .45+Math.random()*.55, .8+Math.random()*1.6,
                 Math.random()<.4 ? '#ff8f78' : '#c8614c', 60);
   }
-  G.ripples.push({x:tip.x, y:tip.y, r0:8, r1:96, life:.55, max:.55, col:'rgba(255,110,90,.45)'});
+  G.ripples.push({x:tip.x, y:tip.y, r0:8, r1:78, life:.45, max:.45, col:'rgba(255,110,90,.32)'});
   showToast(msg, true, .85);
   syncHud(); syncNeed();
   vibrate([12,40,12]);
@@ -964,8 +1034,6 @@ function seal(){
   const seam = toScreen(poly[0]);
   G.flash = 1; G.flashBad = false; G.flashX = seam.x; G.flashY = seam.y;
   G.shake = 6.5;
-  G.ripples.push({x:seam.x, y:seam.y, r0:14, r1:210, life:.85, max:.85, col:'rgba(255,201,138,.55)'});
-  G.ripples.push({x:seam.x, y:seam.y, r0:4, r1:120, life:.55, max:.55, col:'rgba(255,243,221,.7)'});
   burstSeam(seam.x, seam.y);
   L.objs.forEach((o, i) => {
     if (G.inside.indexOf(o) >= 0){
@@ -1088,44 +1156,57 @@ function drawBg(w, h){
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, h*0.42);
 }
 
-function drawBoard(){
-  // 盘面在屏幕空间里画：一张铺满画面的纸，而不是一块缩在中间的方板
-  const p = frame;
-  if (!p.w || !p.h) return;
-  ctx.save();
-
-  // 光池：本关物件重心处提亮
-  let g = ctx.createRadialGradient(view.cx, view.cy, 20, view.cx, view.cy, Math.max(p.w, p.h)*0.66);
-  g.addColorStop(0, 'rgba(255,232,196,.055)');
-  g.addColorStop(0.45, 'rgba(255,220,180,.024)');
-  g.addColorStop(1, 'rgba(255,210,170,0)');
-  ctx.fillStyle = g; ctx.fillRect(p.x, p.y, p.w, p.h);
-
-  // 纸边
-  ctx.strokeStyle = 'rgba(255,214,170,.14)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
-
-  // 四角刻线：贴着屏幕角，像裁切线
-  ctx.strokeStyle = 'rgba(255,214,170,.20)';
-  ctx.lineWidth = 1;
-  const t = 18;
-  [[p.x,p.y,1,1],[p.x+p.w,p.y,-1,1],[p.x,p.y+p.h,1,-1],[p.x+p.w,p.y+p.h,-1,-1]].forEach(([x,y,sx,sy])=>{
-    ctx.beginPath();
-    ctx.moveTo(x+sx*t, y); ctx.lineTo(x, y); ctx.lineTo(x, y+sy*t);
-    ctx.stroke();
-  });
-
+function drawGrid(alpha){
   // 方格纸：横竖都等分成接近正方形的格子
-  const cell = Math.max(46, Math.min(78, Math.min(p.w, p.h)/8));
+  const p = frame;
+  if (!p.w || !p.h || alpha <= 0) return;
+  const cell = Math.max(40, Math.min(54, Math.min(p.w, p.h)/14));
   const nx = Math.max(3, Math.round(p.w/cell)), ny = Math.max(3, Math.round(p.h/cell));
-  ctx.strokeStyle = 'rgba(255,228,190,.030)';
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,228,190,${alpha})`;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let i=1;i<nx;i++){ const x = Math.round(p.x + p.w*i/nx) + .5; ctx.moveTo(x, p.y); ctx.lineTo(x, p.y+p.h); }
   for (let j=1;j<ny;j++){ const y = Math.round(p.y + p.h*j/ny) + .5; ctx.moveTo(p.x, y); ctx.lineTo(p.x+p.w, y); }
   ctx.stroke();
   ctx.restore();
+}
+
+function drawPaperEdge(alpha){
+  // 纸边 + 四角刻线：画在暗角之上，屏幕永远是一张有边的纸
+  const p = frame;
+  if (!p.w || !p.h || alpha <= 0) return;
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,214,170,${alpha})`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1);
+
+  const t = 18;
+  ctx.strokeStyle = `rgba(255,214,170,${Math.min(.5, alpha*1.5)})`;
+  [[p.x,p.y,1,1],[p.x+p.w,p.y,-1,1],[p.x,p.y+p.h,1,-1],[p.x+p.w,p.y+p.h,-1,-1]].forEach(([x,y,sx,sy])=>{
+    ctx.beginPath();
+    ctx.moveTo(x+sx*t, y); ctx.lineTo(x, y); ctx.lineTo(x, y+sy*t);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawBoard(pcx, pcy){
+  // 盘面在屏幕空间里画：一张铺满画面的纸，而不是一块缩在中间的方板
+  const p = frame;
+  if (!p.w || !p.h) return;
+  ctx.save();
+
+  // 光池：本关物件重心处提亮（范围收紧一点，纸面才有明暗）
+  const R = Math.min(p.w, p.h) * 0.74;
+  let g = ctx.createRadialGradient(pcx, pcy, 10, pcx, pcy, R);
+  g.addColorStop(0, 'rgba(255,232,196,.078)');
+  g.addColorStop(0.45, 'rgba(255,220,180,.032)');
+  g.addColorStop(1, 'rgba(255,210,170,0)');
+  ctx.fillStyle = g; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.restore();
+
+  drawGrid(.038);
 }
 
 function drawMotes(w, h){
@@ -1260,21 +1341,121 @@ function drawPath(P){
   }
 }
 
-function drawObj(o, state, idx, cen){
-  const sx = o.x*view.s + view.ox, sy = o.y*view.s + view.oy;
-  const r = 18;
+/* 标签排布：优先朝圈内 / 重心一侧，其次上下左右；
+   逐个试方向，避开别的标签、别的物件和纸边——手机上也不会两行字叠在一起。 */
+function planLabels(pts, ref, states, rope){
+  const L = LEVELS[G.idx];
+  const GAP = 17, R = G.objR || OBJ_R, LH = 16;
+  const CLEAR = 10;                 // 名字的盒子离自己那个圈至少这么远
+  const boxes = [], out = [];
+  const area = (a, b) =>
+    Math.max(0, Math.min(a.x+a.w, b.x+b.w) - Math.max(a.x, b.x)) *
+    Math.max(0, Math.min(a.y+a.h, b.y+b.h) - Math.max(a.y, b.y));
+  // 盒子到圆心的最近距离：斜着放时“中心距 R+GAP”并不等于“离圈边 GAP”，
+  // 直接拿中心距当间距会让名字贴在自己的圈线上（手机上实测 0–2px）
+  const boxGap = (b, cx, cy) =>
+    Math.hypot(Math.max(b.x, Math.min(cx, b.x+b.w)) - cx,
+               Math.max(b.y, Math.min(cy, b.y+b.h)) - cy);
+  // 封口后绳子是静止的，可以让名字避开它；画的过程中路径每帧都在变，
+  // 那时传入 null，名字不许跟着手抖。
+  const ropeHit = rope ? (box) => {
+    const x0 = box.x-4, y0 = box.y-4, x1 = box.x+box.w+4, y1 = box.y+box.h+4;
+    let n = 0;
+    for (let s = 1; s < rope.length; s++){
+      const a = rope[s-1], b = rope[s];
+      const dx = b.x-a.x, dy = b.y-a.y;
+      let t0 = 0, t1 = 1, ok = true;
+      const clip = (pp, qq) => {
+        if (!pp) return qq >= 0;
+        const r = qq/pp;
+        if (pp < 0){ if (r > t1) return false; if (r > t0) t0 = r; }
+        else { if (r < t0) return false; if (r < t1) t1 = r; }
+        return true;
+      };
+      ok = clip(-dx, a.x-x0) && clip(dx, x1-a.x) && clip(-dy, a.y-y0) && clip(dy, y1-a.y);
+      if (ok) n++;
+    }
+    return n;
+  } : null;
+  for (let i = 0; i < pts.length; i++){
+    const p = pts[i], name = L.objs[i].name;
+    const w = [...name].length * 13 + 2;   // 600 13px 的中文每字正好 13px，别把盒子估胖
+    const dx = p.x - ref.x, dy = p.y - ref.y, d = Math.hypot(dx, dy) || 1;
+    const sgn = states[i] === 'left' ? 1 : -1;     // 放手的朝外，留下的朝里
+    const cands = [];
+    if (d > 4) cands.push([dx/d*sgn, dy/d*sgn]);
+    cands.push([0, 1], [0, -1], [1, 0], [-1, 0]);
+    if (d > 4) cands.push([dx/d, dy/d], [-dx/d, -dy/d]);
+    let best = null, bestScore = Infinity;
+    for (let c = 0; c < cands.length; c++){
+      const [ux, uy] = cands[c];
+      const px = p.x + ux*(R + GAP), py = p.y + uy*(R + GAP) + 3;
+      let align = 'center', bx = px - w/2;
+      if (ux > .45){ align = 'left'; bx = px; }
+      else if (ux < -.45){ align = 'right'; bx = px - w; }
+      const box = { x:bx, y:py - LH/2, w, h:LH };
+      // 不够远就沿着这个方向把盒子推出去，再判分（推完可能出纸边，所以先推后判）
+      let lx = px, ly = py;
+      for (let t = 0; t < 5; t++){
+        const g = boxGap(box, p.x, p.y);
+        if (g >= R + CLEAR) break;
+        const k = R + CLEAR - g + 1;
+        box.x += ux*k; box.y += uy*k; lx += ux*k; ly += uy*k;
+      }
+      let sc = c * 4;                                   // 越靠前的方向越优先
+      if (box.x < frame.x + 6 || box.x + box.w > frame.x + frame.w - 6 ||
+          box.y < frame.y + 6 || box.y + box.h > frame.y + frame.h - 6) sc += 500;
+      for (let j = 0; j < pts.length; j++){
+        if (j === i) continue;
+        const q = pts[j];
+        const dd = Math.hypot(lx - q.x, ly - q.y);
+        if (dd < R + 26) sc += 70;                      // 压到别的物件
+        // 名字横穿过别人那个圈，和线穿过字一样难读：越近罚越重，逼它换方向
+        const g2 = boxGap(box, q.x, q.y);
+        if (g2 < R + 6) sc += (R + 6 - g2) * 16;
+        // 名字不能离别人的圈比离自己的还近：320 上「一支话筒」曾挪到门牌旁边，
+        // 看着像在说「门」——这个方向的便宜不能占
+        const own = boxGap(box, p.x, p.y);
+        if (g2 < own + 10) sc += (own + 10 - g2) * 12;
+      }
+      // 标签之间要留出“呼吸”，不能只判“没重叠”：横屏时三个名字会排成一列，
+      // 每个都算不重叠，读起来却像一段不相干的说明。按扩张后的盒子算重叠面积。
+      const pad = { x:box.x-12, y:box.y-6, w:box.w+24, h:box.h+12 };
+      for (const b of boxes) sc += area(pad, b) * 2.2;
+      if (ropeHit){ const h = ropeHit(box); if (h) sc += 26 + h*8; }   // 线从字里穿过去
+      if (sc < bestScore){ bestScore = sc; best = { x:lx, y:ly, align, box }; }
+    }
+    boxes.push(best.box);
+    out.push(best);
+  }
+  return out;
+}
+
+const OBJ_R = 24;
+
+function drawObj(o, state, idx, lab, sp){
+  const sx = sp ? sp.x : o.x*view.s + view.ox;
+  const sy = sp ? sp.y : o.y*view.s + view.oy;
+  const r = sp ? OBJ_R : G.objR;
   const col = state === 'kept' ? '#ffd7a6' : state === 'live' ? '#f2ebdc'
-            : state === 'ghost' ? '#ffffff' : '#8f8879';
-  const alpha = state === 'left' ? .34 : state === 'ghost' ? .16 : 1;
+            : state === 'ghost' ? '#ffffff' : '#9d9382';
+  const alpha = state === 'left' ? .62 : state === 'ghost' ? .16 : 1;
 
   ctx.save();
   ctx.globalAlpha = alpha;
 
+  // 被圈住的那一下：光晕鼓一下，不画第二圈同心环（那看着像扫描仪）
+  let glow = 0;
+  if (state === 'kept'){
+    const dt = G.sealT - idx*.085;
+    if (dt > 0 && dt < .65) glow = 1 - dt/.65;
+  }
   if (state === 'live' || state === 'kept'){
-    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 44);
-    g.addColorStop(0, state === 'kept' ? 'rgba(255,180,110,.17)' : 'rgba(255,220,180,.055)');
+    const hr = 50 + glow*30;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, hr);
+    g.addColorStop(0, state === 'kept' ? `rgba(255,180,110,${.17 + glow*.42})` : 'rgba(255,220,180,.055)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(sx-44, sy-44, 88, 88);
+    ctx.fillStyle = g; ctx.fillRect(sx-hr, sy-hr, hr*2, hr*2);
   }
 
   if (state === 'kept'){
@@ -1288,30 +1469,27 @@ function drawObj(o, state, idx, cen){
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = col;
-  ctx.font = `16px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
+  ctx.font = `${Math.max(15, Math.round(r*.76))}px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(o.ch, sx, sy + 1);
 
-  if (state !== 'ghost'){
-    // 名字沿“远离本关重心”的方向外移，并用暗色描边压住底下的圈线
-    let lx = sx, ly = sy + r + 15, align = 'center';
-    if (cen){
-      const dx = sx - cen.x, dy = sy - cen.y, d = Math.hypot(dx, dy);
-      if (d > 4){
-        const ux = dx/d, uy = dy/d;
-        lx = sx + ux*(r + 15);
-        ly = sy + uy*(r + 15) + 4;
-        align = ux > .45 ? 'left' : ux < -.45 ? 'right' : 'center';
-      }
-    }
-    ctx.textAlign = align; ctx.textBaseline = 'middle';
-    ctx.font = `13px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
+  if (state !== 'ghost' && lab){
+    const lx = lab.x, ly = lab.y;
+    ctx.textAlign = lab.align; ctx.textBaseline = 'middle';
+    // 宋体 13px 太细，加半粗 + 亮一档，暗底上才真的读得清
+    ctx.font = `600 13px "Songti SC","Noto Serif SC",STSong,SimSun,serif`;
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.lineWidth = 3.6;
-    ctx.strokeStyle = 'rgba(9,7,5,.9)';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(9,7,5,.92)';
+    // 3px 描边挡不住圈线的外发光：线从字中间穿过时，光会在笔画之间渗进来。
+    // 再给描边加一层同色柔光，等于把“墨”加厚一圈（只在亮底上看得见，暗底无副作用）。
+    ctx.shadowColor = 'rgba(7,5,4,.92)'; ctx.shadowBlur = 7;
     ctx.strokeText(o.name, lx, ly);
-    ctx.globalAlpha = alpha * .96;
-    ctx.fillStyle = state === 'kept' ? '#ffcf93' : state === 'left' ? '#8f8879' : '#cdc1aa';
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = alpha * .98;
+    // 放手的名字原来用 #a89d8a 再乘 .62，落到 3.3:1 —— 13px 这样太淡了，
+    // 提一档到 ~4.5:1：圈和字形继续退到暗面，但“你放手了什么”要读得出来
+    ctx.fillStyle = state === 'kept' ? '#ffd9a3' : state === 'left' ? '#d4c9b3' : '#e4d8c2';
     ctx.fillText(o.name, lx, ly);
   }
   ctx.restore();
@@ -1339,8 +1517,11 @@ function drawSealField(w, h, P){
   ctx.beginPath();
   ctx.rect(-300, -300, w+600, h+600);
   tracePoly(P);
-  ctx.fillStyle = `rgba(4,4,5,${.30*d})`;
+  ctx.fillStyle = `rgba(4,4,5,${.22*d})`;
   ctx.fill('evenodd');
+
+  // 压暗之后把方格补回来一点点：屏幕仍然是“一张纸”，不是黑洞
+  drawGrid(.016*d);
 
   // 圈口一圈细光：把“里 / 外”分开
   ctx.beginPath(); tracePoly(P);
@@ -1383,7 +1564,14 @@ function draw(){
   ctx.translate(shx, shy);
 
   // 盘面（屏幕坐标：一张铺满画面的纸）
-  drawBoard();
+  // 封口后光池跟着圈走：亮的是你圈出来的那一块，不是关卡包围盒的中心
+  let pcx = view.cx, pcy = view.cy;
+  if (G.state === 'sealed' && G.inside.length){
+    let ax = 0, ay = 0;
+    for (const o of G.inside){ ax += o.x*view.s + view.ox; ay += o.y*view.s + view.oy; }
+    pcx = ax/G.inside.length; pcy = ay/G.inside.length;
+  }
+  drawBoard(pcx, pcy);
   drawMotes(w, h);
 
   const P = G.path.map(toScreen);
@@ -1393,28 +1581,23 @@ function draw(){
   // 物件（屏幕坐标，文字不随缩放变小）
   const L = LEVELS[G.idx];
   const isFinal = G.idx === LEVELS.length - 1;
-  const cen = { x: view.cx + shx, y: view.cy + shy };
-  if (isFinal){
-    G.kept.forEach(k => { if (k.i !== G.idx) drawObj(k.o, 'ghost', 0, cen); });
-    G.left.forEach(k => { if (k.i !== G.idx) drawObj(k.o, 'ghost', 0, cen); });
+  let ref = { x: view.cx + shx, y: view.cy + shy };
+  if (G.state === 'sealed' && P.length > 2){
+    let rx = 0, ry = 0;
+    for (const p of P){ rx += p.x; ry += p.y; }
+    ref = { x: rx/P.length + shx, y: ry/P.length + shy };
   }
+  if (isFinal){
+    // 末章的盘上铺着前五站的记忆：按 0.55 的距离收在“你自己”周围，
+    // 否则按本关包围盒放大会把旧物件甩到屏幕外、压到 HUD 上
+    for (const q of ghostPts) drawObj(q.o, 'ghost', 0, null, q);
+  }
+  const sts = L.objs.map(o =>
+    G.state === 'sealed' ? (G.inside.indexOf(o) >= 0 ? 'kept' : 'left') : 'live');
+  const pts = L.objs.map(o => ({ x:o.x*view.s + view.ox, y:o.y*view.s + view.oy }));
+  const labs = planLabels(pts, ref, sts, G.state === 'sealed' ? P : null);
   L.objs.forEach((o, i) => {
-    let st = 'live';
-    if (G.state === 'sealed') st = G.inside.indexOf(o) >= 0 ? 'kept' : 'left';
-    drawObj(o, st, i, cen);
-    if (st === 'kept'){
-      const dt = G.sealT - i*.085;
-      if (dt > 0 && dt < .7){
-        const sx = o.x*view.s + view.ox, sy = o.y*view.s + view.oy;
-        const k = dt/.7;
-        ctx.save();
-        ctx.globalAlpha = (1-k)*.8;
-        ctx.strokeStyle = 'rgba(255,201,138,.9)';
-        ctx.lineWidth = 1.3;
-        ctx.beginPath(); ctx.arc(sx, sy, 18 + k*64, 0, Math.PI*2); ctx.stroke();
-        ctx.restore();
-      }
-    }
+    drawObj(o, sts[i], i, labs[i]);
   });
 
   // 笔尖停靠的位置：一个很轻的亮点，告诉手“从这里落下”
@@ -1423,13 +1606,13 @@ function draw(){
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 26);
-    hg.addColorStop(0, 'rgba(255,235,200,.22)');
+    hg.addColorStop(0, 'rgba(255,235,200,.14)');
     hg.addColorStop(.5, 'rgba(255,190,120,.07)');
     hg.addColorStop(1, 'rgba(255,180,110,0)');
     ctx.fillStyle = hg; ctx.fillRect(hx-26, hy-26, 52, 52);
-    ctx.strokeStyle = 'rgba(255,214,160,.55)';
+    ctx.strokeStyle = 'rgba(255,214,160,.34)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(hx, hy, 7, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx, hy, 6, 0, Math.PI*2); ctx.stroke();
     ctx.fillStyle = '#fff6e6';
     ctx.beginPath(); ctx.arc(hx, hy, 2.1, 0, Math.PI*2); ctx.fill();
     ctx.restore();
@@ -1462,10 +1645,13 @@ function draw(){
     ctx.restore();
   }
   // 暗角（留一点边缘呼吸）
-  const vg = ctx.createRadialGradient(w/2, h*.47, Math.min(w, h)*.36, w/2, h*.5, Math.max(w, h)*.78);
+  const vg = ctx.createRadialGradient(w/2, h*.47, Math.min(w, h)*.52, w/2, h*.5, Math.max(w, h)*.86);
   vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, 'rgba(0,0,0,.46)');
+  vg.addColorStop(1, 'rgba(0,0,0,.30)');
   ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+
+  // 纸边最后画：暗角压不掉的“画框”
+  drawPaperEdge(.20 + .10*G.dim);
 }
 
 /* ══════════════════ 主循环 ══════════════════ */
@@ -1589,7 +1775,9 @@ showCard(0);
 requestAnimationFrame(loop);
 
 /* 供自动化测试使用 */
-window.__game = { G, LEVELS, polyArea, polyLen, inPoly, seal, loadLevel, beginPlay, shareText, finish, showCard, nextChapter };
+window.__game = { G, LEVELS, polyArea, polyLen, inPoly, seal, loadLevel, beginPlay, shareText, finish, showCard, nextChapter,
+  getView: () => ({ s:view.s, ox:view.ox, oy:view.oy, cx:view.cx, cy:view.cy }),
+  getFrame: () => ({ ...frame }), getSafe: () => ({ ...safe }), toScreen };
 </script>
 </body>
 </html>

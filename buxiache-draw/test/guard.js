@@ -80,5 +80,36 @@ chk(levels.length === 6, '六站数据完整');
 chk(levels.every(l => l.year && l.rope && l.need && Array.isArray(l.objs)), '每站都有年份 / 绳长 / 要求 / 物件');
 chk(levels[levels.length - 1].year === '????' && levels[levels.length - 1].need === 1, '末章只圈一个人');
 
+console.log('\n— 这一轮视觉返工的回归线 —');
+chk(/function fitView/.test(html) && /function levelBox/.test(html), '按本关物件包围盒自适应缩放（不再固定 1000×1000 棋盘）');
+chk(/MIN_SPAN\s*=\s*360/.test(html), '末章单点也有最小取景范围（不会无限放大）');
+chk(/function layout/.test(html) && /const inf = Math\.max/.test(html), '安全区夹在纸边以内，物件圈不压边线');
+chk(/drawGrid\(|drawPaperEdge\(/.test(html), '纸面是“整屏一张纸”：方格 + 纸边 + 四角刻线');
+chk(!/SPECKS/.test(html), '去掉了满盘碎点（原来像扫描仪故障）');
+chk(!/\[150,300,450\]/.test(html), '去掉了物件周围的同心圆');
+chk(!/ripples\.push\(\{x:seam/.test(html), '封口不再叠同心涟漪（只留光晕脉冲）');
+chk(/function planLabels/.test(html), '标签有排布器：逐个试方向、避让别的标签和物件');
+chk(/strokeText\(o\.name/.test(html) && /strokeStyle = 'rgba\(9,7,5/.test(html), '物件名有暗色描边，压在亮线上也读得清');
+chk(/600 13px "Songti SC"/.test(html), '物件名用半粗 13px（细宋体在暗底上会发灰）');
+chk(/#toast\{[^}]*bottom:/.test(html.replace(/\s+/g,'')) || /#toast\{[^}]*bottom:/.test(html), 'toast 贴底部的固定安全区（不再垂直居中压物件）');
+chk(!/#toast\{[^}]*top:50%/.test(html), 'toast 不再垂直居中');
+chk(/ropeLeft/.test(html) && /ropeOf/.test(html), '绳长显示为“剩余 / 总长”，不再是一个孤零零的数字');
+chk(/剩余绳长/.test(html), '绳长有单位说明');
+chk(/function syncNeed/.test(html) && !/封住了 · 圈住/.test(html), '右上角不再重复报“圈住 N 样”');
+chk(/还差 <b>/.test(html) && /够了 · 松手封口/.test(html), '画的过程中实时报“还差几样”');
+chk(/getView/.test(html), '__game 暴露 getView（截图夹具按真实取景画圈）');
+
+console.log('\n— 这一轮验收的回归线（名字离圈、线穿过字、手机按钮）—');
+chk(/const CLEAR = 10/.test(html), '名字离自己的圈有 10px 硬间距（不再只按中心距算）');
+chk(/const boxGap = \(b, cx, cy\)/.test(html) && /boxGap\(box, p\.x, p\.y\)/.test(html),
+  '排标签时按“盒子到圆心的最近点”量间距（斜着放时中心距不等于离圈边的距离）');
+chk(/box\.x \+= ux\*k; box\.y \+= uy\*k; lx \+= ux\*k; ly \+= uy\*k/.test(html),
+  '间距不够就沿着候选方向把盒子推出去，推完再判分');
+chk(/const g2 = boxGap\(box, q\.x, q\.y\)/.test(html), '名字横穿别人那个圈要按距离重罚');
+chk(/ctx\.shadowColor = 'rgba\(7,5,4,\.92\)'; ctx\.shadowBlur = 7;/.test(html),
+  '名字描边外再垫一层同色柔光：线圈从字中间穿过时不在笔画之间渗光');
+chk(/state === 'left' \? '#d4c9b3'/.test(html), '放手的名字提到 ~4.5:1（原来 #a89d8a×.62 只有 3.3:1）');
+chk(/#btnAgain,#btnCopy\{[^}]*min-height:46px/.test(html), '手机结算卡按钮 46px（原来 44px，已经达标，这次多留 2px 余量）');
+
 console.log(bad === 0 ? '\n=== GUARD PASS ===' : `\n=== FAIL ${bad} ===`);
 process.exit(bad ? 1 : 0);

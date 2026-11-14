@@ -3,7 +3,10 @@
    剧本 · 六个年份
    ═══════════════════════════════════════════════════════════ */
 
-const PLAYER_PAL = { skin:'#e8b98f', skin2:'#c9946d', hair:'#241a14', shirt:'#d94f63', shirt2:'#a83a4c', pants:'#2f3a52', shoe:'#1a1512' };
+/* 玩家：深藏青的外套 + 一条红围巾。红色只留在脖子上，
+   这样他和同为「粉丝」的站姐（芥黄羽绒服 + 长直发 + 胸前的相机）一眼就能分开。 */
+const PLAYER_PAL = { skin:'#e8b98f', skin2:'#c9946d', hair:'#241a14', shirt:'#3a5570', shirt2:'#28405a', pants:'#3f4757', shoe:'#151216' };
+const PLAYER_OPT = { build:'small', hair:'messy', scarf:'#d94f63' };
 const NPC_PAL    = { skin:'#e0b088', skin2:'#bd8a63', hair:'#2a1e18', shirt:'#4a5a7a', shirt2:'#38465e', pants:'#2b3244', shoe:'#191410' };
 
 const PAL = {
@@ -15,7 +18,7 @@ const PAL = {
   worker:{ skin:'#dcb48c', skin2:'#b78f68', hair:'#1f1b17', shirt:'#54606e', shirt2:'#3e4854', pants:'#2a3038', shoe:'#141210' },
   mod:  { skin:'#ecc49c', skin2:'#c79c74', hair:'#2e1f18', shirt:'#d0709a', shirt2:'#a8557a', pants:'#3a2e40', shoe:'#1a1218' },
   pap:  { skin:'#e0b48a', skin2:'#bb9068', hair:'#241a14', shirt:'#2a2a34', shirt2:'#1e1e26', pants:'#232330', shoe:'#121014' },
-  fan:  { skin:'#e9c09a', skin2:'#c49873', hair:'#2c1e16', shirt:'#c85a52', shirt2:'#a0443e', pants:'#33384a', shoe:'#181412' },
+  fan:  { skin:'#e9c09a', skin2:'#c49873', hair:'#1c1410', hair2:'rgba(255,220,170,.16)', shirt:'#a3742c', shirt2:'#7d561d', pants:'#3d4350', shoe:'#151216' },
   grey: { skin:'#c9c9c9', skin2:'#a4a4a4', hair:'#141414', shirt:'#2a2a2a', shirt2:'#1e1e1e', pants:'#1c1c1c', shoe:'#0e0e0e' },
 };
 
@@ -280,13 +283,13 @@ const ERA_SCRIPT = {
   '2006': {
     hint:'去广电门口看看',
     npcs:[
-      { id:'xm', name:'小满', tx:20, ty:11, dir:0, pal:PAL.xm, opt:{longHair:true}, script:npcXiaoman },
-      { id:'guard', name:'保安', tx:20, ty:9, dir:0, pal:PAL.guard, opt:{hat:'cap'}, script:npcGuard },
-      { id:'sc', name:'黄牛', tx:13, ty:12, dir:2, pal:PAL.scalper, opt:{bag:true}, script:async()=>{ await say('黄牛','票要不要？内场三百。'); const c=await choose(['太贵了。','……买。']); if(c===0){S.qing+=1; await say('黄牛','穷鬼。');} else {S.zhi+=2; await say('黄牛','爽快。'); await say('','你花了三百块，买了一张根本进不去的票。');} updateHUD(); } },
-      { id:'fan2', name:'举牌的人', tx:26, ty:13, dir:1, pal:PAL.fan, opt:{longHair:true}, script:async()=>{ await say('举牌的人','飞雪 forever！'); await say('','她把两个人的名字写在同一张纸上，中间画了一颗心。'); await say('举牌的人','你说她们会一直这么好吗？'); const c=await choose(['会。','不会。']); if(c===0){S.zhi+=2;} else {S.qing+=2;} updateHUD(); } },
+      { id:'xm', name:'小满', tx:20, ty:11, dir:0, pal:PAL.xm, opt:{longHair:true, build:'small'}, script:npcXiaoman },
+      { id:'guard', name:'保安', tx:20, ty:9, dir:0, pal:PAL.guard, opt:{hat:'cap', build:'tall', bulky:true}, script:npcGuard },
+      { id:'sc', name:'黄牛', tx:13, ty:12, dir:2, pal:PAL.scalper, opt:{bag:true, hair:'bob'}, script:async()=>{ await say('黄牛','票要不要？内场三百。'); const c=await choose(['太贵了。','……买。']); if(c===0){S.qing+=1; await say('黄牛','穷鬼。');} else {S.zhi+=2; await say('黄牛','爽快。'); await say('','你花了三百块，买了一张根本进不去的票。');} updateHUD(); } },
+      { id:'fan2', name:'举牌的人', tx:26, ty:13, dir:1, pal:PAL.fan, opt:{longHair:true, prop:'board'}, script:async()=>{ await say('举牌的人','飞雪 forever！'); await say('','她把两个人的名字写在同一张纸上，中间画了一颗心。'); await say('举牌的人','你说她们会一直这么好吗？'); const c=await choose(['会。','不会。']); if(c===0){S.zhi+=2;} else {S.qing+=2;} updateHUD(); } },
     ],
     objs:[
-      { id:'t1', type:'tape', tx:9, ty:12,
+      { id:'t1', type:'tape', tx:9, ty:12, label:'磁带',
         text:'地上一盘磁带。标签上手写着：2006 · 夏。\n你完全不记得自己录过这个。',
         tape:'2006', tapeName:'2006 · 夏',
         after: async()=>{ await say('','你把它塞进随身听。按下了播放。'); await say('','里面是你自己的呼吸声，很吵，很远。'); await say('','然后是一个女孩的声音，在喊一个名字。'); await say('','……按 T，你可以回到这一年。任何时候。'); } },
@@ -296,10 +299,10 @@ const ERA_SCRIPT = {
   '2007': {
     hint:'网吧 / 路灯下那个戴口罩的人',
     npcs:[
-      { id:'po', name:'发帖的人', tx:6, ty:17, dir:0, pal:PAL.poster, opt:{bag:true}, script:npcPoster },
-      { id:'wh', name:'口罩人', tx:27, ty:12, dir:3, pal:PAL.grey, opt:{hat:'beanie'},
+      { id:'po', name:'发帖的人', tx:6, ty:17, dir:0, pal:PAL.poster, opt:{bag:true, build:'small', hair:'messy'}, script:npcPoster },
+      { id:'wh', name:'口罩人', tx:27, ty:12, dir:3, pal:PAL.grey, opt:{hat:'beanie', mask:true},
         when:()=>!S.flags.whisperDone, script:npcWhisper },
-      { id:'wd', name:'扫雪的人', tx:14, ty:18, dir:1, pal:PAL.worker,
+      { id:'wd', name:'扫雪的人', tx:14, ty:18, dir:1, pal:PAL.worker, opt:{bulky:true},
         script:async()=>{ await say('扫雪的人','今年的雪，下得比哪年都大。'); await say('','他扫出一条路，风又把它填回去。'); } },
     ],
     objs:[],
@@ -308,8 +311,8 @@ const ERA_SCRIPT = {
   '2014': {
     hint:'地铁口',
     npcs:[
-      { id:'bu', name:'卖唱的人', tx:6, ty:17, dir:1, pal:PAL.busker, opt:{longHair:true}, script:npcBusker },
-      { id:'wo', name:'加班的人', tx:28, ty:17, dir:3, pal:PAL.worker, opt:{bag:true}, script:npcWorker },
+      { id:'bu', name:'卖唱的人', tx:6, ty:17, dir:1, pal:PAL.busker, opt:{longHair:true, prop:'guitar'}, script:npcBusker },
+      { id:'wo', name:'加班的人', tx:28, ty:17, dir:3, pal:PAL.worker, opt:{build:'tall', prop:'case'}, script:npcWorker },
       { id:'sv', name:'七年', tx:30, ty:11, dir:0, pal:PAL.grey, when:()=>!S.tapes.includes('2020'), script:npcSeven },
     ],
     objs:[],
@@ -318,8 +321,8 @@ const ERA_SCRIPT = {
   '2020': {
     hint:'录制基地外',
     npcs:[
-      { id:'mo', name:'群管', tx:14, ty:12, dir:0, pal:PAL.mod, opt:{longHair:true}, script:npcMod },
-      { id:'pa', name:'代拍', tx:26, ty:12, dir:2, pal:PAL.pap, opt:{hat:'cap'}, script:npcPap },
+      { id:'mo', name:'群管', tx:14, ty:12, dir:0, pal:PAL.mod, opt:{longHair:true, prop:'phone'}, script:npcMod },
+      { id:'pa', name:'代拍', tx:26, ty:12, dir:2, pal:PAL.pap, opt:{hat:'cap', prop:'camera'}, script:npcPap },
     ],
     objs:[],
   },
@@ -327,11 +330,11 @@ const ERA_SCRIPT = {
   '2026': {
     hint:()=> S.tapes.includes('2026') ? '站台尽头' : '雪地里好像有东西在反光',
     npcs:[
-      { id:'st', name:'站姐', tx:17, ty:11, dir:0, pal:PAL.fan, opt:{longHair:true}, script:npcStation },
-      { id:'ps', name:'路人', tx:24, ty:17, dir:3, pal:PAL.worker, script:npcPasserby },
+      { id:'st', name:'站姐', tx:17, ty:11, dir:0, pal:PAL.fan, opt:{longHair:true, build:'tall', prop:'camera'}, script:npcStation },
+      { id:'ps', name:'路人', tx:24, ty:17, dir:3, pal:PAL.worker, opt:{bulky:true}, script:npcPasserby },
     ],
     objs:[
-      { id:'t0', type:'tape', tx:20, ty:13, once:true,
+      { id:'t0', type:'tape', tx:20, ty:13, once:true, label:'雪里的磁带',
         when:()=> !S.tapes.includes('2006'),
         text:'雪地里有个东西在反光。\n是一盒磁带。标签旧得发黄，上面写着：2006 · 夏。',
         tape:'2006', tapeName:'2006 · 夏',
@@ -340,7 +343,7 @@ const ERA_SCRIPT = {
           await say('','里面是蝉鸣。很吵。还有很远的人声，在喊一个名字。');
           await say('','（按 T，打开磁带盒。）');
         } },
-      { id:'plat', type:'station', tx:27, ty:19, text:'',
+      { id:'plat', type:'station', tx:27, ty:19, text:'', label:'站台尽头',
         when:()=> S.tapes.includes('2026'), script:objPlatform },
     ],
   },
@@ -348,10 +351,10 @@ const ERA_SCRIPT = {
   '????': {
     hint:'那扇门',
     npcs:[
-      { id:'gr', name:'灰', tx:20, ty:11, dir:0, pal:PAL.grey, opt:{glow:'#f0e8d0'}, script:npcVoid },
+      { id:'gr', name:'灰', tx:20, ty:11, dir:0, pal:PAL.grey, opt:{glow:'#f0e8d0', hair:'long'}, script:npcVoid },
     ],
     objs:[
-      { id:'door', type:'door', tx:20, ty:8, text:'', script:objDoor },
+      { id:'door', type:'door', tx:20, ty:8, text:'', label:'那扇门', script:objDoor },
     ],
   },
 };
@@ -471,8 +474,8 @@ function resetGame(){
   S.items = [];
   S.ended = false;
   ERA = ERAS['2026'];
-  P.x = 20*TS; P.y = 11*TS; P.dir = 0; P.fr = 0; P.t = 0;
-  PLAYER_PAL.shirt = '#d94f63'; PLAYER_PAL.shirt2 = '#a83a4c';
+  P.x = 20*TS; P.y = 10*TS; P.dir = 0; P.fr = 0; P.t = 0;
+  PLAYER_PAL.shirt = '#3a5570'; PLAYER_PAL.shirt2 = '#28405a';
   buildMap();
   bakeMap();
   initWeather(ERA.weather);

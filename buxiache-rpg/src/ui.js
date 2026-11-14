@@ -12,7 +12,7 @@ let started = false;        // 标题按下「开始」之后才接受输入
 
 const el = {
   dlg:null, dname:null, dtext:null, choices:null, hudEra:null, hudTape:null,
-  hudZhi:null, hudQing:null, tapeUI:null, tapeList:null, battle:null, enemyCv:null,
+  hudSub:null, hudSlots:null, tapeUI:null, tapeList:null, battle:null, enemyCv:null,
   menu:null, fade:null, title:null, ending:null, hint:null,
 };
 
@@ -20,7 +20,7 @@ function cacheEls(){
   el.dlg = $('#dlg'); el.dname = $('#dname'); el.dtext = $('#dtext');
   el.choices = $('#choices');
   el.hudEra = $('#hudEra'); el.hudTape = $('#hudTape');
-  el.hudZhi = $('#hudZhi'); el.hudQing = $('#hudQing');
+  el.hudSub = $('#hudSub'); el.hudSlots = $('#hudSlots');
   el.tapeUI = $('#tapeUI'); el.tapeList = $('#tapeList');
   el.battle = $('#battle'); el.enemyCv = $('#enemyCv');
   el.menu = $('#menu'); el.fade = $('#fade');
@@ -30,11 +30,31 @@ function cacheEls(){
 function updateHUD(){
   if (!el.hudEra) return;
   el.hudEra.textContent = ERA.year === '????' ? '????' : ERA.year;
+  if (el.hudSub) el.hudSub.textContent = ERA.label || '';
   const hp = (typeof ERA_SCRIPT !== 'undefined' && ERA_SCRIPT[S.era]) ? ERA_SCRIPT[S.era].hint : '';
   if (el.hint) el.hint.textContent = (typeof hp === 'function') ? hp() : (hp || '');
-  el.hudTape.textContent = '磁带 ' + S.tapes.length + '/6';
-  el.hudZhi.style.width = Math.min(100, S.zhi/22*100) + '%';
-  el.hudQing.style.width = Math.min(100, S.qing/22*100) + '%';
+  if (el.hudTape) el.hudTape.textContent = S.tapes.length + '/6';
+  renderTapeSlots();
+}
+
+/* 顶栏那 6 个槽位 = 磁带盒里的 6 格 = 六盘磁带。
+   拿到 = 金色、两轴发亮；当前所在的年份多一圈冷色描边。 */
+function renderTapeSlots(){
+  if (!el.hudSlots) return;
+  if (!el.hudSlots.children || el.hudSlots.children.length !== 6){
+    el.hudSlots.innerHTML = '';
+    for (let i=0;i<6;i++){
+      const d = document.createElement('div');
+      d.className = 'hslot';
+      el.hudSlots.appendChild(d);
+    }
+  }
+  TAPE_ORDER.forEach((y, i) => {
+    const n = el.hudSlots.children[i];
+    if (!n) return;
+    const has = S.tapes.indexOf(y) >= 0;
+    n.className = 'hslot' + (has ? ' on' : '') + (S.era === y ? ' cur' : '');
+  });
 }
 
 /* ───────── 对话 ───────── */
@@ -223,7 +243,7 @@ async function jumpTo(y, spawn){
 
 function eraSpawn(y){
   const d = { '2006':{x:20,y:18}, '2007':{x:20,y:18}, '2014':{x:20,y:18},
-              '2020':{x:20,y:18}, '2026':{x:20,y:11}, '????':{x:20,y:12} };
+              '2020':{x:20,y:18}, '2026':{x:20,y:10}, '????':{x:20,y:12} };
   return d[y] || {x:20,y:18};
 }
 
