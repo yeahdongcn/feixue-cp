@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>不下车 · 各执一词</title>
+<style>
+  :root{
+    --bg:#08080a; --fg:#e8e4dc; --dim:#8d877a; --dim2:#5d594f;
+    --acc:#ffc98a; --line:#262420; --panel:#111113; --red:#c8342b; --blue:#5a7fb0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--fg); overflow:hidden;
+    font-family:"Songti SC","Noto Serif SC",STSong,SimSun,serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #bgframe{position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.92}
+  #grain{position:fixed; inset:0; z-index:99; pointer-events:none; opacity:.05; mix-blend-mode:overlay; background-size:128px 128px}
+  #vig{position:fixed; inset:0; z-index:98; pointer-events:none;
+    background:radial-gradient(130% 100% at 50% 40%, transparent 45%, rgba(0,0,0,.72) 100%)}
+
+  .screen{z-index:2; position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding:max(24px,env(safe-area-inset-top)) 22px max(24px,env(safe-area-inset-bottom)); overflow-y:auto}
+  .screen.on{display:flex}
+  .wrap{width:100%; max-width:780px}
+
+  .kicker{font-size:11px; letter-spacing:.4em; color:var(--dim2); margin-bottom:20px}
+  h1{font-size:clamp(24px,5.5vw,40px); font-weight:400; letter-spacing:.05em; line-height:1.5; margin-bottom:14px}
+  h1 em{font-style:normal; color:var(--acc)}
+  p.lead{font-size:15.5px; line-height:2.15; color:var(--dim); letter-spacing:.02em}
+  p.lead b{color:var(--fg); font-weight:400}
+
+  .btn{
+    display:inline-block; padding:13px 26px; border:1px solid var(--line); background:transparent;
+    color:var(--fg); font-family:inherit; font-size:14px; letter-spacing:.12em; cursor:pointer;
+    transition:all .22s; border-radius:2px;
+  }
+  .btn:hover, .btn:focus-visible{border-color:var(--acc); color:var(--acc); outline:none}
+  .btn.primary{background:var(--acc); color:#0c0c0e; border-color:var(--acc)}
+  .btn.primary:hover{box-shadow:0 0 28px #ffc98a44; color:#0c0c0e}
+  .btn:disabled{opacity:.3; cursor:not-allowed}
+
+  .who{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:34px}
+  .who button{
+    padding:26px 18px; border:1px solid var(--line); background:var(--panel); color:var(--fg);
+    font-family:inherit; cursor:pointer; text-align:left; transition:all .22s; border-radius:2px;
+  }
+  .who button:hover{border-color:#4a4437; transform:translateY(-2px)}
+  .who .n{font-size:22px; letter-spacing:.1em; display:block; margin-bottom:9px}
+  .who .d{font-size:12px; color:var(--dim); line-height:1.9; letter-spacing:.02em}
+  .who .xf .n{color:#e0736a}
+  .who .ln .n{color:#8fb0d8}
+
+  /* ── 时间轴 ── */
+  .hud{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:26px;
+    font-size:12px; color:var(--dim); letter-spacing:.16em}
+  .hud b{color:var(--acc); font-weight:400}
+  .battery{display:flex; gap:5px}
+  .battery i{width:16px; height:6px; background:#2a2723; display:block; border-radius:1px}
+  .battery i.on{background:var(--acc)}
+  .tl{display:flex; flex-direction:column; gap:1px; border:1px solid #35312a; background:#35312a; border-radius:2px; overflow:hidden}
+  .tl button{
+    display:flex; background:rgba(12,12,14,.8); align-items:baseline; gap:16px; padding:19px 20px; width:100%;
+    border:0; color:var(--fg); font-family:inherit;
+    text-align:left; cursor:pointer; transition:background .2s;
+  }
+  .tl button:hover:not(:disabled){background:#191918}
+  .tl button:disabled{cursor:default; opacity:.34}
+  .tl .y{font-size:13px; color:var(--acc); letter-spacing:.1em; min-width:74px}
+  .tl .t{font-size:15px; letter-spacing:.05em}
+  .tl .s{margin-left:auto; font-size:11px; color:var(--dim2); letter-spacing:.1em; white-space:nowrap}
+  .tl button.done .s{color:#7fb07f}
+  .tl button.fin .y{color:#d8a0a0}
+
+  /* ── 档案卡 ── */
+  .arch{ border:1px solid #35312a; background:rgba(12,12,14,.86); backdrop-filter:blur(3px); padding:24px 22px 20px; position:relative; border-radius:2px }
+  .arch::before{content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg,#ffffff04 0 1px,transparent 1px 3px)}
+  .arch .stamp{position:absolute; top:14px; right:16px; font-size:10.5px; letter-spacing:.1em;
+    padding:4px 9px; border:1px solid; border-radius:1px}
+  .arch .stamp.solid{color:#8fbf8f; border-color:#3d5a3d}
+  .arch .stamp.ruin{color:#d8a06b; border-color:#5c4630}
+  .arch .mid{font-size:11px; letter-spacing:.34em; color:var(--dim2); margin-bottom:16px}
+  .arch .ln{font-size:14.5px; line-height:2.15; color:#c9c4ba; letter-spacing:.02em}
+  .arch .ln + .ln{margin-top:2px}
+  .arch canvas{display:block; width:100%; height:96px; margin-top:18px; opacity:.75; border:1px solid #1a1916}
+  .arch .note{margin-top:14px; font-size:12px; line-height:1.95; color:var(--dim); border-top:1px solid #1a1916; padding-top:13px}
+  .arch .empty{margin-top:16px; padding:18px 14px; border:1px dashed #3a3428; text-align:center;
+    font-size:12.5px; letter-spacing:.18em; color:#7a6a52}
+
+  /* ── 场景 ── */
+  .scene .yr{font-size:11px; letter-spacing:.4em; color:var(--dim2); margin-bottom:22px}
+  .scene .mono{font-size:clamp(18px,2.4vw,22px); line-height:2.05; letter-spacing:.03em; color:var(--fg); margin-bottom:34px;
+    padding-left:16px; border-left:1px solid #332f28}
+  .opts{display:flex; flex-direction:column; gap:10px}
+  .opt{
+    position:relative; padding:18px 20px 18px 56px;
+    border:1px solid #35312a; border-left:2px solid #35312a; background:rgba(10,10,11,.55); color:var(--fg);
+    font-family:inherit; font-size:clamp(14.5px,1.5vw,16px); line-height:1.75; letter-spacing:.03em;
+    text-align:left; cursor:pointer; transition:all .2s; border-radius:2px;
+  }
+  .opt::before{content:attr(data-n); position:absolute; left:20px; top:19px; font-size:11px;
+    color:#6a6459; letter-spacing:.1em}
+  .opt::after{content:"›"; position:absolute; right:18px; top:50%; transform:translateY(-50%);
+    color:#4a4437; font-size:20px; transition:color .2s, transform .2s}
+  .opt:hover{border-color:#4a4437; border-left-color:var(--acc); background:#131315}
+  .opt:hover::after{color:var(--acc); transform:translateY(-50%) translateX(3px)}
+  .opt:hover::before{color:var(--acc)}
+  .opt.ghost{color:#8a8377; border-style:dashed}
+  .opt.ghost:hover{color:#c0b8a8; border-color:#4a4437; border-left-color:#6a6459}
+  .opt .hint{display:block; font-size:11px; color:#6a6459; margin-top:5px; letter-spacing:.06em}
+
+  /* ── 后果 ── */
+  .cons{text-align:center}
+  .cons .big{font-size:16px; line-height:2.2; letter-spacing:.04em; margin:26px 0 8px}
+  .cons .tag{display:inline-block; font-size:11px; letter-spacing:.18em; padding:3px 10px;
+    border:1px solid; margin-top:16px}
+  .cons .tag.crack{color:#d88a7a; border-color:#5a3028}
+  .cons .tag.silent{color:#8a8a8a; border-color:#3a3a3a}
+  .cons .tag.match{color:#8fbf8f; border-color:#3d5a3d}
+  .cons .tag.none{color:#7a6a52; border-color:#3a3428}
+
+  /* ── 终局 / 结局 ── */
+  .fin .two{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:26px 0}
+  .fin .col{border:1px solid #35312a; padding:20px 18px; background:rgba(12,12,14,.86); backdrop-filter:blur(3px); border-radius:2px}
+  .fin .col h3{font-size:12px; font-weight:400; letter-spacing:.16em; color:var(--dim); margin-bottom:14px}
+  .fin .col li{list-style:none; font-size:12.5px; line-height:1.95; color:#c9c4ba; margin-bottom:9px; padding-left:12px;
+    border-left:1px solid #2a2723}
+  .fin .col.me li{border-left-color:#5c4630}
+  .fin .col.her li{border-left-color:#2c3a4a; color:#9aa8b8}
+  .fin .col.me li.nope{color:#6a6459; font-style:normal; letter-spacing:.06em}
+  @media (max-width:560px){ .fin .two{grid-template-columns:1fr} }
+  .fin .close{font-size:15px; line-height:2.3; letter-spacing:.05em; text-align:center; margin:30px 0 6px; color:var(--fg)}
+  .fin .sig{text-align:center; font-size:12.5px; color:#9a9285; letter-spacing:.2em; margin-bottom:26px}
+  .title-end{font-size:clamp(26px,6vw,44px); letter-spacing:.14em; text-align:center; margin-bottom:8px; color:var(--acc)}
+
+  .foot{margin-top:30px; display:flex; gap:12px; flex-wrap:wrap}
+  .tiny{font-size:11px; color:var(--dim2); line-height:2; letter-spacing:.04em; margin-top:22px}
+</style>
+</head>
+<body>
+<canvas id="bgframe"></canvas>
+<div id="grain"></div>
+<div id="vig"></div>
+
+<!-- 开场 -->
+<section class="screen on" id="s-intro">
+  <div class="wrap">
+    <div class="kicker">2 0 0 6 — — 2 0 2 6</div>
+    <h1>你只能改<em>你自己</em>。</h1>
+    <p class="lead">
+      你扮演她们中的一个，回到任何一个年份，重新决定当时的自己怎么做。<br>
+      但另一方不归你管——她的反应锁在<strong>档案</strong>里。你重来一百次，她还是她。<br><br>
+      这不是还原，是一次<b>重构</b>。你做的每个选择，都是"如果当时是我"。
+    </p>
+    <div class="who">
+      <button class="xf" data-who="xf"><span class="n">许 飞</span><span class="d">动词更多：说、问、打电话、当面讲。<br>你开口，事情就会往前走。</span></button>
+      <button class="ln" data-who="ln"><span class="n">厉 娜</span><span class="d">动词更少：等、忍、笑一下、转身。<br>你能选的，本来就比她少。</span></button>
+    </div>
+    <p class="tiny">非官方同人。人物是真实的公众人物，情节基于公开报道改编，不构成对任何人的事实主张。<br>画面与声音全部由代码实时生成，不含任何真人影像。</p>
+  </div>
+</section>
+
+<!-- 时间轴 -->
+<section class="screen" id="s-tl">
+  <div class="wrap">
+    <div class="hud">
+      <span id="tl-who"></span>
+      <span class="battery" id="tl-batt"></span>
+    </div>
+    <div class="tl" id="tl-list"></div>
+    <p class="tiny" id="tl-tip">每回去一次，用掉一格电。改得越多，最后一夜越不一样。</p>
+  </div>
+</section>
+
+<!-- 档案卡 -->
+<section class="screen" id="s-arch">
+  <div class="wrap">
+    <div class="arch" id="arch-body"></div>
+    <div class="foot"><button class="btn primary" id="arch-go">进 去</button></div>
+  </div>
+</section>
+
+<!-- 场景 -->
+<section class="screen" id="s-scene">
+  <div class="wrap scene">
+    <div class="yr" id="sc-year"></div>
+    <div class="mono" id="sc-mono"></div>
+    <div class="opts" id="sc-opts"></div>
+  </div>
+</section>
+
+<!-- 后果 -->
+<section class="screen" id="s-cons">
+  <div class="wrap cons">
+    <div class="big" id="cons-big"></div>
+    <div id="cons-tag"></div>
+    <div class="foot" style="justify-content:center"><button class="btn" id="cons-back">回 时 间 轴</button></div>
+  </div>
+</section>
+
+<!-- 终局 -->
+<section class="screen" id="s-end">
+  <div class="wrap fin" id="end-body"></div>
+</section>
+
+<script>
+'use strict';
+/* ══════════════════════════════════════════════════════
+   剧本：全部数据驱动。改词不用碰逻辑。
+   kind: match(符合档案) / break(偏离) / silent(沉默) / ghost(没说出口)
+   ══════════════════════════════════════════════════════ */
+const NODES = [
+  {
+    id:'pk', year:'2006 · 夏', title:'PK 台', tint:['#c8342b','#ffa04a'],
+    arch:{
+      mid:'资 料 · 0 0 1',
+      lines:['2006 年夏，长沙赛区 PK 环节。','主持人问厉娜投票标准。','她说：「于公于私，于情于理。」','然后举起了许飞的手。'],
+      stamp:'✅ 公开可查 · 有播出画面', level:'solid',
+      note:'这一段有播出画面。'
+    },
+    opts:{
+      xf:[
+        { t:'握紧她的手', kind:'match', big:'镜头扫过去的时候，你们的手是握着的。' },
+        { t:'把手抽回来', kind:'break', crack:2, big:'镜头扫过去的时候，你的手垂在身侧。' },
+        { t:'低着头，等她放下', kind:'silent', big:'你什么也没做。那只手举了十一秒。' },
+        { t:'「你为什么选我」', kind:'ghost', big:'这句话你没说出口。' }
+      ],
+      ln:[
+        { t:'说「于公于私，于情于理」，举起她的手', kind:'match', big:'台下很吵。你听见自己心跳。' },
+        { t:'说「她唱得比我好」，不举手', kind:'break', crack:2, big:'她的名字被念过去了。你们再没提过这一晚。' },
+        { t:'什么都不说，直接举手', kind:'silent', big:'你没解释。后来所有人都以为你不需要解释。' },
+        { t:'「我其实……」', kind:'ghost', big:'这句话你没说出口。' }
+      ]
+    },
+    mono:{
+      xf:'她举手的时候，我没敢看她。',
+      ln:'话筒递到我手里的时候，我脑子里只有一个念头：别让她走。'
+    }
+  },
+  {
+    id:'post', year:'2007 · 11', title:'那三句话', tint:['#4a5a70','#8899aa'],
+    arch:{
+      mid:'资 料 · 0 0 2',
+      lines:['2007 年 11 月，天涯娱乐八卦。','一个帖子，三句话。跟了两千一百多楼。','原帖已删。流传的截图来源不明。','许飞指认；厉娜先否认，后被追问时改口「也许话赶话提过，但没点名」。'],
+      stamp:'⚠ 罗生门 · 无第三方证据', level:'ruin',
+      empty:'没有第三方证据。没有任何一方被证实。'
+    },
+    opts:{
+      xf:[
+        { t:'不问。自己扛', kind:'match', big:'此后的七年，你的行程单近乎全空。' },
+        { t:'打电话问她', kind:'break', crack:1, big:'电话通了。你们都没有先开口，然后挂断。' },
+        { t:'发一条短信：「你看到那个帖子了吗」', kind:'break', crack:1, big:'已读。没有回复。' },
+        { t:'「是不是你」', kind:'ghost', big:'这句话你没说出口。这一格永远是空的。' }
+      ],
+      ln:[
+        { t:'接，说「不是我」', kind:'match', big:'你说了三遍。第三遍的时候声音有点抖。' },
+        { t:'不接', kind:'break', crack:1, big:'手机在桌上震了很久。你看着它停。' },
+        { t:'接，说「也许话赶话提过」', kind:'match', flag:'改口', big:'你说完就后悔了。但话已经出去了。' },
+        { t:'「你信我吗」', kind:'ghost', big:'这句话你没说出口。这一格永远是空的。' }
+      ]
+    },
+    mono:{
+      xf:'我第一个想到的不是帖子，是她。',
+      ln:'手机响的时候，我在想，接了要说什么。'
+    }
+  },
+  {
+    id:'cliff', year:'2026 · 10', title:'海拔四千米', tint:['#5a7fb0','#dfe8f0'],
+    arch:{
+      mid:'资 料 · 0 0 3',
+      lines:['2026 年 10 月，悬崖小屋，海拔约 4000 米。','她说：「我画地为牢。」','回屋后，她用 AI 查了这四个字的意思，然后点了麦当劳。'],
+      stamp:'✅ 公开可查 · 有节目画面', level:'solid',
+      note:'「她在等谁」是网友逐帧读出来的，没有当事人确认过。'
+    },
+    opts:{
+      ln:[
+        { t:'说出「我画地为牢」', kind:'match', big:'风把这句话吹散了。你也不知道自己为什么说。' },
+        { t:'笑一下，说「风好大」', kind:'break', crack:1, big:'她「嗯」了一声。那句话就没有了。' },
+        { t:'什么都不说', kind:'silent', big:'你们站了四分钟。谁都没有先走。' },
+        { t:'「你听懂了吗」', kind:'ghost', big:'这句话你没说出口。' }
+      ],
+      xf:[
+        { t:'沉默', kind:'match', big:'你听懂了。但你没有接。' },
+        { t:'说「那我陪你关在里面」', kind:'break', crack:1, big:'她笑了一下，说「你关不住的」。' },
+        { t:'说「下山吃饭」', kind:'break', crack:1, big:'她跟着你走了。回头看了两次。' },
+        { t:'「你是不是在等我」', kind:'ghost', big:'这句话你没说出口。' }
+      ]
+    },
+    mono:{
+      ln:'我不知道那个词是什么意思。我就是觉得，站在这儿，走不出去。',
+      xf:'她说那四个字的时候，我在想怎么接。'
+    }
+  }
+];
+
+const FINALE = {
+  id:'end', year:'2026 · 11', title:'下车', fin:true, tint:['#8a6a4a','#ffc98a'],
+  arch:{
+    mid:'节 目 组', lines:['收官环节。','节目组让每人说一句：这些年最想对对方说的话。','双方都没有下车。'],
+    stamp:'✅ 公开可查', level:'solid'
+  },
+  opts:{
+    xf:[
+      { t:'说完那句话', kind:'match', fin:'stay' },
+      { t:'不说。下车', kind:'break', fin:'leave' }
+    ],
+    ln:[
+      { t:'说完那句话', kind:'match', fin:'stay' },
+      { t:'不说。下车', kind:'break', fin:'leave' }
+    ]
+  }
+};
+
+const CHARS = {
+  xf:{ name:'许飞', color:'#c8342b', her:'厉娜' },
+  ln:{ name:'厉娜', color:'#5a7fb0', her:'许飞' }
+};
+
+/* ══════════ 状态 ══════════ */
+const KEY = 'gezhiyici.v1';
+let S = {
+  who:null, battery:6, cracks:0, silence:0, unspoken:0,
+  done:{}, log:[], ended:false
+};
+
+const $ = id => document.getElementById(id);
+const show = id => {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  window.scrollTo(0,0);
+  const sc = document.querySelector('.screen.on'); if (sc) sc.scrollTop = 0;
+};
+
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const r = localStorage.getItem(KEY); if (r) S = Object.assign(S, JSON.parse(r)); }catch(e){} }
+
+/* ══════════ 噪点 ══════════ */
+(function grain(){
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  if (!x || !x.createImageData) return;
+  const im = x.createImageData(128,128), d = im.data;
+  for (let i=0;i<d.length;i+=4){ const v = Math.random()*255|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; }
+  x.putImageData(im,0,0);
+  $('grain').style.backgroundImage = 'url(' + c.toDataURL() + ')';
+})();
+
+/* ══════════ 背景：一帧看不清的"记忆残片"，全部现场生成 ══════════ */
+const hexA = (hex, a) => {
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + (n>>16&255) + ',' + (n>>8&255) + ',' + (n&255) + ',' + a + ')';
+};
+function drawFrame(node){
+  const cv = $('bgframe'); if (!cv) return;
+  const w = cv.width = cv.clientWidth, h = cv.height = cv.clientHeight;
+  const x = cv.getContext('2d'); if (!x) return;
+  const tint = (node && node.tint) || ['#3a2a1c','#ff9c5a'];
+  let s = 7919 * ((node && node.id.length) || 3) + (S.who === 'xf' ? 101 : 211);
+  const rnd = () => (s = (s*1103515245 + 12345) & 0x7fffffff, s / 0x7fffffff);
+  x.fillStyle = '#08080a'; x.fillRect(0,0,w,h);
+  // 大色团：像严重失焦的画面
+  for (let i=0;i<10;i++){
+    const cx = w*rnd(), cy = h*(0.15+rnd()*0.9), r = Math.min(w,h)*(0.16+rnd()*0.5);
+    const g = x.createRadialGradient(cx,cy,0,cx,cy,r);
+    g.addColorStop(0, hexA(tint[i%2], 0.07+rnd()*0.09));
+    g.addColorStop(0.55, hexA(tint[i%2], 0.03));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(0,0,w,h);
+  }
+  // 一道横向亮带：曝光过的地方
+  const by = h*(0.28+rnd()*0.3);
+  const lg = x.createLinearGradient(0,by-60,0,by+60);
+  lg.addColorStop(0,'rgba(255,255,255,0)'); lg.addColorStop(.5, hexA(tint[1],0.05)); lg.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle = lg; x.fillRect(0,by-60,w,120);
+  // 扫描线
+  x.fillStyle = 'rgba(0,0,0,.20)';
+  for (let y=0;y<h;y+=3) x.fillRect(0,y,w,1);
+  // 竖直划痕
+  for (let i=0;i<6;i++){
+    x.fillStyle = 'rgba(255,255,255,' + (0.012+rnd()*0.022).toFixed(3) + ')';
+    x.fillRect(w*rnd()|0, 0, 1+rnd()*2, h);
+  }
+  // 巨大的年份水印
+  const year = node ? node.year.slice(0,4) : '';
+  if (year){
+    x.font = '700 ' + Math.round(Math.min(w,h)*0.46) + 'px "Songti SC",serif';
+    x.fillStyle = 'rgba(255,255,255,.028)';
+    x.textAlign = 'right'; x.fillText(year, w-24, h*0.90);
+  }
+  // 暗角
+  const vg = x.createRadialGradient(w/2,h*0.45,0,w/2,h*0.45,Math.max(w,h)*0.72);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.78)');
+  x.fillStyle = vg; x.fillRect(0,0,w,h);
+}
+
+/* ══════════ 档案卡上的"影像残片"：程序化生成 ══════════ */
+function drawRelic(cv, seed, level){
+  const w = cv.width = cv.clientWidth * 2, h = cv.height = 192;
+  const x = cv.getContext('2d'); if (!x) return;
+  let s = seed;
+  const rnd = () => (s = (s*1103515245 + 12345) & 0x7fffffff, s / 0x7fffffff);
+  x.fillStyle = level === 'ruin' ? '#151210' : '#101215'; x.fillRect(0,0,w,h);
+  // 模糊的亮块：像是画面的残余
+  for (let i=0;i<7;i++){
+    x.fillStyle = 'rgba(' + (120+rnd()*90|0) + ',' + (100+rnd()*70|0) + ',' + (70+rnd()*50|0) + ',' + (0.05+rnd()*0.12).toFixed(2) + ')';
+    const bw = w*(0.1+rnd()*0.4), bh = h*(0.1+rnd()*0.5);
+    x.fillRect(w*rnd(), h*rnd()*0.7, bw, bh);
+  }
+  // 扫描线
+  x.fillStyle = 'rgba(0,0,0,.28)';
+  for (let y=0;y<h;y+=4) x.fillRect(0,y,w,1.6);
+  // 噪点
+  for (let i=0;i<900;i++){
+    x.fillStyle = 'rgba(255,255,255,' + (rnd()*0.05).toFixed(3) + ')';
+    x.fillRect(w*rnd()|0, h*rnd()|0, 2, 1);
+  }
+  // 时间码
+  x.fillStyle = level === 'ruin' ? 'rgba(216,160,107,.5)' : 'rgba(255,201,138,.42)';
+  x.font = '22px monospace';
+  x.fillText('REC ' + String(10 + (seed%80)).padStart(2,'0') + ':0' + (seed%6), 20, h-20);
+  if (level === 'ruin'){
+    x.fillStyle = 'rgba(0,0,0,.45)';
+    for (let i=0;i<5;i++) x.fillRect(0, h*(0.1+rnd()*0.7), w, 2+rnd()*10);
+  }
+}
+
+/* ══════════ 时间轴 ══════════ */
+function renderTL(){
+  drawFrame(null);
+  $('tl-who').innerHTML = '你 是 <b>' + CHARS[S.who].name + '</b>';
+  $('tl-batt').innerHTML = Array.from({length:6}, (_,i) => '<i class="' + (i < S.battery ? 'on' : '') + '"></i>').join('');
+  const list = $('tl-list'); list.innerHTML = '';
+  NODES.forEach(n => {
+    const b = document.createElement('button');
+    const done = S.done[n.id];
+    b.className = done ? 'done' : '';
+    b.innerHTML = '<span class="y">' + n.year + '</span><span class="t">' + n.title + '</span>' +
+                  '<span class="s">' + (done ? '已经回去过' : '还没回去') + '</span>';
+    b.onclick = () => enterNode(n);
+    b.disabled = S.battery <= 0 && !done;
+    list.appendChild(b);
+  });
+  const allDone = NODES.every(n => S.done[n.id]);
+  const f = document.createElement('button');
+  f.className = 'fin';
+  f.innerHTML = '<span class="y">' + FINALE.year + '</span><span class="t">' + FINALE.title + '</span>' +
+                '<span class="s">' + (allDone ? '去' : '把三站都走完') + '</span>';
+  f.disabled = !allDone;
+  f.onclick = () => enterNode(FINALE);
+  list.appendChild(f);
+}
+
+/* ══════════ 进入节点：先看档案 ══════════ */
+let pending = null;
+function enterNode(n){
+  if (!n.fin && S.battery <= 0){ return; }
+  pending = n;
+  const a = n.arch, body = $('arch-body');
+  body.innerHTML =
+    '<div class="stamp ' + a.level + '">' + a.stamp + '</div>' +
+    '<div class="mid">' + a.mid + '</div>' +
+    a.lines.map(l => '<div class="ln">' + l + '</div>').join('') +
+    (n.fin ? '' : '<canvas id="relic"></canvas>') +
+    (a.empty ? '<div class="empty">' + a.empty + '</div>' : '') +
+    (a.note ? '<div class="note">' + a.note + '</div>' : '');
+  if (!n.fin){
+    const cv = $('relic');
+    requestAnimationFrame(() => drawRelic(cv, n.id.length * 977 + n.year.length * 31, a.level));
+  }
+  $('arch-go').textContent = n.fin ? '下 车 环 节' : '进 去';
+  drawFrame(n);
+  show('s-arch');
+}
+
+/* ══════════ 场景 ══════════ */
+function enterScene(n){
+  if (!n.fin){
+    if (S.battery <= 0) return;
+    S.battery--;
+    if (!S.done[n.id]) S.done[n.id] = 0;
+    S.done[n.id]++;
+  }
+  save();
+  $('sc-year').textContent = n.year + '  ·  ' + n.title + '   —   你 是 ' + CHARS[S.who].name;
+  $('sc-mono').textContent = n.fin
+    ? '节目组让每人说一句：这些年最想对对方说的话。你想留下，还是下车？'
+    : (n.mono[S.who] || '');
+  const box = $('sc-opts'); box.innerHTML = '';
+  n.opts[S.who].forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt' + (o.kind === 'ghost' ? ' ghost' : '');
+    b.dataset.n = o.kind === 'ghost' ? '—' : String(i + 1).padStart(2, '0');
+    b.innerHTML = o.t + (o.kind === 'ghost' ? '<span class="hint">你大概永远也不会说</span>' : '');
+    b.onclick = () => choose(n, o);
+    box.appendChild(b);
+  });
+  if (n.fin){ $('sc-year').textContent = '2026 · 11  ·  下车'; }
+  drawFrame(n);
+  show('s-scene');
+}
+
+/* ══════════ 选择后的后果 ══════════ */
+function choose(n, o){
+  if (o.fin){ return finish(o.fin); }
+  if (o.kind === 'break') S.cracks += (o.crack || 1);
+  if (o.kind === 'silent') S.silence++;
+  if (o.kind === 'ghost') S.unspoken++;
+  S.log.push({ id:n.id, t:o.t, big:o.big || o.t, kind:o.kind, flag:o.flag || null });
+  save();
+  $('cons-big').textContent = o.big;
+  const tag = $('cons-tag');
+  const map = {
+    match:  ['match',  '与档案一致'],
+    break:  ['crack',  '裂痕 +' + (o.crack || 1)],
+    silent: ['silent', '你什么也没说'],
+    ghost:  ['none',   '这句话你没说出口']
+  };
+  const [cls, txt] = map[o.kind] || map.match;
+  tag.innerHTML = '<span class="tag ' + cls + '">' + txt + (o.flag ? ' · ' + o.flag : '') + '</span>';
+  $('cons-back').onclick = () => { renderTL(); show('s-tl'); };
+  show('s-cons');
+}
+
+/* ══════════ 结局 ══════════ */
+function finish(way){
+  S.ended = true; save();
+  const mine = S.log.map(x => ({ t:x.t, big:x.big || x.t, k:x.kind }));
+  // 她的版本：由档案固定生成，与你的选择无关
+  // 她的版本 = 另一个人的版本。谁在玩，决定了这一栏是谁的账。
+  const hers = S.who === 'xf' ? [
+    '她举起了手，说「于公于私，于情于理」。',
+    '她没有承认，也没有否认。',
+    '她说了「我画地为牢」，然后点了麦当劳。'
+  ] : [
+    '她站在 PK 台上，等一个结果。',
+    '有人说她指认过。也有人说没有。原帖已删。',
+    '她听完那四个字，没有接话。'
+  ];
+  let title, tail;
+  if (way === 'leave'){ title = '下 车'; tail = '你没有说那句话。车门关上的时候，你听见有人喊了你的名字。'; }
+  else if (S.cracks === 0){ title = '各 自 安 好'; tail = '你做的每个选择，都是当时的你会做的。二十年就这样过去了，谁也没欠谁一句解释。'; }
+  else { title = '说 不 清'; tail = '你想说清楚。可是说清楚需要两个人用同一份证据——你们从来没有过。'; }
+
+  const mineLi = mine.length
+    ? mine.map(m => m.k === 'ghost'
+        ? '<li class="nope">「' + m.t.replace(/[「」]/g,'') + '」—— 没说出口</li>'
+        : '<li>' + m.big + '</li>').join('')
+    : '<li>你什么都没有改。</li>';
+
+  $('end-body').innerHTML =
+    '<div class="title-end">' + title + '</div>' +
+    '<div class="sig">裂痕 ' + S.cracks + ' · 沉默 ' + S.silence + ' · 没说出口 ' + S.unspoken + '</div>' +
+    '<div class="two">' +
+      '<div class="col me"><h3>你 的 版 本</h3><ul>' + mineLi + '</ul></div>' +
+      '<div class="col her"><h3>她 的 版 本</h3><ul>' + hers.map(h => '<li>' + h + '</li>').join('') + '</ul></div>' +
+    '</div>' +
+    '<p class="close">' + tail + '</p>' +
+    '<p class="close" style="color:var(--acc)">「你们说的都是真的。<br>只是不是同一件事。」</p>' +
+    '<div class="foot" style="justify-content:center">' +
+      '<button class="btn" id="again">另 一 个 人</button>' +
+      '<button class="btn" id="restart">从 头 再 来</button>' +
+    '</div>';
+  drawFrame(FINALE);
+  $('again').onclick = () => { reset(); show('s-intro'); };
+  $('restart').onclick = () => { reset(); show('s-intro'); };
+  show('s-end');
+}
+
+function reset(){
+  S = { who:null, battery:6, cracks:0, silence:0, unspoken:0, done:{}, log:[], ended:false };
+  try{ localStorage.removeItem(KEY); }catch(e){}
+}
+
+/* ══════════ 入口 ══════════ */
+document.querySelectorAll('.who button').forEach(b => {
+  b.onclick = () => {
+    if (!S.who || S.ended){ S = { who:b.dataset.who, battery:6, cracks:0, silence:0, unspoken:0, done:{}, log:[], ended:false }; }
+    S.who = b.dataset.who;
+    save(); renderTL(); show('s-tl');
+  };
+});
+$('arch-go').onclick = () => enterScene(pending);
+
+// 存档续玩
+load();
+if (S.who && !S.ended){ renderTL(); show('s-tl'); }
+
+window.__g = { get S(){ return S; }, NODES, FINALE, reset, renderTL, enterNode, enterScene, choose, finish };
+// 电量或进度被外部改动后，重画时间轴让禁用态跟上
+Object.defineProperty(window.__g, 'refresh', { value(){ renderTL(); } });
+</script>
+</body>
+</html>
