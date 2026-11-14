@@ -2221,13 +2221,20 @@ function animatePlayer(dt){
     v.armL.sh.rotation.x = -2.2;  v.armR.sh.rotation.x = -2.0;
     v.torso.rotation.x = -0.16;
   } else if (sl){
-    v.root.rotation.x = -1.15;
-    v.root.position.y = 0.55;
-    v.legL.hip.rotation.x = 0.5; v.legR.hip.rotation.x = 0.3;
-    v.armL.sh.rotation.x = 0.6;  v.armR.sh.rotation.x = 0.4;
-    v.torso.rotation.x = 0.2;
+    // 跪滑：光把上身压下去，腿还是直的，看着像"弯腰站着"。
+    // 髋部一起下沉、双腿折叠，整体剪影才矮得下来。
+    v.root.rotation.x = -0.95;
+    v.root.position.y = -0.20;
+    v.torso.rotation.x = -0.06;
+    v.legL.hip.rotation.x = 1.62; v.legR.hip.rotation.x = 1.38;
+    v.legL.kn.rotation.x  = 2.20; v.legR.kn.rotation.x  = 2.00;
+    v.legL.hip.rotation.z = -0.20; v.legR.hip.rotation.z = 0.18;
+    v.armL.sh.rotation.x = 0.42; v.armR.sh.rotation.x = 0.26;   // 手臂往后贴地，不是举手
+    v.armL.sh.rotation.z = -0.16; v.armR.sh.rotation.z = 0.16;
+    v.armL.el.rotation.x = -0.30; v.armR.el.rotation.x = -0.22;
   } else {
     v.root.rotation.x = 0;
+    v.legL.kn.rotation.x = 0; v.legR.kn.rotation.x = 0;
     const s = Math.sin(ph), c = Math.cos(ph);
     v.legL.hip.rotation.x = s * 0.95;
     v.legR.hip.rotation.x = -s * 0.95;
