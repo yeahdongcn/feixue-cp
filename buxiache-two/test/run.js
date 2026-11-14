@@ -68,6 +68,8 @@ const ok = (c, m) => { c ? (pass++, console.log('  ✓ ' + m)) : (fail++, consol
   await page.waitForTimeout(300);
   const arch2 = await page.locator('#arch-body').innerText();
   ok(arch2.includes('没有第三方证据'), '2007 节点的档案写明无第三方证据');
+  ok(arch2.includes('厉娜把解约'), '指控方是厉娜，不是许飞');
+  ok(!arch2.includes('许飞指认'), '没有把告密的指控方向写反');
   ok(arch2.includes('罗生门') || arch2.includes('⚠'), '标为罗生门，不是结论');
   await shot('06_archive_ruin');
   await page.click('#arch-go');
@@ -84,7 +86,10 @@ const ok = (c, m) => { c ? (pass++, console.log('  ✓ ' + m)) : (fail++, consol
   // ── 6. 第三站 ──
   await page.locator('#tl-list button').nth(2).click();
   await page.waitForTimeout(300);
-  ok((await page.locator('#arch-body').innerText()).includes('画地为牢'), '第三站档案含关键台词');
+  const arch3 = await page.locator('#arch-body').innerText();
+  ok(arch3.includes('画地为牢'), '第三站档案含关键台词');
+  ok(arch3.includes('许飞说'), '「我画地为牢」是许飞说的');
+  ok(arch3.includes('厉娜用 AI'), '查 AI、点麦当劳的是厉娜');
   await page.click('#arch-go');
   await page.waitForTimeout(150);
   await page.locator('.opt').nth(0).click();
@@ -132,8 +137,9 @@ const ok = (c, m) => { c ? (pass++, console.log('  ✓ ' + m)) : (fail++, consol
   await page.waitForTimeout(250);
   const end2 = await page.locator('#end-body').innerText();
   ok(end2.includes('各 自 安 好'), '全程符合档案 → 各自安好');
-  ok(end2.includes('有人说她指认过'), '玩厉娜时，她的版本是许飞的账，不是自己的');
-  ok(!end2.includes('我画地为牢」'), '玩厉娜时不会把厉娜自己的台词写进"她的版本"');
+  ok(end2.includes('我是被宣判的人'), '玩厉娜时，她的版本是许飞的账');
+  ok(!end2.includes('麦当劳'), '玩厉娜时不会把她自己做的事写进"她的版本"');
+  ok(!end2.includes('于公于私'), '玩厉娜时不会把 2006 年那一票算到许飞头上');
 
   // ── 10. 下车结局 + 电量拦截 ──
   await page.click('#restart');
