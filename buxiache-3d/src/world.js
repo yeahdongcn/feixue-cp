@@ -13,8 +13,37 @@ const CAR_W    = 7.4;
 const ERA_LEN  = 190;        // 每个时代的世界长度
 const SPAWN_A  = 60;         // 前方多少距离内生成障碍
 
+const BOND_MAX  = 100;       // 「同框」满值
+const PAIR_AHEAD = 14.5;     // 两个剪影跑在玩家前方多少米
+
 const Q = new URLSearchParams(location.search);
 const SHOT = Q.get('shot');
+
+/* ══════════ 「同框」：两个人的间距是这一局唯一能保住的东西 ══════════
+   mode  both=两个都在 / one=只剩一个 / none=空台
+   gap   进入该时代时的间距（米），gapMax 是这个时代会自然撕开到多远
+   in/out 玩家站在两人之间时每秒回多少 / 离开时每秒掉多少
+   drift 每秒自然撕开的距离；extra 这个时代无论怎样都在掉的量          */
+const PAIR_ERA = [
+  { mode:'both', gap:1.00, gapMax:1.80, inRate:6, outRate:12, drift:0.02, extra:0.3, tag:'并肩' },
+  { mode:'both', gap:1.70, gapMax:4.40, inRate:3, outRate:14, drift:0.11, extra:1.2, tag:'渐远' },
+  { mode:'one',  gap:0.00, gapMax:0.90, inRate:0, outRate:14, drift:0.02, extra:3.0, tag:'只剩一个' },
+  { mode:'both', gap:3.60, gapMax:4.80, inRate:4, outRate:14, drift:0.04, extra:2.0, tag:'更远' },
+  { mode:'both', gap:1.60, gapMax:2.60, inRate:4.5, outRate:13, drift:0.05, extra:1.0, tag:'又近了一点' },
+  { mode:'none', gap:0.00, gapMax:0.00, inRate:0, outRate:0,  drift:0,    extra:0,   tag:'空台' },
+];
+
+/* 2007 那一站：三种说法。没有一种有第三方证据，游戏不替任何人下结论。 */
+const RUMOR_ERA = 1;
+const RUMOR_AT  = 0.46;
+const RUMOR_VERSIONS = [
+  { key:'v0', short:'“告了密”', y:'未证实 · 第一种说法',
+    t:'有人说，那一年她“告了密”。没有第三方证据，也没有人出来对质。' },
+  { key:'v1', short:'“没做这事”', y:'未证实 · 第二种说法',
+    t:'有人说，她什么都没做。这句话同样只有一面之词，不能当证据。' },
+  { key:'v2', short:'“记错了”', y:'未证实 · 第三种说法',
+    t:'还有人说，整件事从头到尾都被记错了。谁也没法证明这一种更真。' },
+];
 
 /* ───────── 时代调色板 ───────── */
 const ERAS = [
@@ -68,6 +97,12 @@ const ERAS = [
 ];
 
 const C = hex => new THREE.Color(hex);
+const metalC = (c, sat, k) => {          // 去饱和 + 提亮，让暖色调色板读成金属而不是木头
+  const col = new THREE.Color(c), hsl = {};
+  col.getHSL(hsl);
+  col.setHSL(hsl.h, hsl.s * sat, Math.min(1, hsl.l * k));
+  return col.getHex();
+};
 const shadeC = (hex, k) => { const c = C(hex); c.multiplyScalar(k); return c; };
 
 /* ══════════════════════════════════════════════════════════════
@@ -131,11 +166,41 @@ class Builder{
    场景 / 渲染器
    ══════════════════════════════════════════════════════════════ */
 let renderer, scene, camera, clock;
-let skyMat, sunLight, ambLight, hemiLight;
+let skyMat, skyMesh, sunLight, ambLight, hemiLight;
 let glows, solids;          // 每个时代两组合并网格
 let tapesIM, shardIM;       // 动的东西才用 InstancedMesh
 let particles;
 let worldGroup;
+
+/* ── 程序化光晕贴图（DataTexture，零外部资源，node 里也能建） ── */
+let GLOW_TEX = null;
+function glowTex(){
+  if (GLOW_TEX) return GLOW_TEX;
+  const N = 32, data = new Uint8Array(N*N*4);
+  for (let y=0;y<N;y++){
+    for (let x=0;x<N;x++){
+      const dx = (x+0.5)/N*2-1, dy = (y+0.5)/N*2-1;
+      const r = Math.sqrt(dx*dx+dy*dy);
+      const a = Math.max(0, 1-r);
+      const i = (y*N+x)*4;
+      data[i] = 255; data[i+1] = 255; data[i+2] = 255;
+      data[i+3] = Math.round(a*a*a*255);
+    }
+  }
+  GLOW_TEX = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+  GLOW_TEX.needsUpdate = true;
+  return GLOW_TEX;
+}
+function makeGlowSprite(color, size, opacity){
+  const m = new THREE.SpriteMaterial({
+    map: glowTex(), color: new THREE.Color(color), transparent: true,
+    opacity: opacity === undefined ? 0.8 : opacity,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+  });
+  const s = new THREE.Sprite(m);
+  s.scale.set(size, size, 1);
+  return s;
+}
 
 const G = {
   running:false, over:false, t:0, dist:0, speed:26,
@@ -152,7 +217,7 @@ const player = {
 
 /* ── 天空 ── */
 function makeSky(){
-  const geo = new THREE.SphereGeometry(600, 24, 16);
+  const geo = new THREE.SphereGeometry(240, 24, 16);   // 必须小于相机远平面，否则整个天空被裁掉
   skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite:false, fog:false,
     uniforms:{
@@ -186,6 +251,7 @@ function makeSky(){
   const m = new THREE.Mesh(geo, skyMat);
   m.frustumCulled = false;
   m.renderOrder = -100;
+  skyMesh = m;
   return m;
 }
 
@@ -222,6 +288,7 @@ function resetParticle(i, anywhere){
 const obstacles = [];   // {z, lane, kind, w, h, y}
 const tapeList  = [];   // {z, lane, y, taken}
 const tapeData  = [];
+const rumorData = [];   // 2007 那三种说法 {idx, lane, z, taken, spin}
 const SCENERY = [];
 
 function buildEra(era, z0){
@@ -235,19 +302,47 @@ function buildEra(era, z0){
   for (let i=0;i<nCar;i++){
     const cz = z0 - i*(CAR_LEN+CAR_GAP);
     // 车体
-    b.box(CAR_W, 2.9, CAR_LEN, 0, 1.55, cz, E.roofC2);
+    b.box(CAR_W, 2.9, CAR_LEN, 0, 1.55, cz, metalC(E.roofC2, 0.34, 0.92));
     // 车顶
-    b.box(CAR_W+0.5, 0.22, CAR_LEN+0.4, 0, 3.30, cz, E.roofC);
-    b.box(CAR_W+0.2, 0.10, CAR_LEN+0.2, 0, 3.19, cz, shadeC(E.roofC,0.82).getHex());
+    b.box(CAR_W+0.5, 0.22, CAR_LEN+0.4, 0, 3.30, cz, metalC(E.roofC, 0.30, 1.02));
+    b.box(CAR_W+0.2, 0.10, CAR_LEN+0.2, 0, 3.19, cz, shadeC(E.roofC,0.62).getHex());
     // 车顶护栏（两侧）
     b.box(0.12, 0.30, CAR_LEN+0.2, -CAR_W/2-0.20, 3.55, cz, E.trim);
     b.box(0.12, 0.30, CAR_LEN+0.2,  CAR_W/2+0.20, 3.55, cz, E.trim);
-    // 车顶导引亮条（两侧 + 中线）
+    // 车顶导引亮条（两侧）
     b.box(0.26, 0.06, CAR_LEN+0.4, -CAR_W/2+0.18, 3.43, cz, E.trim);
     b.box(0.26, 0.06, CAR_LEN+0.4,  CAR_W/2-0.18, 3.43, cz, E.trim);
-    b.box(0.12, 0.05, CAR_LEN+0.2, 0, 3.42, cz, shadeC(E.trim,1.15).getHex());
-    // 车顶通风口
-    for (let k=-1;k<=1;k++) b.box(1.6, 0.26, 2.0, k*1.7, 3.52, cz + 3.5, shadeC(E.roofC,0.7).getHex());
+    // 纵向瓦楞：一条条细筋收敛到灭点，"金属车顶"读得出来
+    for (let r=0;r<9;r++){
+      b.box(0.045, 0.028, CAR_LEN+0.1, -3.2 + r*0.8, 3.422, cz, metalC(E.roofC, 0.18, 0.86));
+    }
+    // 车顶横向接缝：把"公路虚线"换成"车厢钣金拼缝"，这是铁路的语言
+    for (let k=0;k<6;k++){
+      b.box(CAR_W+0.1, 0.03, 0.07, 0, 3.425, cz - CAR_LEN/2 + 1.2 + k*2.3, metalC(E.roofC,0.14,0.68));
+    }
+    // 纵向走线槽（正中偏左，避开角色中线）
+    b.box(0.30, 0.05, CAR_LEN-0.8, -1.9, 3.435, cz, metalC(E.roofC,0.16,0.78));
+    // 车顶边灯：给画面加一串透视光点
+    for (let k=0;k<4;k++){
+      const lz = cz - CAR_LEN/2 + 2.0 + k*3.5;
+      g.box(0.10, 0.10, 0.34, -CAR_W/2+0.18, 3.50, lz, E.glow);
+      g.box(0.10, 0.10, 0.34,  CAR_W/2-0.18, 3.50, lz, E.glow);
+    }
+    // 车顶空调机组：底座 + 上盖 + 散热片，别再是光秃秃的灰盒子
+    for (let k=-1;k<=1;k+=2){
+      const vx = k*2.25, vz = cz + 3.4;
+      b.box(1.05, 0.18, 1.35, vx, 3.45, vz, metalC(E.roofC,0.10,0.76));
+      b.box(0.86, 0.13, 1.15, vx, 3.58, vz, metalC(E.roofC,0.08,0.94));
+      for (let q=0;q<4;q++) b.box(0.90, 0.02, 0.05, vx, 3.65, vz-0.40+q*0.26, metalC(E.roofC,0.10,0.58));
+    }
+    // 车厢连接处：风挡 + 车钩，让"一节一节"读得出来
+    if (i < nCar-1){
+      const gz = cz - (CAR_LEN+CAR_GAP)/2;
+      b.box(CAR_W-0.9, 2.0, 0.42, 0, 1.85, gz, shadeC(E.roofC2,0.42).getHex());
+      b.box(1.1, 0.34, 0.55, 0, 0.78, gz, '#191c22');
+      g.box(0.10, 0.06, 0.5, -CAR_W/2+0.18, 3.50, gz, E.glow);
+      g.box(0.10, 0.06, 0.5,  CAR_W/2-0.18, 3.50, gz, E.glow);
+    }
     // 侧面窗带（发光）
     g.box(CAR_W+0.06, 0.95, CAR_LEN-1.4, 0, 2.10, cz, E.lit);
     // 车窗分隔
@@ -284,7 +379,7 @@ function buildEra(era, z0){
         b.cyl(0.14, 9.5, s*(8.5), 4.6, pz, shadeC(E.trim,0.55).getHex());
         b.box(3.4, 0.16, 0.16, s*(7.0), 8.6, pz, shadeC(E.trim,0.45).getHex());
         g.box(0.9, 0.16, 0.16, s*(6.2), 8.5, pz, E.glow);   // 灯
-        g.box(1.2, 1.2, 1.2, s*(6.2), 8.2, pz, E.glow).box; // 光晕用精灵另做
+        g.box(1.2, 1.2, 1.2, s*(6.2), 8.2, pz, E.glow);     // 光晕（合并几何，够用）
       }
     } else if (type === 'blocks'){
       // 远处楼群
@@ -296,11 +391,11 @@ function buildEra(era, z0){
         const dist = 16 + r()*20;
         b.box(w, h, d, s*(dist), h/2, pz, shadeC(E.ground, 1.35 + r()*0.5).getHex());
         // 窗户点阵
-        const rows = Math.min(9, Math.floor(h/3.0)), cols = Math.min(4, Math.floor(w/2.6));
+        const rows = Math.min(14, Math.floor(h/1.9)), cols = Math.min(8, Math.floor(w/1.5));
         for (let ry2=0; ry2<rows; ry2++){
           for (let cx=0; cx<cols; cx++){
             if (r() > 0.62){
-              g.box(0.9, 0.9, 0.06, s*(dist) - w/2 + 1.3 + cx*2.6, 2.0 + ry2*3.0, pz + d/2 + 0.05,
+              g.box(0.55, 0.62, 0.06, s*(dist) - w/2 + 0.8 + cx*1.5, 1.5 + ry2*1.9, pz + d/2 + 0.05,
                     r() > 0.7 ? E.accent : E.lit);
             }
           }
@@ -391,6 +486,11 @@ function buildEra(era, z0){
     // 站台
     b.box(7.4, 0.32, 6.0, baseX, 0.16, sz, shadeC(E.ground, 1.5).getHex());
     b.box(7.4, 0.06, 6.0, baseX, 0.34, sz, shadeC(E.trim, 0.35).getHex());
+    // 站台边缘灯带 + 一盏立灯：给每一站一个光源
+    g.box(7.0, 0.05, 0.10, baseX, 0.36, sz + 3.0, E.glow);
+    b.box(0.14, 3.4, 0.14, baseX + 3.0, 1.7, sz - 2.4, shadeC(E.trim, 0.55).getHex());
+    g.box(0.46, 0.20, 0.46, baseX + 3.0, 3.4, sz - 2.4, E.glow);
+    g.box(0.30, 0.06, 0.30, baseX + 3.0, 3.28, sz - 2.4, E.accent);
     if (sil.mode === 4) return;   // 空站台
 
     const fig = (x, facing, flip) => {
@@ -447,14 +547,14 @@ const TIMELINE = [
     {at:0.62, y:'2014 · 灯牌还在',      t:'有人把 2006 年的灯牌擦干净，带去了现场。'} ],
   [ {at:0.16, y:'2020.4 · 一次重聚',    t:'她在节目里当场质问另一个人。舆论翻车。'},
     {at:0.58, y:'2020.4 · 六个字',      t:'「我们不说别人了，乖。」'} ],
-  [ {at:0.12, y:'2026.10 · 后会友期',   t:'18 天列车，四对走散的旧友。播放破 7 亿。'},
+  [ {at:0.12, y:'2026.10 · 后会友期',   t:'18 天列车，四对多年没同框的人。播放破 7 亿。'},
     {at:0.44, y:'海拔 4000 米 · 悬崖',   t:'「我是被宣判的人，我能去哪儿啊。我画地为牢。」'},
     {at:0.78, y:'2026 · 系鞋带',        t:'她蹲下去系了四次。鞋带，一次都没有松。'} ],
   [ {at:0.30, y:'收官 · 下车环节',      t:'两个人都没有下车。'} ],
 ];
 
 function genEntities(){
-  obstacles.length = 0; tapeData.length = 0;
+  obstacles.length = 0; tapeData.length = 0; rumorData.length = 0;
   for (let e=0;e<6;e++){
     const z0 = -e*ERA_LEN;
     const rnd = mulberry(9001 + e*131);
@@ -489,5 +589,16 @@ function genEntities(){
       tz -= 30 + rnd()*8;
     }
   }
+  // 2007 那一站：三种说法摆在同一道线上，你只能带走一种。
+  // 不替任何人下判断——三种都只是「说法」，都没有第三方证据。
+  const rz = -RUMOR_ERA*ERA_LEN - ERA_LEN*RUMOR_AT;
+  for (let l=0;l<3;l++) rumorData.push({ idx:l, lane:l, z:rz, taken:false, spin:l*2.1 });
+  for (let i=obstacles.length-1;i>=0;i--){
+    if (Math.abs(obstacles[i].z - rz) < 6.5) obstacles.splice(i,1);
+  }
+  for (let i=tapeData.length-1;i>=0;i--){
+    if (Math.abs(tapeData[i].z - rz) < 4) tapeData.splice(i,1);
+  }
+
   obstacles.sort((a,b)=> b.z - a.z);   // 从远到近（z 递减）
 }

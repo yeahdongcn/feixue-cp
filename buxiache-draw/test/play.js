@@ -237,6 +237,12 @@ console.log('\n— 整局跑通（真实主循环 + 真实章节卡）—');
   chk(G.kept.length === 14 && G.left.length === 12, `圈住/放手 记账正确（${G.kept.length}/${G.left.length}）`);
   chk(els.eBig.innerHTML.includes('14'), '结局文案带数字');
   chk(els.eStat.textContent.includes('称号'), '称号已生成');
+  chk(els.eKept.textContent === '14' && els.eLeft.textContent === '12', '结算卡分数正确（14 / 12）');
+  chk((els.eYears.innerHTML.match(/class="cell/g) || []).length === 6, '结算卡有六格年份');
+  chk(LEVELS.every(L => els.eYears.innerHTML.includes(L.year)), '六站年份都在结算卡上');
+  chk(els.eBig.innerHTML.includes('最后一圈只够圈住自己') && els.eBig.innerHTML.includes('你会先放下哪一样'),
+      '可以直接复制的一句话在卡上');
+  chk(els.end._cls.has('on') && document.body._cls.has('end-open'), '结算时 HUD 让位');
 
   // 再走一遍
   els.btnAgain.dispatch('click');

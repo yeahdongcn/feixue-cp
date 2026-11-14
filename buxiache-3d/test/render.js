@@ -21,10 +21,10 @@ const ROOF_Y=3.42;
 
 /* ── 相机（与 game.js 一致）── */
 const aspect = ASPECT || (W/H);
-const back   = 6.4 + (aspect<1 ? (1-aspect)*5.0 : 0);
+const back   = 6.4 + (aspect<1 ? (1-aspect)*2.4 : 0);
 const up     = 2.70;
-const ldy    = 1.00 + (aspect<1 ? 0.80 : 0);
-const portBoost = aspect<1 ? (1+(1-aspect)*0.62) : 1;
+const ldy    = 1.00;
+const portBoost = aspect<1 ? (1+(1-aspect)*0.18) : 1;
 const fov    = 58 * portBoost;
 
 const cam = new THREE.PerspectiveCamera(fov, aspect, 0.1, 320);

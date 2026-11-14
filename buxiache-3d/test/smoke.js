@@ -78,9 +78,9 @@ function parseInto(root,html){
 }
 
 const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const b0=html.indexOf('<body'), b1=html.indexOf('<script');
+const b0=html.indexOf('<body'), b1=html.indexOf('</body');
 const body=new El('body');
-body.innerHTML = html.slice(b0,b1).replace(/^<body[^>]*>/,'');
+body.innerHTML = html.slice(b0,b1).replace(/^<body[^>]*>/,'').replace(/<script[\s\S]*?<\/script>/g,'');
 
 const document={
   body, documentElement:new El('html'), readyState:'complete', title:'',
@@ -174,11 +174,120 @@ chk(!!title && title.length>0, '称号已填充');
 chk(/[0-9]/.test(sc), '分数已填充');
 chk(document.getElementById('endTitle').textContent.length>0, '结局标题已填充');
 
-console.log('— 失败路径 —');
-const ctx2=vm.createContext(Object.assign({},sandbox,{}));
-Object.assign(sandbox,{});
-// 复用同一上下文重开一局
+console.log('— 再坐一次（真正的 reset） —');
+vm.runInContext('onHit = function(){};', ctx);   // 这一段不验死亡
+document.getElementById('btnAgain').click();
+chk(!sandbox.__reloaded, '「再坐一次」没有调用 location.reload()');
+chk(G().state==='playing', '「再坐一次」直接进入 playing');
+chk(!document.getElementById('over').classList.contains('on'), '结算页已关掉');
+chk(vm.runInContext('AC',ctx)===vm.runInContext('AC',ctx) && vm.runInContext('AC',ctx)!==null,
+    '音频上下文没有被丢掉');
+chk(Math.floor(G().dist)<50, '距离已归零（' + Math.floor(G().dist) + 'm）');
+
+console.log('— 会躲的玩家：这局能不能打通 —');
 ctx.onHit = realOnHit;   // 恢复真实碰撞
+ctx.resetRun();
+ctx.startGame();
+const LX = vm.runInContext('LANE_X', ctx);
+const PR = vm.runInContext('pair', ctx);
+const PO = vm.runInContext('player', ctx);
+const OB = vm.runInContext('obstacles', ctx);
+let bf=0, inFrames=0, botHits=0, prevHearts=st().hearts, minBond=999, maxBond=0;
+while (G().state==='playing' && bf<20000){
+  const pz = PO.z;
+  const th=[1e9,1e9,1e9], kd=[null,null,null];
+  for (let i=0;i<OB.length;i++){
+    const o=OB[i];
+    if (o.hit||o.passed) continue;
+    const ahead = pz - o.z;          // 正数 = 前方多少米（z 向负方向延伸）
+    if (ahead < -0.5 || ahead > 40) continue;
+    if (ahead < th[o.lane]){ th[o.lane]=ahead; kd[o.lane]=o.kind; }
+  }
+  const cur = PO.lane;
+  let want = cur;
+  if (th[cur] < 10 && kd[cur] === 'block'){
+    for (let l=0;l<3;l++){
+      if (l===cur) continue;
+      if (th[l] > Math.max(th[cur]+4, 10)){ want = l; break; }
+    }
+  } else {
+    let target = 0;
+    for (let l=1;l<3;l++) if (Math.abs(LX[l]-PR.cx) < Math.abs(LX[target]-PR.cx)) target = l;
+    const blocked = (th[target] < 12 && kd[target] === 'block');
+    if (!blocked) want = target;
+  }
+  if (want !== cur) ctx.tryLane(want > cur ? 1 : -1);
+  const ln = want;
+  const sp = G().speed;
+  // 起跳要卡在「撞到之前 0.12~0.30 秒」，太早会落地太晚
+  const tImp = (th[ln] - 1.15) / sp;
+  if (kd[ln] === 'barrier' && PO.y === 0 && PO.slide <= 0 && tImp > 0.15 && tImp < 0.32) ctx.tryJump();
+  if (kd[ln] === 'gate' && PO.slide <= 0 && !PO.jumping && tImp > 0.05 && tImp < 0.30) ctx.trySlide();
+  const hitBefore = OB.filter(o=>o.hit).length;
+  const eraBefore = G().era;
+  ctx.update(DT);
+  if (G().era !== eraBefore){
+    console.log(`    era ${eraBefore}→${G().era} @${(bf*DT).toFixed(1)}s bond=${PR.bond.toFixed(0)} gap=${PR.gap.toFixed(2)} inFrame=${inFrames}/${bf}`);
+  }
+  const hitNow = OB.filter(o=>o.hit).length;
+  if (hitNow > hitBefore){
+    const o = OB.find(o=>o.hit && !o._logged);
+    if (o){ o._logged = true;
+      console.log(`    撞到 ${o.kind} lane=${o.lane} z-player=${(o.z-PO.z).toFixed(1)} ` +
+                  `x=${PO.x.toFixed(2)} y=${PO.y.toFixed(2)} slide=${PO.slide.toFixed(2)} ` +
+                  `jump=${PO.jumping} v=${G().speed.toFixed(1)} hearts=${st().hearts}`);
+    }
+  }
+  bf++;
+  if (PR.inFrame) inFrames++;
+  minBond=Math.min(minBond, PR.bond); maxBond=Math.max(maxBond, PR.bond);
+  if (st().hearts < prevHearts){ botHits++; prevHearts = st().hearts; }
+}
+console.log(`  会躲的玩家跑了 ${(bf*DT).toFixed(1)}s，距离 ${Math.floor(G().dist)}m，撞了 ${botHits} 次，` +
+            `心 ${st().hearts}，同框 ${Math.round(PR.bond)}（${(inFrames/bf*100).toFixed(0)}% 帧在框内），` +
+            `min ${minBond.toFixed(0)} max ${maxBond.toFixed(0)}，状态 ${G().state}`);
+chk(G().dist > 1000, '会躲的玩家能跑完全程');
+chk(st().hearts >= 1, '会躲的玩家不是靠三条命硬撞（剩 ' + st().hearts + ' 心）');
+chk(inFrames/bf > 0.35, '至少 35% 的帧能保持在同框里（' + (inFrames/bf*100).toFixed(0) + '%）');
+chk(st().combo > 3 || st().bestCombo > 3, '连击机制被触发（best ×' + st().bestCombo + '）');
+
+console.log('— 同框：守住 / 掉线 / 挡一下 —');
+ctx.resetRun(); ctx.startGame();
+PR.bond = 50; PR.lane = 1; PR.cx = 0; PR.gap = 1.0; PR.laneT = 99;
+PO.lane = 1; PO.x = 0;
+vm.runInContext('updatePair(0.1)', ctx);
+const inB0 = PR.bond;
+for (let i=0;i<6;i++) vm.runInContext('updatePair(0.1)', ctx);
+chk(PR.bond > inB0, `站在同一道，同框在涨（${inB0.toFixed(1)}→${PR.bond.toFixed(1)}）`);
+PR.bond = 50; PR.gap = 4.0; PR.cx = 2.0; PR.laneT = 99;
+PO.lane = 0; PO.x = -2.5;
+vm.runInContext('updatePair(0.1)', ctx);
+const outB0 = PR.bond;
+for (let i=0;i<6;i++) vm.runInContext('updatePair(0.1)', ctx);
+chk(PR.bond < outB0, `被挤到另一道，同框在掉（${outB0.toFixed(1)}→${PR.bond.toFixed(1)}）`);
+
+ctx.resetRun(); ctx.startGame();
+PR.bond = 95; PR.used = false; PR.armed = true;
+const hShield = st().hearts;
+ctx.onHit();
+chk(st().hearts === hShield, `同框拉满时挡下一次撞击（心 ${hShield}→${st().hearts}）`);
+chk(st().shieldUsed === 1, '护盾记账，一局只挡一次');
+chk(PR.bond < 60, `挡完同框掉一大截（${PR.bond.toFixed(0)}）`);
+
+console.log('— 罗生门：一局只能带走一个版本 —');
+ctx.resetRun(); ctx.startGame();
+const RD = vm.runInContext('rumorData', ctx);
+const r0 = RD[0];
+PO.z = r0.z; PO.x = LX[r0.lane]; PO.lane = r0.lane; PO.y = 0; PO.slide = 0;
+ctx.update(1/60);
+chk(st().rumor === 0, '捡到第一块碎片');
+chk(Math.abs(st().score - 250) < 200, `碎片给了分（${Math.floor(st().score)}）`);
+chk(RD.filter(r=>r.taken).length === 1, '另外两块拿不走');
+chk(document.getElementById('rRumor').textContent.length === 0 || G().state === 'playing', 'HUD 出现版本提示');
+console.log('  版本:', vm.runInContext('RUMOR_VERSIONS[0].t', ctx));
+
+console.log('— 失败路径 —');
+// 复用同一上下文重开一局
 ctx.startGame();
 chk(G().state==='playing', '可以重开');
 let n=0;

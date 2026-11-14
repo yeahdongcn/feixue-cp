@@ -27,7 +27,9 @@ const P = { x: 20*TS, y: 18*TS, dir: 0, fr: 0, t: 0, moving: false, speed: 62 };
 const cam = { x: 0, y: 0 };
 
 let ctx = null, canvas = null, atlas = null, atlasEra = null;
-let running = false, paused = true;
+let bgCanvas = null, bgCtx = null;   // 屏幕外的柔光层（黑边不再是死黑）
+let LAMPS = [];                       // 路灯坐标，用来打光池
+let running = false, paused = true, titleMode = true, rafId = 0;
 
 /* ───────── 工具 ───────── */
 const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
@@ -88,6 +90,9 @@ function buildMap(){
   set(3,18,T.PROP); set(26,18,T.PROP);
 
   MAP = m;
+  LAMPS = [];
+  for (let i=0;i<MAP.length;i++) if (MAP[i] === T.LAMP)
+    LAMPS.push({ x:(i%MAPW)*TS, y:((i/MAPW)|0)*TS });
 }
 
 function isWalk(tx,ty){ return !SOLID[MAP[ty*MAPW+tx]]; }
@@ -422,6 +427,17 @@ function render(dt){
     }
   }
 
+  // 路灯的光池：每个时代一个暖/冷光源焦点
+  for (const L of LAMPS){
+    const lx = L.x - cam.x + 8, ly = L.y - cam.y + 5;
+    if (lx < -50 || ly < -50 || lx > CW+50 || ly > CH+50) continue;
+    const lg = g.createRadialGradient(lx, ly, 1, lx, ly, 38);
+    lg.addColorStop(0, rgba(p.lamp, .42));
+    lg.addColorStop(.35, rgba(p.lamp, .14));
+    lg.addColorStop(1, rgba(p.lamp, 0));
+    g.fillStyle = lg; g.fillRect(lx-38, ly-38, 76, 76);
+  }
+
   drawWeather(g);
 
   // 光照 / 色调
@@ -432,9 +448,41 @@ function render(dt){
   const grd = g.createRadialGradient(CW/2, CH/2, CH*0.35, CW/2, CH/2, CH*0.95);
   grd.addColorStop(0, 'rgba(0,0,0,0)');
   grd.addColorStop(1, p.fog);
-  g.globalAlpha = p.fogA * 1.6;
+  g.globalAlpha = p.fogA * (titleMode ? 1.0 : 1.6);
   g.fillStyle = grd; g.fillRect(0,0,CW,CH);
   g.globalAlpha = 1;
+
+  // 标题镜头的暖光池（标题文字背后的焦点光源）
+  if (titleMode){
+    // 抬一点曝光：标题不能压在一整块死黑上
+    g.fillStyle = '#182640'; g.globalAlpha = .30;
+    g.fillRect(0,0,CW,CH); g.globalAlpha = 1;
+    const gx = CW*0.5, gy = CH*0.40;
+    const tg = g.createRadialGradient(gx, gy, 2, gx, gy, 104);
+    tg.addColorStop(0, 'rgba(255,228,176,.26)');
+    tg.addColorStop(.45, 'rgba(255,196,128,.10)');
+    tg.addColorStop(1, 'rgba(255,180,100,0)');
+    g.fillStyle = tg; g.fillRect(0,0,CW,CH);
+  }
+
+  // 背景层是全屏 CSS 模糊，没必要 60fps 重画：~12fps 就够，省移动端 GPU
+  const nowMs = performance.now();
+  if (nowMs - lastBgPaint > 80){ lastBgPaint = nowMs; paintBackdrop(); }
+}
+
+/* 把主画面 cover 裁切后画进小号背景层，由 CSS 模糊铺满屏幕 */
+let lastBgPaint = 0;
+function paintBackdrop(){
+  if (!bgCtx || !bgCanvas) return;
+  const bw = bgCanvas.width, bh = bgCanvas.height;
+  const s = Math.max(bw/CW, bh/CH);
+  const dw = CW*s, dh = CH*s;
+  bgCtx.drawImage(canvas, (bw-dw)/2, (bh-dh)/2, dw, dh);
+}
+
+function rgba(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + (n>>16&255) + ',' + (n>>8&255) + ',' + (n&255) + ',' + a + ')';
 }
 
 function drawObj(g, x, y, o){
@@ -520,8 +568,15 @@ function loop(t){
   const dt = Math.min(0.05, (t - lastT) / 1000 || 0);
   lastT = t;
 
-  updatePlayer(dt);
-  updateCamera();
+  if (titleMode){
+    // 标题画面：镜头极缓地漂移，人物不动，雪一直下
+    updateCamera();
+    cam.x = clamp(cam.x + Math.sin(t/11000)*10, 0, MAPW*TS - CW);
+    cam.y = clamp(cam.y + Math.cos(t/15000)*4, 0, MAPH*TS - CH);
+  } else {
+    updatePlayer(dt);
+    updateCamera();
+  }
   stepWeather(dt);
 
   // NPC 朝向玩家
@@ -532,7 +587,20 @@ function loop(t){
     }
   }
   render(dt);
-  requestAnimationFrame(loop);
+  rafId = requestAnimationFrame(loop);
+}
+
+/* 只允许有一条渲染循环：重开/重进时代都不会叠帧 */
+function startLoop(){
+  if (rafId) cancelAnimationFrame(rafId);
+  lastT = performance.now();
+  running = true;
+  rafId = requestAnimationFrame(loop);
+}
+function stopLoop(){
+  running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = 0;
 }
 
 /* ───────── 输入 ───────── */

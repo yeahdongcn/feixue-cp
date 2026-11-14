@@ -8,7 +8,7 @@
 <style>
 :root{
   --era:#ffb35c;
-  --ink:#eef1f7; --dim:#8a93a6;
+  --ink:#eef1f7; --dim:#c2ccdf;
   --sans:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   --mono:"SF Mono",ui-monospace,"Menlo","Consolas",monospace;
 }
@@ -21,57 +21,93 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
 
 /* 暗角 + 颗粒 */
 #vignette{position:absolute;inset:0;pointer-events:none;z-index:3;
-  background:radial-gradient(115% 85% at 50% 45%,transparent 45%,rgba(0,0,0,.62) 100%)}
-#grain{position:absolute;inset:-50%;pointer-events:none;z-index:4;opacity:.055;
-  background-image:repeating-conic-gradient(#fff 0 0.0006turn,#000 0 0.0012turn);
-  animation:grain .7s steps(3) infinite}
-@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-1.5%,1%)}66%{transform:translate(1%,-1.5%)}}
+  background:radial-gradient(125% 95% at 50% 42%,transparent 50%,rgba(0,0,0,.52) 100%)}
+#grain{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:.055;
+  background-size:128px 128px;image-rendering:pixelated;mix-blend-mode:overlay}
 
 /* ── HUD ── */
 #hud{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity .5s}
 #hud.on{opacity:1}
+/* HUD 底板：顶部压一层渐变，让白字/暖色字在亮天空和车顶上也能读 */
+#hud::before{content:"";position:absolute;left:0;right:0;top:0;height:230px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(3,5,10,.82) 0%,rgba(3,5,10,.66) 42%,
+    rgba(3,5,10,.44) 72%,rgba(3,5,10,0) 100%)}
 #eraBarWrap{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08)}
 #eraBar{height:100%;width:0;background:var(--era);transition:width .25s linear;
   box-shadow:0 0 12px var(--era)}
 #hudTop{position:absolute;top:calc(14px + env(safe-area-inset-top));left:0;right:0;
   display:flex;align-items:flex-start;justify-content:space-between;padding:0 18px}
-.hudYear{font-size:30px;font-weight:200;letter-spacing:.10em;line-height:1;
-  text-shadow:0 2px 18px rgba(0,0,0,.8);font-variant-numeric:tabular-nums}
-.hudTag{font-size:11px;letter-spacing:.26em;color:var(--dim);margin-top:7px;text-indent:.26em}
+#hudLeft{min-width:150px;max-width:46vw}
+.hudYear{font-size:30px;font-weight:200;letter-spacing:.10em;line-height:1.18;
+  text-shadow:0 2px 18px rgba(0,0,0,.8);font-variant-numeric:tabular-nums;padding-right:.12em}
+.hudTag{font-size:12px;letter-spacing:.24em;color:var(--dim);margin-top:5px;text-indent:.24em;
+  text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .hudRight{text-align:right}
-.hudScore{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:.02em;
-  font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(0,0,0,.8)}
-.hudTapeRow{margin-top:7px;font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
+.hudScore{font-family:var(--mono);font-size:22px;font-weight:500;letter-spacing:.02em;
+  font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(0,0,0,.85)}
+.hudScore #hudMult{font-family:var(--sans);font-size:13px;margin-left:7px;color:var(--era);
+  text-shadow:0 0 18px var(--era)}
+.hudTapeRow{margin-top:5px;font-size:12px;letter-spacing:.16em;color:var(--dim);
+  text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .hudTapeRow b{color:var(--era);font-weight:600;font-family:var(--mono)}
-#hudHearts{position:absolute;right:18px;top:calc(78px + env(safe-area-inset-top));
-  font-size:11px;letter-spacing:.42em;color:var(--era);opacity:.85;
+.hudTapeRow i{font-style:normal;color:#ccd4e4;font-family:var(--mono);letter-spacing:.04em}
+#hudHearts{margin-top:6px;font-size:12px;letter-spacing:.36em;color:var(--era);opacity:.95;
   text-shadow:0 2px 12px #000;text-align:right}
+#hudRumor{margin-top:7px;font-size:11.5px;line-height:1.6;letter-spacing:.04em;color:#d6c8f2;
+  opacity:0;transition:opacity .5s;max-width:38vw;margin-left:auto}
+#hudRumor.on{opacity:.9}
+
+/* 「同框」 */
+#bondWrap{margin-top:15px;width:152px;max-width:44vw}
+.bondTop{display:flex;align-items:baseline;justify-content:space-between}
+.bondLabel{font-size:11.5px;letter-spacing:.32em;color:#d6dcea;text-indent:.32em;
+  text-shadow:0 1px 10px #000}
+.bondGap{font-family:var(--mono);font-size:11.5px;color:var(--era);letter-spacing:0;opacity:.95}
+.bondBar{height:4px;margin-top:6px;background:rgba(255,255,255,.13);border-radius:1px;overflow:hidden}
+#bondFill{display:block;height:100%;width:55%;background:var(--era);
+  box-shadow:0 0 10px var(--era);transition:width .18s linear,background .3s}
+#bondFill.low{background:#ff6f6f;box-shadow:0 0 10px #ff6f6f}
+#bondFill.armed{background:#fffdf2;box-shadow:0 0 16px #fffdf2}
+.bondTag{margin-top:6px;font-size:11.5px;line-height:1.5;color:#b8c3d6;letter-spacing:.05em;
+  text-shadow:0 1px 4px rgba(0,0,0,.8)}
+#bondWrap.low .bondTag{color:#ff9a9a}
+#bondWrap.low .bondLabel{color:#ffb0b0}
+#bondWrap.out .bondGap{color:#ff9a9a}
+#bondWrap.out .bondBar{box-shadow:inset 0 0 0 1px rgba(255,120,120,.30)}
 
 /* 时间线字幕：跑过的每一站都是真的 */
 #tl{position:absolute;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));
-  transform:translate(-50%,14px);width:min(88vw,520px);z-index:9;pointer-events:none;
+  transform:translate(-50%,14px);width:min(88vw,540px);z-index:9;pointer-events:none;
   opacity:0;transition:opacity .45s,transform .55s cubic-bezier(.2,.9,.3,1)}
 #tl.on{opacity:1;transform:translate(-50%,0)}
-#tl .tlY{font-size:10px;letter-spacing:.28em;color:var(--era);text-indent:.28em;margin-bottom:6px;
-  padding-left:9px;border-left:2px solid var(--era)}
-#tl .tlT{font-size:13px;line-height:1.85;color:#dfe4ef;letter-spacing:.02em;
-  background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.30));
-  padding:9px 12px;border-radius:2px;text-shadow:0 1px 8px #000}
-#combo{position:absolute;right:20px;top:44%;font-size:26px;font-weight:300;
-  color:var(--era);letter-spacing:.02em;opacity:0;transform:scale(.7);
-  transition:opacity .2s,transform .16s cubic-bezier(.2,1.6,.4,1);text-shadow:0 0 26px var(--era)}
-#combo.on{opacity:1;transform:scale(1)}
+#tl .tlY{font-size:11.5px;letter-spacing:.22em;color:var(--era);text-indent:.22em;margin-bottom:6px;
+  padding-left:9px;border-left:2px solid var(--era);text-shadow:0 1px 10px #000}
+#tl .tlT{font-size:13.5px;line-height:1.85;color:#e2e7f2;letter-spacing:.02em;
+  background:linear-gradient(90deg,rgba(0,0,0,.66),rgba(0,0,0,.34));
+  padding:10px 13px;border-radius:2px;text-shadow:0 1px 8px #000}
+#combo{position:absolute;right:22px;top:47%;font-size:17px;font-weight:400;
+  color:var(--era);letter-spacing:.06em;opacity:0;transform:translateY(6px);
+  transition:opacity .2s,transform .18s cubic-bezier(.2,1.6,.4,1);
+  text-shadow:0 0 24px var(--era),0 2px 12px #000;font-variant-numeric:tabular-nums;
+  padding:3px 11px;border-radius:2px;background:rgba(5,7,13,.72)}
+#combo.on{opacity:1;transform:translateY(0)}
 
 /* ── 时代字幕 ── */
 #caption{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);z-index:7;
-  text-align:center;opacity:0;pointer-events:none;transition:opacity .5s,transform .8s}
+  text-align:center;opacity:0;pointer-events:none;transition:opacity .5s,transform .8s;
+  padding:34px 44px;border-radius:50%;
+  /* 2006 的天空很亮，白色年份需要一块暗底才站得住 */
+  background:radial-gradient(closest-side,rgba(4,6,12,.78),rgba(4,6,12,.52) 68%,rgba(4,6,12,.12) 100%)}
 #caption.on{opacity:1}
 #caption .cy{font-size:clamp(38px,9vw,64px);font-weight:100;letter-spacing:.2em;
-  color:#fff;text-indent:.2em;text-shadow:0 0 40px var(--era),0 0 90px var(--era)}
-#caption .ct{margin-top:6px;font-size:12px;letter-spacing:.5em;color:var(--era);text-indent:.5em}
+  color:#fff;text-indent:.2em;text-shadow:0 0 40px var(--era),0 2px 12px rgba(0,0,0,.55)}
+#caption .ct{margin-top:6px;font-size:12.5px;letter-spacing:.5em;color:#ffd79a;text-indent:.5em;
+  display:inline-block;background:rgba(4,6,12,.44);padding:3px 12px 4px;border-radius:2px}
 
 #toast{position:absolute;left:50%;bottom:26%;transform:translate(-50%,8px);z-index:8;
-  font-size:12px;letter-spacing:.2em;color:var(--era);opacity:0;transition:.25s;pointer-events:none}
+  font-size:13px;letter-spacing:.18em;color:var(--era);opacity:0;transition:.25s;
+  pointer-events:none;text-shadow:0 2px 12px #000;white-space:nowrap;
+  background:rgba(5,7,13,.7);padding:5px 13px;border-radius:2px}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20;
@@ -79,68 +115,128 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
 #flash.on{opacity:1;transition:opacity .12s}
 
 /* ── 标题 ── */
-#title{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(80% 60% at 50% 38%,rgba(18,26,46,.55) 0%,rgba(5,6,10,.93) 68%);
-  transition:opacity .7s,visibility .7s;padding:24px}
+#title{position:absolute;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;
+  background:linear-gradient(180deg,rgba(4,6,12,.66) 0%,rgba(4,6,12,.18) 40%,rgba(4,6,12,.30) 72%,rgba(4,6,12,.62) 100%);
+  transition:opacity .7s,visibility .7s;overflow-y:auto;overscroll-behavior:contain;
+  touch-action:pan-y;
+  padding:calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom))}
 #title.gone{opacity:0;visibility:hidden;pointer-events:none}
-.tin{text-align:center;max-width:440px;width:100%}
-.tkick{font-size:11px;letter-spacing:.42em;color:#5b6a86;text-indent:.42em;margin-bottom:26px}
+/* 竖屏小屏/横屏不够高时，卡片从顶部排起并且可滚，标题不再被裁掉 */
+.tin{text-align:center;max-width:460px;width:100%;margin:auto;
+  padding:26px 20px 24px;border-radius:3px;
+  background:radial-gradient(120% 100% at 50% 40%,rgba(5,7,13,.74),rgba(5,7,13,.42) 70%,rgba(5,7,13,.06) 100%)}
+.tkick{font-size:11.5px;letter-spacing:.4em;color:#9aa7c0;text-indent:.4em;margin-bottom:22px}
 .tin h1{font-size:clamp(46px,13vw,76px);font-weight:200;letter-spacing:.20em;margin:0;
-  text-indent:.20em;line-height:1.1;
-  text-shadow:0 0 50px #ffd47922,0 0 110px #7fd7ff14}
-.tsub{font-size:13px;letter-spacing:.34em;color:#93a0b8;margin-top:16px;text-indent:.34em}
-.tline{font-size:12.5px;letter-spacing:.16em;color:#79839a;margin-top:26px;line-height:2.1}
-#btnStart{margin-top:34px;width:100%;padding:17px;background:transparent;border:1px solid #4a556e;
-  color:#e8ecf5;font-family:inherit;font-size:14px;letter-spacing:.44em;text-indent:.44em;
-  border-radius:2px;cursor:pointer;transition:.25s}
-#btnStart:hover{background:#ffd479;border-color:#ffd479;color:#0a0e18;box-shadow:0 0 60px #ffd47944}
-.tmeta{margin-top:14px;font-size:10.5px;letter-spacing:.24em;color:#4e5a72}
-.tkeys{margin-top:30px;font-size:10.5px;line-height:2.2;color:#454f66;letter-spacing:.05em}
-.ttip{margin-top:22px;font-size:9.5px;line-height:1.9;color:#39425a;text-align:left;letter-spacing:.02em}
+  text-indent:.20em;padding-right:.20em;line-height:1.14;
+  text-shadow:0 0 50px #ffd47933,0 0 110px #7fd7ff18}
+.tsub{font-size:13.5px;letter-spacing:.32em;color:#b6c1d6;margin-top:14px;text-indent:.32em}
+.tline{font-size:13px;letter-spacing:.10em;color:#a8b2c6;margin-top:24px;line-height:2.15}
+#btnStart{margin-top:26px;width:100%;padding:16px;background:rgba(8,11,18,.62);
+  border:1px solid #56617b;color:#eef2fa;font-family:inherit;font-size:14px;letter-spacing:.44em;
+  text-indent:.44em;border-radius:2px;cursor:pointer;transition:.25s}
+#btnStart:hover{background:#ffd479;border-color:#ffd479;color:#0a0e18;box-shadow:0 0 60px #ffd47955}
+.tmeta{margin-top:13px;font-size:11.5px;letter-spacing:.2em;color:#8f9bb2}
+.tmech{margin-top:20px;font-size:11.5px;line-height:1.95;color:#aab5c9;letter-spacing:.02em;
+  border-left:2px solid rgba(255,179,92,.55);padding:2px 0 2px 11px;text-align:left}
+.tmech b{color:#ffcf8a;font-weight:600}
+.tkeys{margin-top:18px;font-size:11.5px;line-height:2.0;color:#8b96ab;letter-spacing:.03em}
+.ttip{margin-top:16px;font-size:11.5px;line-height:1.85;color:#98a2b8;text-align:left;letter-spacing:.01em}
 
 /* ── 结局 / 结算 ── */
 #over{position:absolute;inset:0;z-index:32;display:none;overflow-y:auto;
-  background:radial-gradient(80% 60% at 50% 20%,#12131c,#05060a 70%);padding:0}
+  background:
+    radial-gradient(130% 78% at 50% -6%, #2b384e 0%, #18202f 42%, rgba(9,11,18,0) 78%),
+    linear-gradient(180deg, #070910 0%, #141220 62%, #2e2118 100%);
+  padding:0}
 #over.on{display:block;animation:fadein .8s}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
-.overIn{max-width:520px;margin:0 auto;padding:calc(56px + env(safe-area-inset-top)) 26px 60px}
-.endKick{font-size:10px;letter-spacing:.44em;color:#6b7391;text-indent:.44em}
-.endTitle{font-size:46px;font-weight:200;letter-spacing:.16em;margin:14px 0 6px;text-indent:.16em}
-.endLine{font-size:13px;line-height:2.1;color:#939cb2;letter-spacing:.03em}
-.rule{height:1px;background:#20232e;margin:30px 0}
-.card{background:linear-gradient(180deg,#0d1018,#080a10);border:1px solid #1e2230;
-  border-radius:3px;padding:24px 22px;box-shadow:0 24px 70px #000a}
-.cBrand{font-size:9.5px;letter-spacing:.4em;color:#525b75;margin-bottom:18px}
-.cScore{font-family:var(--mono);font-size:46px;font-weight:600;letter-spacing:-.01em;line-height:1;
-  font-variant-numeric:tabular-nums}
-.cTitle{font-size:19px;letter-spacing:.10em;margin-top:10px;color:var(--era);font-weight:500}
-.cTitle.gold{color:#ffd479;text-shadow:0 0 26px #ffd47955}
-.cSub{font-size:11.5px;color:#6d7690;margin-top:7px;letter-spacing:.06em}
-.cQuote{font-size:13px;line-height:1.95;color:#b9c1d2;margin-top:20px;padding-left:12px;
+.overIn{max-width:560px;margin:0 auto;
+  padding:calc(30px + env(safe-area-inset-top)) 24px calc(14px + env(safe-area-inset-bottom));
+  position:relative}
+.endKick{font-size:11.5px;letter-spacing:.42em;color:#9aa4bd;text-indent:.42em}
+.endTitle{font-size:38px;font-weight:200;letter-spacing:.16em;margin:9px 0 4px;text-indent:.16em;
+  padding-right:.16em;line-height:1.16}
+.endLine{font-size:13.5px;line-height:1.9;color:#a9b2c8;letter-spacing:.02em}
+.rule{height:1px;background:linear-gradient(90deg,#2a3042,#3c445c,#2a3042);margin:18px 0}
+.card{background:linear-gradient(180deg,#1b2232,#121722);border:1px solid #323a4e;
+  border-radius:3px;padding:18px 20px 18px;box-shadow:0 24px 70px #000c}
+.cBrand{font-size:11.5px;letter-spacing:.38em;color:#93a0b8;margin-bottom:10px}
+.cScore{font-family:var(--mono);font-size:40px;font-weight:600;letter-spacing:-.01em;line-height:1.12;
+  font-variant-numeric:tabular-nums;padding-right:2px}
+.cTitle{font-size:19px;letter-spacing:.10em;margin-top:5px;color:var(--era);font-weight:500}
+.cTitle.gold{color:#ffd479;text-shadow:0 0 26px #ffd47966}
+.cSub{font-size:12.5px;color:#9aa4bb;margin-top:6px;letter-spacing:.06em}
+.cQuote{font-size:13.5px;line-height:1.85;color:#c3cadb;margin-top:12px;padding-left:12px;
   border-left:2px solid var(--era)}
-.cDetail{font-family:var(--mono);font-size:10.5px;color:#5a6379;margin-top:18px;letter-spacing:.04em}
-.cFoot{font-size:9px;line-height:1.8;color:#39415a;margin-top:20px}
-#btnAgain{width:100%;margin-top:26px;padding:15px;background:transparent;border:1px solid #2b3040;
-  color:#cfd6e4;font-family:inherit;font-size:12px;letter-spacing:.4em;text-indent:.4em;
+.cDetail{font-family:var(--mono);font-size:11.5px;color:#98a3ba;margin-top:10px;letter-spacing:.02em;
+  line-height:1.9}
+.cSep{height:1px;background:#222838;margin:13px 0 11px}
+.cLabel{font-size:11.5px;letter-spacing:.3em;color:#8a95ac;text-indent:.3em;margin-top:9px}
+.cBondHead{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:11.5px;letter-spacing:.3em;color:#d3d9e6}
+.cBondHead span{font-family:var(--mono);letter-spacing:0;font-size:12px;color:var(--era)}
+.cBondBar{height:5px;margin-top:7px;background:rgba(255,255,255,.10);border-radius:1px;overflow:hidden}
+.cBondBar i{display:block;height:100%;width:55%;background:var(--era);
+  box-shadow:0 0 12px var(--era);transition:width .6s}
+.cBondBar i.low{background:#ff6f6f;box-shadow:0 0 12px #ff6f6f}
+.cBondTxt{font-size:12px;line-height:1.8;color:#9aa4bb;margin-top:7px;letter-spacing:.02em}
+.cStrip{font-family:var(--mono);font-size:13px;letter-spacing:.12em;color:#ffd479;
+  margin-top:8px;line-height:1.5;word-break:break-all}
+.cEras{font-size:12px;line-height:1.9;color:#c8cfe0;margin-top:8px;letter-spacing:.04em;
+  font-family:var(--mono)}
+.cRumor{font-size:12px;line-height:1.9;color:#b9aed6;margin-top:8px;letter-spacing:.01em}
+.cFoot{font-size:11.5px;line-height:1.8;color:#8b96ac;margin-top:14px}
+#btnAgain{width:100%;margin-top:18px;padding:13px;background:transparent;border:1px solid #333a4d;
+  color:#d6dcea;font-family:inherit;font-size:12.5px;letter-spacing:.4em;text-indent:.4em;
   border-radius:2px;cursor:pointer;transition:.2s}
-#btnAgain:hover{background:#cfd6e4;color:#05060a}
+#btnAgain:hover{background:#d6dcea;color:#05060a}
 
 /* ── 反转镜头 ── */
 #revealText{position:absolute;inset:0;z-index:14;display:flex;align-items:center;justify-content:center;
   pointer-events:none;opacity:0;transition:opacity 1.6s}
 #revealText.on{opacity:1}
 #revealText .rt{text-align:center;padding:0 30px}
-#revealText .r1{font-size:clamp(17px,4.4vw,24px);font-weight:200;letter-spacing:.22em;color:#e8e2f0;
-  line-height:2.2;text-indent:.22em;text-shadow:0 0 40px #000}
-#revealText .r2{margin-top:22px;font-size:12px;letter-spacing:.34em;color:#8b83a8;text-indent:.34em}
-#choiceRow{position:absolute;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));
+#revealText .r1{font-size:clamp(18px,4.6vw,25px);font-weight:200;letter-spacing:.20em;color:#f0ebf8;
+  line-height:2.1;text-indent:.20em;text-shadow:0 0 40px #000,0 0 90px #9a7fd044}
+#revealText .r2{margin-top:18px;font-size:12.5px;letter-spacing:.32em;color:#9d94ba;text-indent:.32em}
+#revealText .r3{margin-top:10px;font-size:11.5px;letter-spacing:.16em;color:#b0a6cc;font-family:var(--mono)}
+#choiceRow{position:absolute;left:50%;bottom:calc(40px + env(safe-area-inset-bottom));
   transform:translateX(-50%);z-index:16;display:flex;gap:14px;opacity:0;pointer-events:none;
   transition:opacity .8s}
 #choiceRow.on{opacity:1;pointer-events:auto}
-#choiceRow button{background:rgba(0,0,0,.45);border:1px solid #4a4560;color:#e6e0f0;
+#choiceRow button{background:rgba(0,0,0,.5);border:1px solid #565072;color:#ece6f6;
   font-family:inherit;font-size:14px;letter-spacing:.3em;text-indent:.3em;padding:15px 30px;
-  border-radius:2px;cursor:pointer;transition:.2s;backdrop-filter:blur(6px);white-space:nowrap}
-#choiceRow button:hover{background:#e6e0f0;color:#0a0a12;border-color:#e6e0f0}
+  border-radius:2px;cursor:pointer;transition:.2s;white-space:nowrap}
+#choiceRow button:hover{background:#ece6f6;color:#0a0a12;border-color:#ece6f6}
+
+@media (max-width:520px){
+  #hudTop{padding:0 14px}
+  .hudYear{font-size:26px}
+  .hudScore{font-size:19px}
+  #bondWrap{width:132px;margin-top:12px}
+  .tin{padding:22px 16px}
+  .tline{font-size:13px;line-height:2.05}
+  .ttip{font-size:11.5px}
+  .endTitle{font-size:38px}
+  .cScore{font-size:40px}
+  #tl{bottom:calc(34px + env(safe-area-inset-bottom))}
+  #tl .tlT{font-size:12.5px}
+  #choiceRow button{padding:14px 22px}
+}
+/* 横屏手机 / 矮窗口：标题卡压缩 + 可滚动，别把开场白裁掉 */
+@media (max-height:640px){
+  #title{padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
+  .tin{padding:16px 14px 15px}
+  .tkick{margin-bottom:10px;font-size:11px}
+  .tin h1{font-size:clamp(38px,9vw,54px)}
+  .tsub{margin-top:8px;font-size:12.5px}
+  .tline{margin-top:12px;font-size:12px;line-height:1.85}
+  #btnStart{margin-top:14px;padding:13px}
+  .tmeta{margin-top:9px;font-size:11px}
+  .tmech{margin-top:12px;font-size:11px;line-height:1.8}
+  .tkeys{margin-top:10px;font-size:11px;line-height:1.8}
+  .ttip{margin-top:10px;font-size:11px;line-height:1.7}
+}
 </style>
 </head>
 <body>
@@ -152,16 +248,25 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
   <div id="hud">
     <div id="eraBarWrap"><div id="eraBar"></div></div>
     <div id="hudTop">
-      <div>
+      <div id="hudLeft">
         <div class="hudYear" id="hudYear">2006</div>
         <div class="hudTag" id="hudTag">夏 · 长沙</div>
+        <div id="bondWrap">
+          <div class="bondTop">
+            <span class="bondLabel">同 框</span>
+            <span class="bondGap" id="bondGap">间距 1.0m</span>
+          </div>
+          <div class="bondBar"><i id="bondFill"></i></div>
+          <div class="bondTag" id="bondTag">还连着</div>
+        </div>
       </div>
       <div class="hudRight">
-        <div class="hudScore" id="hudScore">0</div>
-        <div class="hudTapeRow">磁带 <b id="hudTape">0</b></div>
+        <div class="hudScore"><span id="hudScore">0</span><span id="hudMult">×3</span></div>
+        <div class="hudTapeRow">磁带 <b id="hudTape">0</b> · <i id="hudCombo">连 0</i></div>
+        <div id="hudHearts">●●●</div>
+        <div id="hudRumor"></div>
       </div>
     </div>
-    <div id="hudHearts">●●●</div>
     <div id="combo">×0</div>
     <div id="tl">
       <div class="tlY"></div>
@@ -176,6 +281,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
     <div class="rt">
       <div class="r1">你跑了二十年。<br>轨道是个圈。</div>
       <div class="r2">画地为牢</div>
+      <div class="r3" id="revealBond"></div>
     </div>
   </div>
   <div id="choiceRow">
@@ -185,12 +291,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
 
   <div id="title">
     <div class="tin">
-      <div class="tkick">2006 — 2026</div>
+      <div class="tkick">2006 — 2026 · 六站 · 70 秒</div>
       <h1>不下车</h1>
       <div class="tsub">一列车开过二十年</div>
-      <div class="tline">2006 年，你挤上了一趟车。<br>车开了二十年，你在第几站下车？</div>
+      <div class="tline">2006 年，你挤上了一趟车。<br>车顶上跑着两个人，中间隔着一根线。<br>你保不住她们的二十年，只能让她们留在同一个画面里。</div>
       <button id="btnStart">刷 卡 上 车</button>
-      <div class="tmeta">90 秒 · 六站 · 不用登录</div>
+      <div class="tmeta">70 秒 · 1140 米 · 不用登录</div>
+      <div class="tmech"><b>同 框</b>：跑在两人中间，线就紧。线断了，分数倍率掉、磁带吸不过来；<br>拉到最满，它能替你挡一次撞。那是这局里你唯一能失去、也唯一能保住的东西。</div>
       <div class="tkeys">← → 换道　空格 起跳　↓ 滑铲　（手机：左右滑 / 上滑跳 / 下滑铲）</div>
       <div class="ttip">
         本作为虚构怀旧创作。人物与情节均经艺术化处理，不指向任何真实个人的私生活与关系；
@@ -212,7 +319,20 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
         <div class="cSub" id="rSub"></div>
         <div class="cQuote" id="rQuote"></div>
         <div class="cDetail" id="rDetail"></div>
-        <div class="cFoot">本作为虚构同人创作，与真实人物无关。截图发给你 2006 年的同桌。</div>
+
+        <div class="cSep"></div>
+        <div class="cBondHead">同 框 <span id="rBond">同框 55 · 间距 1.0m</span></div>
+        <div class="cBondBar"><i id="rBondFill"></i></div>
+        <div class="cBondTxt" id="rBondTxt"></div>
+
+        <div class="cSep"></div>
+        <div class="cLabel">磁 带</div>
+        <div class="cStrip" id="rTapeStrip"></div>
+        <div class="cLabel">六 站</div>
+        <div class="cEras" id="rEras"></div>
+        <div class="cLabel">2007 · 三 种 说 法</div>
+        <div class="cRumor" id="rRumor"></div>
+        <div class="cFoot">本作为虚构同人创作；不构成对真实个人关系的陈述。</div>
       </div>
       <button id="btnAgain">再 坐 一 次</button>
     </div>
@@ -247,8 +367,37 @@ const CAR_W    = 7.4;
 const ERA_LEN  = 190;        // 每个时代的世界长度
 const SPAWN_A  = 60;         // 前方多少距离内生成障碍
 
+const BOND_MAX  = 100;       // 「同框」满值
+const PAIR_AHEAD = 14.5;     // 两个剪影跑在玩家前方多少米
+
 const Q = new URLSearchParams(location.search);
 const SHOT = Q.get('shot');
+
+/* ══════════ 「同框」：两个人的间距是这一局唯一能保住的东西 ══════════
+   mode  both=两个都在 / one=只剩一个 / none=空台
+   gap   进入该时代时的间距（米），gapMax 是这个时代会自然撕开到多远
+   in/out 玩家站在两人之间时每秒回多少 / 离开时每秒掉多少
+   drift 每秒自然撕开的距离；extra 这个时代无论怎样都在掉的量          */
+const PAIR_ERA = [
+  { mode:'both', gap:1.00, gapMax:1.80, inRate:6, outRate:12, drift:0.02, extra:0.3, tag:'并肩' },
+  { mode:'both', gap:1.70, gapMax:4.40, inRate:3, outRate:14, drift:0.11, extra:1.2, tag:'渐远' },
+  { mode:'one',  gap:0.00, gapMax:0.90, inRate:0, outRate:14, drift:0.02, extra:3.0, tag:'只剩一个' },
+  { mode:'both', gap:3.60, gapMax:4.80, inRate:4, outRate:14, drift:0.04, extra:2.0, tag:'更远' },
+  { mode:'both', gap:1.60, gapMax:2.60, inRate:4.5, outRate:13, drift:0.05, extra:1.0, tag:'又近了一点' },
+  { mode:'none', gap:0.00, gapMax:0.00, inRate:0, outRate:0,  drift:0,    extra:0,   tag:'空台' },
+];
+
+/* 2007 那一站：三种说法。没有一种有第三方证据，游戏不替任何人下结论。 */
+const RUMOR_ERA = 1;
+const RUMOR_AT  = 0.46;
+const RUMOR_VERSIONS = [
+  { key:'v0', short:'“告了密”', y:'未证实 · 第一种说法',
+    t:'有人说，那一年她“告了密”。没有第三方证据，也没有人出来对质。' },
+  { key:'v1', short:'“没做这事”', y:'未证实 · 第二种说法',
+    t:'有人说，她什么都没做。这句话同样只有一面之词，不能当证据。' },
+  { key:'v2', short:'“记错了”', y:'未证实 · 第三种说法',
+    t:'还有人说，整件事从头到尾都被记错了。谁也没法证明这一种更真。' },
+];
 
 /* ───────── 时代调色板 ───────── */
 const ERAS = [
@@ -302,6 +451,12 @@ const ERAS = [
 ];
 
 const C = hex => new THREE.Color(hex);
+const metalC = (c, sat, k) => {          // 去饱和 + 提亮，让暖色调色板读成金属而不是木头
+  const col = new THREE.Color(c), hsl = {};
+  col.getHSL(hsl);
+  col.setHSL(hsl.h, hsl.s * sat, Math.min(1, hsl.l * k));
+  return col.getHex();
+};
 const shadeC = (hex, k) => { const c = C(hex); c.multiplyScalar(k); return c; };
 
 /* ══════════════════════════════════════════════════════════════
@@ -365,11 +520,41 @@ class Builder{
    场景 / 渲染器
    ══════════════════════════════════════════════════════════════ */
 let renderer, scene, camera, clock;
-let skyMat, sunLight, ambLight, hemiLight;
+let skyMat, skyMesh, sunLight, ambLight, hemiLight;
 let glows, solids;          // 每个时代两组合并网格
 let tapesIM, shardIM;       // 动的东西才用 InstancedMesh
 let particles;
 let worldGroup;
+
+/* ── 程序化光晕贴图（DataTexture，零外部资源，node 里也能建） ── */
+let GLOW_TEX = null;
+function glowTex(){
+  if (GLOW_TEX) return GLOW_TEX;
+  const N = 32, data = new Uint8Array(N*N*4);
+  for (let y=0;y<N;y++){
+    for (let x=0;x<N;x++){
+      const dx = (x+0.5)/N*2-1, dy = (y+0.5)/N*2-1;
+      const r = Math.sqrt(dx*dx+dy*dy);
+      const a = Math.max(0, 1-r);
+      const i = (y*N+x)*4;
+      data[i] = 255; data[i+1] = 255; data[i+2] = 255;
+      data[i+3] = Math.round(a*a*a*255);
+    }
+  }
+  GLOW_TEX = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+  GLOW_TEX.needsUpdate = true;
+  return GLOW_TEX;
+}
+function makeGlowSprite(color, size, opacity){
+  const m = new THREE.SpriteMaterial({
+    map: glowTex(), color: new THREE.Color(color), transparent: true,
+    opacity: opacity === undefined ? 0.8 : opacity,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+  });
+  const s = new THREE.Sprite(m);
+  s.scale.set(size, size, 1);
+  return s;
+}
 
 const G = {
   running:false, over:false, t:0, dist:0, speed:26,
@@ -386,7 +571,7 @@ const player = {
 
 /* ── 天空 ── */
 function makeSky(){
-  const geo = new THREE.SphereGeometry(600, 24, 16);
+  const geo = new THREE.SphereGeometry(240, 24, 16);   // 必须小于相机远平面，否则整个天空被裁掉
   skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite:false, fog:false,
     uniforms:{
@@ -420,6 +605,7 @@ function makeSky(){
   const m = new THREE.Mesh(geo, skyMat);
   m.frustumCulled = false;
   m.renderOrder = -100;
+  skyMesh = m;
   return m;
 }
 
@@ -456,6 +642,7 @@ function resetParticle(i, anywhere){
 const obstacles = [];   // {z, lane, kind, w, h, y}
 const tapeList  = [];   // {z, lane, y, taken}
 const tapeData  = [];
+const rumorData = [];   // 2007 那三种说法 {idx, lane, z, taken, spin}
 const SCENERY = [];
 
 function buildEra(era, z0){
@@ -469,19 +656,47 @@ function buildEra(era, z0){
   for (let i=0;i<nCar;i++){
     const cz = z0 - i*(CAR_LEN+CAR_GAP);
     // 车体
-    b.box(CAR_W, 2.9, CAR_LEN, 0, 1.55, cz, E.roofC2);
+    b.box(CAR_W, 2.9, CAR_LEN, 0, 1.55, cz, metalC(E.roofC2, 0.34, 0.92));
     // 车顶
-    b.box(CAR_W+0.5, 0.22, CAR_LEN+0.4, 0, 3.30, cz, E.roofC);
-    b.box(CAR_W+0.2, 0.10, CAR_LEN+0.2, 0, 3.19, cz, shadeC(E.roofC,0.82).getHex());
+    b.box(CAR_W+0.5, 0.22, CAR_LEN+0.4, 0, 3.30, cz, metalC(E.roofC, 0.30, 1.02));
+    b.box(CAR_W+0.2, 0.10, CAR_LEN+0.2, 0, 3.19, cz, shadeC(E.roofC,0.62).getHex());
     // 车顶护栏（两侧）
     b.box(0.12, 0.30, CAR_LEN+0.2, -CAR_W/2-0.20, 3.55, cz, E.trim);
     b.box(0.12, 0.30, CAR_LEN+0.2,  CAR_W/2+0.20, 3.55, cz, E.trim);
-    // 车顶导引亮条（两侧 + 中线）
+    // 车顶导引亮条（两侧）
     b.box(0.26, 0.06, CAR_LEN+0.4, -CAR_W/2+0.18, 3.43, cz, E.trim);
     b.box(0.26, 0.06, CAR_LEN+0.4,  CAR_W/2-0.18, 3.43, cz, E.trim);
-    b.box(0.12, 0.05, CAR_LEN+0.2, 0, 3.42, cz, shadeC(E.trim,1.15).getHex());
-    // 车顶通风口
-    for (let k=-1;k<=1;k++) b.box(1.6, 0.26, 2.0, k*1.7, 3.52, cz + 3.5, shadeC(E.roofC,0.7).getHex());
+    // 纵向瓦楞：一条条细筋收敛到灭点，"金属车顶"读得出来
+    for (let r=0;r<9;r++){
+      b.box(0.045, 0.028, CAR_LEN+0.1, -3.2 + r*0.8, 3.422, cz, metalC(E.roofC, 0.18, 0.86));
+    }
+    // 车顶横向接缝：把"公路虚线"换成"车厢钣金拼缝"，这是铁路的语言
+    for (let k=0;k<6;k++){
+      b.box(CAR_W+0.1, 0.03, 0.07, 0, 3.425, cz - CAR_LEN/2 + 1.2 + k*2.3, metalC(E.roofC,0.14,0.68));
+    }
+    // 纵向走线槽（正中偏左，避开角色中线）
+    b.box(0.30, 0.05, CAR_LEN-0.8, -1.9, 3.435, cz, metalC(E.roofC,0.16,0.78));
+    // 车顶边灯：给画面加一串透视光点
+    for (let k=0;k<4;k++){
+      const lz = cz - CAR_LEN/2 + 2.0 + k*3.5;
+      g.box(0.10, 0.10, 0.34, -CAR_W/2+0.18, 3.50, lz, E.glow);
+      g.box(0.10, 0.10, 0.34,  CAR_W/2-0.18, 3.50, lz, E.glow);
+    }
+    // 车顶空调机组：底座 + 上盖 + 散热片，别再是光秃秃的灰盒子
+    for (let k=-1;k<=1;k+=2){
+      const vx = k*2.25, vz = cz + 3.4;
+      b.box(1.05, 0.18, 1.35, vx, 3.45, vz, metalC(E.roofC,0.10,0.76));
+      b.box(0.86, 0.13, 1.15, vx, 3.58, vz, metalC(E.roofC,0.08,0.94));
+      for (let q=0;q<4;q++) b.box(0.90, 0.02, 0.05, vx, 3.65, vz-0.40+q*0.26, metalC(E.roofC,0.10,0.58));
+    }
+    // 车厢连接处：风挡 + 车钩，让"一节一节"读得出来
+    if (i < nCar-1){
+      const gz = cz - (CAR_LEN+CAR_GAP)/2;
+      b.box(CAR_W-0.9, 2.0, 0.42, 0, 1.85, gz, shadeC(E.roofC2,0.42).getHex());
+      b.box(1.1, 0.34, 0.55, 0, 0.78, gz, '#191c22');
+      g.box(0.10, 0.06, 0.5, -CAR_W/2+0.18, 3.50, gz, E.glow);
+      g.box(0.10, 0.06, 0.5,  CAR_W/2-0.18, 3.50, gz, E.glow);
+    }
     // 侧面窗带（发光）
     g.box(CAR_W+0.06, 0.95, CAR_LEN-1.4, 0, 2.10, cz, E.lit);
     // 车窗分隔
@@ -518,7 +733,7 @@ function buildEra(era, z0){
         b.cyl(0.14, 9.5, s*(8.5), 4.6, pz, shadeC(E.trim,0.55).getHex());
         b.box(3.4, 0.16, 0.16, s*(7.0), 8.6, pz, shadeC(E.trim,0.45).getHex());
         g.box(0.9, 0.16, 0.16, s*(6.2), 8.5, pz, E.glow);   // 灯
-        g.box(1.2, 1.2, 1.2, s*(6.2), 8.2, pz, E.glow).box; // 光晕用精灵另做
+        g.box(1.2, 1.2, 1.2, s*(6.2), 8.2, pz, E.glow);     // 光晕（合并几何，够用）
       }
     } else if (type === 'blocks'){
       // 远处楼群
@@ -530,11 +745,11 @@ function buildEra(era, z0){
         const dist = 16 + r()*20;
         b.box(w, h, d, s*(dist), h/2, pz, shadeC(E.ground, 1.35 + r()*0.5).getHex());
         // 窗户点阵
-        const rows = Math.min(9, Math.floor(h/3.0)), cols = Math.min(4, Math.floor(w/2.6));
+        const rows = Math.min(14, Math.floor(h/1.9)), cols = Math.min(8, Math.floor(w/1.5));
         for (let ry2=0; ry2<rows; ry2++){
           for (let cx=0; cx<cols; cx++){
             if (r() > 0.62){
-              g.box(0.9, 0.9, 0.06, s*(dist) - w/2 + 1.3 + cx*2.6, 2.0 + ry2*3.0, pz + d/2 + 0.05,
+              g.box(0.55, 0.62, 0.06, s*(dist) - w/2 + 0.8 + cx*1.5, 1.5 + ry2*1.9, pz + d/2 + 0.05,
                     r() > 0.7 ? E.accent : E.lit);
             }
           }
@@ -625,6 +840,11 @@ function buildEra(era, z0){
     // 站台
     b.box(7.4, 0.32, 6.0, baseX, 0.16, sz, shadeC(E.ground, 1.5).getHex());
     b.box(7.4, 0.06, 6.0, baseX, 0.34, sz, shadeC(E.trim, 0.35).getHex());
+    // 站台边缘灯带 + 一盏立灯：给每一站一个光源
+    g.box(7.0, 0.05, 0.10, baseX, 0.36, sz + 3.0, E.glow);
+    b.box(0.14, 3.4, 0.14, baseX + 3.0, 1.7, sz - 2.4, shadeC(E.trim, 0.55).getHex());
+    g.box(0.46, 0.20, 0.46, baseX + 3.0, 3.4, sz - 2.4, E.glow);
+    g.box(0.30, 0.06, 0.30, baseX + 3.0, 3.28, sz - 2.4, E.accent);
     if (sil.mode === 4) return;   // 空站台
 
     const fig = (x, facing, flip) => {
@@ -681,14 +901,14 @@ const TIMELINE = [
     {at:0.62, y:'2014 · 灯牌还在',      t:'有人把 2006 年的灯牌擦干净，带去了现场。'} ],
   [ {at:0.16, y:'2020.4 · 一次重聚',    t:'她在节目里当场质问另一个人。舆论翻车。'},
     {at:0.58, y:'2020.4 · 六个字',      t:'「我们不说别人了，乖。」'} ],
-  [ {at:0.12, y:'2026.10 · 后会友期',   t:'18 天列车，四对走散的旧友。播放破 7 亿。'},
+  [ {at:0.12, y:'2026.10 · 后会友期',   t:'18 天列车，四对多年没同框的人。播放破 7 亿。'},
     {at:0.44, y:'海拔 4000 米 · 悬崖',   t:'「我是被宣判的人，我能去哪儿啊。我画地为牢。」'},
     {at:0.78, y:'2026 · 系鞋带',        t:'她蹲下去系了四次。鞋带，一次都没有松。'} ],
   [ {at:0.30, y:'收官 · 下车环节',      t:'两个人都没有下车。'} ],
 ];
 
 function genEntities(){
-  obstacles.length = 0; tapeData.length = 0;
+  obstacles.length = 0; tapeData.length = 0; rumorData.length = 0;
   for (let e=0;e<6;e++){
     const z0 = -e*ERA_LEN;
     const rnd = mulberry(9001 + e*131);
@@ -723,6 +943,17 @@ function genEntities(){
       tz -= 30 + rnd()*8;
     }
   }
+  // 2007 那一站：三种说法摆在同一道线上，你只能带走一种。
+  // 不替任何人下判断——三种都只是「说法」，都没有第三方证据。
+  const rz = -RUMOR_ERA*ERA_LEN - ERA_LEN*RUMOR_AT;
+  for (let l=0;l<3;l++) rumorData.push({ idx:l, lane:l, z:rz, taken:false, spin:l*2.1 });
+  for (let i=obstacles.length-1;i>=0;i--){
+    if (Math.abs(obstacles[i].z - rz) < 6.5) obstacles.splice(i,1);
+  }
+  for (let i=tapeData.length-1;i>=0;i--){
+    if (Math.abs(tapeData[i].z - rz) < 4) tapeData.splice(i,1);
+  }
+
   obstacles.sort((a,b)=> b.z - a.z);   // 从远到近（z 递减）
 }
 
@@ -730,24 +961,54 @@ function genEntities(){
 <script>
 /* ══════════════════════════════════════════════════════════════
    《不下车》 · 主程序
+   ──────────────────────────────────────────────────────────────
+   这一版加了一件玩家能操作、能失去、也能保住的东西：
+   「同框」——她们跑在你前面，两个人之间连着一条线。
+   你站在两人中间，线就紧；你被撞开、被逼走，线就松、就断。
+   你保不住她们的二十年，只能保住「她们还在同一个画面里」。
    ══════════════════════════════════════════════════════════════ */
 
 const SPEED0 = 12, SPEED1 = 19;
-const JUMP_V = 7.2, GRAV = 22;
+const JUMP_V = 7.9, GRAV = 22;
 const LANE_LERP = 13;
 
 let camX = 0, camY = 0, camLookX = 0;
 let trauma = 0, fovBump = 0;
 let eraMix = { from:0, to:0, t:1 };
-let obstacleIdx = 0;
 let ringGroup = null;
 let revealT = 0;
+let RUN = 0;                      // 局数令牌：防止上一局的 setTimeout 污染新一局
 
 const HUD = {};
 const st = {
   score:0, tapes:0, hearts:3, combo:0, bestCombo:0,
   hitAt:-99, era:0, tapeBits:0, perEra:[],
+  near:0, precise:0, tlCount:0, rumor:null, rumorShort:'',
+  shieldUsed:0, bondEnd:48, gapEnd:1.0,
 };
+
+/* ══════════ 「同框」状态 ══════════ */
+const pair = {
+  bond: 48, gap: 1.0, lane: 1, cx: 0, mode: 'both',
+  inFrame: false, armed: false, used: false,
+  group: null, a: null, b: null, segs: [], haloA: null, haloB: null,
+  laneT: 3.4, runT: 0, z: 0, flash: 0,
+};
+
+function pairTol(gap){ return Math.max(0.30, 1.95 - gap * 0.24); }
+function bondMult(){
+  if (pair.mode === 'none') return 2;
+  return 1 + Math.min(4, Math.floor(pair.bond / 20));
+}
+function pairLabel(){
+  if (pair.mode === 'none') return '框不住了';
+  if (pair.mode === 'one')  return '这一站只有一个人';
+  if (pair.bond >= 88) return '线是紧的';
+  if (pair.bond >= 60) return '还连着';
+  if (pair.bond >= 35) return '有点松了';
+  if (pair.bond >= 15) return '快散了';
+  return '散了';
+}
 
 /* ══════════ 音频（WebAudio 合成，零资源） ══════════ */
 let AC = null;
@@ -771,8 +1032,12 @@ function sfxHit(){ blip(160, 0.22, 'sawtooth', 0.09, 60); }
 function sfxJump(){ blip(420, 0.09, 'triangle', 0.05, 640); }
 function sfxEra(){ blip(220, 0.5, 'sine', 0.07, 440); }
 function sfxEnd(){ blip(120, 1.2, 'sine', 0.08, 40); }
+function sfxNear(){ blip(1180, 0.05, 'sine', 0.028, 1500); }
+function sfxShield(){ blip(520, 0.30, 'sine', 0.07, 900); }
+function sfxRumor(){ blip(340, 0.36, 'triangle', 0.055, 240); }
+function sfxBondBreak(){ blip(140, 0.5, 'sine', 0.05, 90); }
 
-/* ══════════ 角色 ══════════ */
+/* ══════════ 玩家角色 ══════════ */
 function makePlayer(){
   const g = new THREE.Group();
   const COL = {
@@ -788,48 +1053,42 @@ function makePlayer(){
   };
 
   const root = new THREE.Group(); g.add(root);
-  // 髋
   add(root, .34,.16,.20, 0,.80,0, matPants);
-  // 躯干
   const torso = new THREE.Group(); torso.position.set(0,.80,0); root.add(torso);
-  torso.rotation.x = 0.10;
+  torso.rotation.x = -0.10;   // 前倾（角色朝 -z 跑）
   add(torso, .40,.52,.24, 0,.28,0, matShirt);
-  add(torso, .40,.10,.24, 0,.02,0, matPants);      // 腰
-  add(torso, .42,.06,.25, 0,.50,0, matAcc);        // 领口
-  add(torso, .30,.16,.22, 0,.56,0, matSkin);       // 颈
+  add(torso, .40,.10,.24, 0,.02,0, matPants);
+  add(torso, .42,.06,.25, 0,.50,0, matAcc);
+  add(torso, .30,.16,.22, 0,.56,0, matSkin);
 
-  // 头
   const head = new THREE.Group(); head.position.set(0,.68,0); torso.add(head);
-  add(head, .34,.34,.32, 0,.17,0, matSkin);
-  add(head, .36,.12,.34, 0,.31,0, matHair);
-  add(head, .36,.10,.10, 0,.24,-.14, matHair);     // 刘海
-  add(head, .06,.05,.02, -.09,.18,.165, matDark);  // 眼
-  add(head, .06,.05,.02,  .09,.18,.165, matDark);
+  add(head, .31,.32,.30, 0,.16,0, matSkin);
+  add(head, .33,.11,.32, 0,.29,0, matHair);
+  add(head, .36,.10,.10, 0,.24,.14, matHair);   // 后脑勺在 +z
+  add(head, .06,.05,.02, -.085,.17,-.155, matDark);
+  add(head, .06,.05,.02,  .085,.17,-.155, matDark);
 
-  // 手臂
   const mkArm = (sx) => {
     const sh = new THREE.Group(); sh.position.set(sx*.26,.46,0); torso.add(sh);
     add(sh, .11,.28,.12, 0,-.13,0, matShirt);
     const el = new THREE.Group(); el.position.set(0,-.26,0); sh.add(el);
     add(el, .10,.26,.11, 0,-.13,0, matSkin);
-    add(el, .11,.07,.12, 0,-.26,0, matAcc);        // 袖口
+    add(el, .11,.07,.12, 0,-.26,0, matAcc);
     return { sh, el };
   };
   const armL = mkArm(-1), armR = mkArm(1);
 
-  // 腿
   const mkLeg = (sx) => {
     const hip = new THREE.Group(); hip.position.set(sx*.11,.80,0); root.add(hip);
-    add(hip, .14,.42,.15, 0,-.21,0, matPants);
+    add(hip, .16,.42,.17, 0,-.21,0, matPants);
     const kn = new THREE.Group(); kn.position.set(0,-.42,0); hip.add(kn);
-    add(kn, .13,.40,.14, 0,-.20,0, matPants);
-    add(kn, .14,.09,.28, 0,-.40,.04, matShoe);     // 脚
-    add(kn, .14,.03,.29, 0,-.44,.04, matAcc);      // 鞋底
+    add(kn, .15,.40,.16, 0,-.20,0, matPants);
+    add(kn, .14,.09,.28, 0,-.40,-.04, matShoe);
+    add(kn, .14,.03,.29, 0,-.44,-.04, matAcc);
     return { hip, kn };
   };
   const legL = mkLeg(-1), legR = mkLeg(1);
 
-  // 影子
   const shadow = new THREE.Mesh(
     new THREE.CircleGeometry(0.42, 14),
     new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.34, depthWrite:false })
@@ -838,20 +1097,106 @@ function makePlayer(){
   shadow.position.y = 0.02;
   g.add(shadow);
 
-  // 小光（受击时闪）
   scene.add(g);
   return { g, root, torso, head, armL, armR, legL, legR, shadow };
 }
 
-/* ══════════ 障碍 / 磁带 ══════════ */
+/* ══════════ 她们：两个不说话的剪影 ══════════ */
+function makePairFigure(which){
+  const cool = which === 0;
+  const bodyC = cool ? '#2c3448' : '#3d2f3c';
+  const trimC = cool ? '#9fc0ea' : '#f0bd7e';
+  // 半透明：她们是记忆里跑在前面的人，不该挡住你要看的路
+  const M = (c, e, op) => new THREE.MeshLambertMaterial({ color:c, flatShading:true,
+    transparent:op < 1, opacity:op, emissive:new THREE.Color(e || 0x000000),
+    emissiveIntensity:0.7, depthWrite:op >= 1 });
+  // 身体半透明（不挡路），头和领口实一点（还看得出是两个人）
+  const mBody = M(bodyC, cool ? 0x101c30 : 0x2a1808, 0.62),
+        mTrim = M(trimC, cool ? 0x3f6a9a : 0x8a5a1a, 1),
+        mHead = M('#15151c', 0x08080c, 1),
+        mSkin = M(cool ? '#a9b4c8' : '#c9b09a', 0x1a1410, 0.86);
+  const g = new THREE.Group();
+  const root = new THREE.Group(); g.add(root);
+  const add = (p,w,h,d,x,y,z,m)=>{ const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); q.position.set(x,y,z); p.add(q); return q; };
+
+  add(root, .30,.14,.18, 0,.74,0, mBody);
+  const torso = new THREE.Group(); torso.position.set(0,.74,0); root.add(torso);
+  add(torso, .36,.48,.21, 0,.26,0, mBody);
+  add(torso, .38,.05,.22, 0,.47,0, mTrim);            // 领口那一点亮
+  add(torso, .16,.30,.23, 0,.20,-.02, mTrim);         // 背带 / 一点色块
+  const head = new THREE.Group(); head.position.set(0,.62,0); torso.add(head);
+  add(head, .28,.28,.27, 0,.15,0, mHead);
+  add(head, .30,.07,.29, 0,.28,0, mTrim);
+  add(head, .26,.05,.10, 0,.14,.13, mSkin);           // 下颌（只给一点，不做脸）
+
+  const arm = (sx) => {
+    const sh = new THREE.Group(); sh.position.set(sx*.23,.44,0); torso.add(sh);
+    add(sh, .09,.26,.10, 0,-.13,0, mBody);
+    add(sh, .10,.24,.10, 0,-.36,0, mSkin);
+    return sh;
+  };
+  const armL = arm(-1), armR = arm(1);
+
+  const leg = (sx) => {
+    const hip = new THREE.Group(); hip.position.set(sx*.10,.74,0); root.add(hip);
+    add(hip, .12,.40,.13, 0,-.20,0, mBody);
+    const kn = new THREE.Group(); kn.position.set(0,-.40,0); hip.add(kn);
+    add(kn, .11,.36,.12, 0,-.18,0, mBody);
+    add(kn, .12,.08,.24, 0,-.36,.03, mHead);
+    return { hip, kn };
+  };
+  const legL = leg(-1), legR = leg(1);
+
+  const halo = makeGlowSprite(trimC, 2.5, 0.35);
+  halo.position.set(0, .95, -.22);
+  g.add(halo);
+
+  // 脚下的一圈光：远处也能看见“这两个人站在哪条道上”
+  const foot = new THREE.Mesh(
+    new THREE.RingGeometry(0.50, 0.72, 26),
+    new THREE.MeshBasicMaterial({ color:trimC, transparent:true, opacity:0.34,
+      blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, fog:false })
+  );
+  foot.rotation.x = -Math.PI/2;
+  foot.position.y = 0.012;
+  g.add(foot);
+
+  return { g, root, torso, head, armL, armR, legL, legR, halo, foot, which };
+}
+
+function buildPair(){
+  pair.group = new THREE.Group();
+  pair.a = makePairFigure(0);
+  pair.b = makePairFigure(1);
+  pair.a.g.scale.setScalar(1.16);
+  pair.b.g.scale.setScalar(1.16);
+  pair.group.add(pair.a.g);
+  pair.group.add(pair.b.g);
+  pair.haloA = pair.a.halo;
+  pair.haloB = pair.b.halo;
+
+  // 两个人之间那根线：三段，松了就断
+  for (let i=0;i<3;i++){
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 0.035, 0.035),
+      new THREE.MeshBasicMaterial({ color:0xffd479, transparent:true, opacity:0.55,
+        blending:THREE.AdditiveBlending, depthWrite:false, fog:false })
+    );
+    pair.group.add(m);
+    pair.segs.push(m);
+  }
+  scene.add(pair.group);
+}
+
+/* ══════════ 障碍 / 磁带 / 说法 ══════════ */
 const OB_KINDS = ['barrier','gate','block'];
 const OB_H = { barrier:1.15, gate:2.9, block:2.4 };
 
-let obIM = {}, tapeIM = null;
+let obIM = {}, tapeIM = null, tapeHaloIM = null, rumorIM = null, rumorHalos = [];
 
 function buildEntities(){
   genEntities();
-  // InstancedMesh
+
   const geoBox = new THREE.BoxGeometry(1,1,1);
   const matB = new THREE.MeshLambertMaterial({ color:0xffffff, flatShading:true });
   OB_KINDS.forEach(k=>{
@@ -864,7 +1209,7 @@ function buildEntities(){
     obIM[k] = { im, list };
   });
 
-  // 磁带（发光小方块 + 内圈）
+  // 磁带（本体 + 一层加色光晕）
   const tapeGeo = new THREE.BoxGeometry(0.62, 0.42, 0.14);
   const tapeMat = new THREE.MeshBasicMaterial({ color:0xffd479 });
   tapeIM = new THREE.InstancedMesh(tapeGeo, tapeMat, tapeData.length);
@@ -872,7 +1217,39 @@ function buildEntities(){
   tapeIM.frustumCulled = false;
   scene.add(tapeIM);
 
+  tapeHaloIM = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.05, 0.80, 0.30),
+    new THREE.MeshBasicMaterial({ color:0xffd479, transparent:true, opacity:0.20,
+      blending:THREE.AdditiveBlending, depthWrite:false }),
+    tapeData.length
+  );
+  tapeHaloIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  tapeHaloIM.frustumCulled = false;
+  scene.add(tapeHaloIM);
+
+  buildRumor();
   placeObstacles();
+}
+
+function buildRumor(){
+  if (!rumorData.length) return;
+  const geo = new THREE.OctahedronGeometry(0.26, 0);
+  const mat = new THREE.MeshBasicMaterial({ color:0xffffff });
+  rumorIM = new THREE.InstancedMesh(geo, mat, rumorData.length);
+  rumorIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  rumorIM.frustumCulled = false;
+  if (rumorIM.setColorAt){
+    rumorData.forEach((r,i)=> rumorIM.setColorAt(i, new THREE.Color(
+      r.idx === 0 ? 0xff7a8a : r.idx === 1 ? 0x9fc0ff : 0xd7b6ff)));
+    if (rumorIM.instanceColor) rumorIM.instanceColor.needsUpdate = true;
+  }
+  scene.add(rumorIM);
+  rumorData.forEach((r)=>{
+    const s = makeGlowSprite(r.idx === 0 ? '#ff7a8a' : r.idx === 1 ? '#9fc0ff' : '#d7b6ff', 1.5, 0.42);
+    s.position.set(LANE_X[r.lane], ROOF_Y + 1.55, r.z);
+    scene.add(s);
+    rumorHalos.push(s);
+  });
 }
 
 const _mm = new THREE.Matrix4();
@@ -917,7 +1294,7 @@ function initScene(){
   document.getElementById('cvhost').appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 320);
+  camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 320);   // 天空球 240，务必留余量
   clock = new THREE.Clock();
 
   scene.add(makeSky());
@@ -930,7 +1307,11 @@ function initScene(){
   const fill = new THREE.DirectionalLight(0x88aaff, 0.4);
   fill.position.set(8, 4, 8);
   scene.add(fill);
+  const fill2 = new THREE.DirectionalLight(0xffd0a0, 0.28);
+  fill2.position.set(6, 3, -6);
+  scene.add(fill2);
   scene.userData.fill = fill;
+  scene.userData.fill2 = fill2;
 
   // 六个时代
   worldGroup = new THREE.Group(); scene.add(worldGroup);
@@ -952,8 +1333,10 @@ function initScene(){
   particles = makeParticles(); scene.add(particles);
   player.model = makePlayer();
   buildEntities();
+  buildPair();
   buildRing();
   applyEra(0, 0, 1);
+  pair.group.visible = false;
 }
 
 /* 结局用的环形轨道 */
@@ -961,24 +1344,70 @@ function buildRing(){
   ringGroup = new THREE.Group();
   ringGroup.visible = false;
   const R = 46;
+
+  // 轨道本体：亮一点，不然俯视时只剩几条暗线
   const torus = new THREE.Mesh(
-    new THREE.TorusGeometry(R, 0.9, 6, 96),
-    new THREE.MeshLambertMaterial({ color:0x6a6070, emissive:0x221e28, flatShading:true, fog:false })
+    new THREE.TorusGeometry(R, 0.85, 8, 120),
+    new THREE.MeshBasicMaterial({ color:0xd0c0f0, fog:false })
   );
   torus.rotation.x = Math.PI/2;
   ringGroup.add(torus);
-  // 轨道上的小车
+
+  // 轨道的加色光晕（略大一圈）
+  const glowRing = new THREE.Mesh(
+    new THREE.TorusGeometry(R, 1.9, 8, 120),
+    new THREE.MeshBasicMaterial({ color:0x6a5f8a, transparent:true, opacity:0.22,
+      blending:THREE.AdditiveBlending, depthWrite:false, fog:false })
+  );
+  glowRing.rotation.x = Math.PI/2;
+  ringGroup.add(glowRing);
+
+  // 轨枕：一圈短线
+  const tieGeo = new THREE.BoxGeometry(0.5, 0.12, 4.2);
+  const tieMat = new THREE.MeshBasicMaterial({ color:0x5a5270, fog:false });
+  const tieIM = new THREE.InstancedMesh(tieGeo, tieMat, 72);
+  tieIM.frustumCulled = false;
+  for (let i=0;i<72;i++){
+    const a = i/72*Math.PI*2;
+    const D = new THREE.Vector3(Math.cos(a)*R, 0, Math.sin(a)*R);
+    const Q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, 0));
+    _mm.compose(D, Q, new THREE.Vector3(1,1,1));
+    tieIM.setMatrixAt(i, _mm);
+  }
+  tieIM.instanceMatrix.needsUpdate = true;
+  ringGroup.add(tieIM);
+
+  // 轨道上的小车厢
   const dots = new THREE.Group();
-  for (let i=0;i<7;i++){
-    const a = i/7*Math.PI*2;
-    const d = new THREE.Mesh(new THREE.BoxGeometry(2.2,1.2,4.4),
+  for (let i=0;i<9;i++){
+    const a = i/9*Math.PI*2;
+    const d = new THREE.Mesh(new THREE.BoxGeometry(2.4,1.4,5.0),
       new THREE.MeshBasicMaterial({ color:0xffd479, fog:false }));
-    d.position.set(Math.cos(a)*R, 0.7, Math.sin(a)*R);
+    d.position.set(Math.cos(a)*R, 0.75, Math.sin(a)*R);
     d.rotation.y = -a;
     dots.add(d);
+    const s = makeGlowSprite('#ffd479', 7.5, 0.34);
+    s.position.set(Math.cos(a)*R, 0.9, Math.sin(a)*R);
+    dots.add(s);
   }
   ringGroup.add(dots);
   ringGroup.userData.dots = dots;
+
+  // 星点：让俯视图不是纯黑
+  const N = 420, pos = new Float32Array(N*3);
+  for (let i=0;i<N;i++){
+    const a = Math.random()*Math.PI*2, r = 60 + Math.random()*90;
+    pos[i*3] = Math.cos(a)*r;
+    pos[i*3+1] = -20 + Math.random()*60;
+    pos[i*3+2] = Math.sin(a)*r;
+  }
+  const sg = new THREE.BufferGeometry();
+  sg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({
+    color:0xb8a8e0, size:0.9, transparent:true, opacity:0.7, depthWrite:false, fog:false }));
+  stars.frustumCulled = false;
+  ringGroup.add(stars);
+
   scene.add(ringGroup);
 }
 
@@ -991,8 +1420,6 @@ function applyEra(from, to, k){
   const fogC = col(A.fog, B.fog);
   if (!scene.fog) scene.fog = new THREE.Fog(fogC, L(A.fogN,B.fogN), L(A.fogF,B.fogF));
   else { scene.fog.color.copy(fogC); scene.fog.near = L(A.fogN,B.fogN); scene.fog.far = L(A.fogF,B.fogF); }
-  scene.fog.near = L(A.fogN,B.fogN);
-  scene.fog.far  = L(A.fogF,B.fogF);
 
   skyMat.uniforms.uTop.value.copy(col(A.skyTop, B.skyTop));
   skyMat.uniforms.uBot.value.copy(col(A.skyBot, B.skyBot));
@@ -1004,12 +1431,13 @@ function applyEra(from, to, k){
   sunLight.color.copy(col(A.dir, B.dir));
   sunLight.intensity = L(A.dirI, B.dirI);
   scene.userData.fill.color.copy(col(A.amb, B.amb));
-  scene.userData.fill.intensity = L(A.dirI, B.dirI) * 0.22;
+  scene.userData.fill.intensity = L(A.dirI, B.dirI) * 0.26;
+  scene.userData.fill2.color.copy(col(A.sun, B.sun));
+  scene.userData.fill2.intensity = L(A.sunI, B.sunI) * 0.30;
 
   pMat.color.copy(col(A.pcol, B.pcol));
   renderer.toneMappingExposure = L(1.12, 1.0);
 
-  // HUD 时代色
   document.documentElement.style.setProperty('--era', B.accent);
   const yEl = HUD.year, tEl = HUD.tag;
   if (yEl && k > 0.5){ yEl.textContent = B.year; tEl.textContent = B.tag; }
@@ -1072,7 +1500,6 @@ function update(dt){
   if (G.state === 'reveal'){ updateReveal(dt); return; }
   if (G.state === 'result'){ return; }
 
-  const E = G.era;
   G.t += dt;
   G.speed = SPEED0 + (SPEED1-SPEED0) * Math.min(1, G.t/68);
 
@@ -1088,6 +1515,7 @@ function update(dt){
     sfxEra(); G.flash = 0.9;
     showCaption(ERAS[newEra].year, ERAS[newEra].tag);
     st.perEra[newEra] = true;
+    enterPairEra(newEra);
   }
   if (eraMix.t < 1){
     eraMix.t = Math.min(1, eraMix.t + dt/1.2);
@@ -1113,9 +1541,11 @@ function update(dt){
   // 跑步动画
   player.runPhase += dt * (G.speed * 0.72);
   animatePlayer(dt);
+  updatePair(dt);
 
   // 碰撞
   collide();
+  if (G.state !== 'playing') return;   // 撞到第三次，这一局结束了
 
   // 相机
   const shakeAmt = trauma * trauma;
@@ -1124,31 +1554,33 @@ function update(dt){
   const camTargetX = player.x * 0.55;
   camX += (camTargetX - camX) * Math.min(1, 9*dt);
   camY += ((ROOF_Y + 2.70 + player.y*0.42) - camY) * Math.min(1, 6*dt);
-  const camBack = 6.4 + (camera.aspect < 1 ? (1-camera.aspect)*5.0 : 0);
+  const camBack = 6.4 + (camera.aspect < 1 ? (1-camera.aspect)*2.4 : 0);
   camera.position.set(camX + sx, camY + sy, player.z + camBack);
   const lx = player.x * 0.42;
   camLookX += (lx - camLookX) * Math.min(1, 14*dt);
   camera.lookAt(camLookX, ROOF_Y + 1.00 + player.y*0.35, player.z - 15);
   camera.rotation.z += player.lean * 0.06 + (Math.random()-0.5)*0.02*shakeAmt;
+  if (pair.bond < 22 && pair.mode !== 'none') camera.rotation.z += (Math.random()-0.5)*0.006;
 
   const asp = camera.aspect;
-  const portBoost = asp < 1 ? (1 + (1-asp)*0.62) : 1;
+  const portBoost = asp < 1 ? (1 + (1-asp)*0.18) : 1;
   const fovTarget = (58 + 18 * (G.speed - SPEED0) / (SPEED1 - SPEED0)) * portBoost;
   camera.fov += (fovTarget - camera.fov) * Math.min(1, 3*dt);
   camera.updateProjectionMatrix();
 
   // 天空跟随
-  scene.children[0].position.copy(camera.position);
+  skyMesh.position.copy(camera.position);
 
   // 粒子
   updateParticles(dt);
+  updateRumor(dt);
   trauma = Math.max(0, trauma - 1.8*dt);
   G.flash = Math.max(0, G.flash - dt*2.6);
 
   checkTimeline();
 
-  // 分数
-  st.score += G.speed * dt * 10;
+  // 分数：同框越紧，里程越值钱
+  st.score += G.speed * dt * 10 * bondMult();
   updateHUD();
   if (G.dist >= ERA_LEN*6 - 30) startReveal();
 }
@@ -1193,13 +1625,195 @@ function animatePlayer(dt){
     v.torso.rotation.x = 0.10;
   }
 
-  // 影子
   v.shadow.position.y = 0.02 - player.y;
   const sc = Math.max(0.35, 1 - player.y*0.32);
   v.shadow.scale.set(sc, sc, sc);
   v.shadow.material.opacity = 0.34 * sc;
 }
 
+/* ══════════ 同框：两个人在前面跑，你在不在他们中间 ══════════ */
+function enterPairEra(e){
+  const cfg = PAIR_ERA[e];
+  pair.mode = cfg.mode;
+  pair.gap = cfg.gap;
+  pair.lane = 1;
+  pair.cx = 0;
+  pair.laneT = 2.6 + Math.random()*1.4;
+  if (cfg.mode === 'both' && e === 4) pair.bond = Math.min(BOND_MAX, pair.bond + 6);
+  if (cfg.mode === 'none'){
+    pair.group.visible = false;
+    toast('这一站，站台是空的');
+  } else {
+    pair.group.visible = true;
+  }
+  updateHUD();
+}
+
+function pairThink(dt){
+  if (pair.mode === 'none') return;
+  pair.laneT -= dt;
+  if (pair.laneT > 0) return;
+  pair.laneT = 2.2 + Math.random()*1.8;
+  const pz = player.z - PAIR_AHEAD;
+  const safe = [];
+  for (let l=0;l<3;l++){
+    let ok = true;
+    for (let i=0;i<obstacles.length;i++){
+      const o = obstacles[i];
+      if (o.lane !== l) continue;
+      const dz = o.z - pz;
+      if (dz > -4 && dz < 18){ ok = false; break; }
+    }
+    if (ok) safe.push(l);
+  }
+  if (!safe.length) return;
+  safe.sort((a,b)=> Math.abs(a-pair.lane) - Math.abs(b-pair.lane));
+  // 大多数时候就近躲一下；偶尔她也说不清要往哪边
+  pair.lane = (Math.random() < 0.24 && safe.length > 1) ? safe[(Math.random()*safe.length)|0] : safe[0];
+}
+
+/* 剪影不会穿模：眼前 12 米内那条道上有东西，她立刻换一条 */
+function pairDodgeNow(){
+  const pz = player.z - PAIR_AHEAD;
+  let block = false;
+  for (let i=0;i<obstacles.length;i++){
+    const o = obstacles[i];
+    if (o.hit || o.passed) continue;
+    if (o.lane !== pair.lane) continue;
+    const dz = o.z - pz;
+    if (dz > -2.5 && dz < 12){ block = true; break; }
+  }
+  if (!block) return;
+  for (let l=0;l<3;l++){
+    if (l === pair.lane) continue;
+    let ok = true;
+    for (let i=0;i<obstacles.length;i++){
+      const o = obstacles[i];
+      if (o.hit || o.passed) continue;
+      if (o.lane !== l) continue;
+      const dz = o.z - pz;
+      if (dz > -2.5 && dz < 14){ ok = false; break; }
+    }
+    if (ok){ pair.lane = l; pair.laneT = 2.0 + Math.random()*1.2; return; }
+  }
+}
+
+function updatePair(dt){
+  if (!pair.group) return;
+  const cfg = PAIR_ERA[G.era];
+  pair.mode = cfg.mode;
+
+  if (pair.mode === 'none'){
+    pair.group.visible = false;
+    pair.inFrame = false;
+    return;
+  }
+  pair.group.visible = true;
+  pair.z = player.z - PAIR_AHEAD;
+  pairThink(dt);
+  pairDodgeNow();
+
+  // 间距：你在，线就收一点；你不在，它自己撕开；时代本身也在撕
+  if (pair.mode === 'both'){
+    pair.gap -= (pair.inFrame ? 0.16 : -0.055) * dt;     // 帧内收，帧外慢慢开
+    pair.gap += cfg.drift * dt * (pair.inFrame ? 1.15 : 2.15);
+  } else {
+    pair.gap = Math.max(0.55, pair.gap - 0.10*dt);
+  }
+  pair.gap = Math.max(0.55, Math.min(cfg.gapMax, pair.gap));
+
+  // 两人中点：间距越小，越可以待在任意一条道上；间距越大，越被压回中线
+  const k = Math.max(0, 1 - pair.gap/4.2);
+  const targetCx = LANE_X[pair.lane] * k;
+  pair.cx += (targetCx - pair.cx) * Math.min(1, 2.6*dt);
+
+  const tol = pairTol(pair.gap);
+  const wasFrame = pair.inFrame;
+  pair.inFrame = Math.abs(player.x - pair.cx) <= tol;
+
+  // 同框值
+  if (pair.mode === 'both'){
+    pair.bond += (pair.inFrame ? cfg.inRate : -cfg.outRate) * dt;
+  } else {
+    pair.bond += (pair.inFrame ? -2.0 : -cfg.outRate) * dt;
+  }
+  pair.bond -= cfg.extra * dt;
+  const before = pair.bond;
+  pair.bond = Math.max(0, Math.min(BOND_MAX, pair.bond));
+
+  // 阈值提示
+  if (wasFrame !== pair.inFrame){
+    if (pair.inFrame) sfxNear(); else sfxBondBreak();
+  }
+  if (before >= 88 && pair.bond < 88) toast('线松了');
+  if (before >= 20 && pair.bond < 20) toast('画面散了');
+  if (before < 88 && pair.bond >= 88 && !pair.used) toast('线是紧的 · 可以挡一下');
+
+  pair.armed = pair.bond >= 88 && !pair.used;
+  if (pair.bond < 20 && pair.flash <= 0){ pair.flash = 0.9; }
+
+  placePair(dt);
+}
+
+function placePair(dt){
+  const A = pair.a, B = pair.b;
+  pair.runT += dt * Math.max(3.0, G.speed * 0.68);
+
+  const cx = pair.cx, g = pair.gap;
+  const x1 = cx - g/2, x2 = cx + g/2;
+  const z = pair.z;
+
+  A.g.position.set(x1, ROOF_Y, z);
+  B.g.position.set(x2, ROOF_Y, z);
+  A.g.rotation.y = 0; B.g.rotation.y = 0;
+  A.g.visible = true;
+  B.g.visible = pair.mode === 'both';
+
+  const ph = pair.runT;
+  const ph2 = pair.runT * 1.0 + 1.7;
+  const pose = (F, p) => {
+    const s = Math.sin(p), c = Math.cos(p);
+    F.legL.hip.rotation.x = s*0.88;
+    F.legR.hip.rotation.x = -s*0.88;
+    F.legL.kn.rotation.x = Math.max(0,-c)*1.05;
+    F.legR.kn.rotation.x = Math.max(0, c)*1.05;
+    F.armL.rotation.x = -s*0.7;
+    F.armR.rotation.x = s*0.7;
+    F.root.position.y = Math.abs(Math.sin(p))*0.05;
+    F.torso.rotation.x = 0.12;
+  };
+  pose(A, ph);
+  if (B.g.visible) pose(B, ph2);
+
+  // 光晕：同框越紧越亮
+  const glow = 0.26 + pair.bond/100*0.46;
+  A.halo.material.opacity = glow;
+  B.halo.material.opacity = glow;
+  A.foot.material.opacity = 0.16 + pair.bond/100*0.30;
+  B.foot.material.opacity = A.foot.material.opacity;
+  A.foot.visible = pair.mode !== 'none';
+  B.foot.visible = pair.mode === 'both';
+
+  // 那根线
+  const segOn = pair.mode === 'both' && pair.bond >= 12;
+  const tighten = 0.82 + 0.18 * (pair.bond/100);
+  const segW = Math.max(0.05, (g/3) * tighten);
+  const gapK = (g/3) * (1-tighten);
+  for (let i=0;i<3;i++){
+    const m = pair.segs[i];
+    m.visible = segOn;
+    if (!segOn) continue;
+    const sx = x1 + (i+0.5)*(g/3);
+    m.position.set(sx, ROOF_Y + 1.16, z);
+    m.scale.set(segW, 1, 1);
+    const dim = pair.bond < 30 ? (0.12 + 0.10*Math.sin(performance.now()*0.02 + i)) : 0.55;
+    m.material.opacity = Math.max(0.03, dim * (0.35 + pair.bond/100*0.9));
+    m.material.color.copy(new THREE.Color(curPal ? curPal.accent : '#ffb35c'));
+  }
+  if (!segOn) for (const m of pair.segs) m.visible = false;
+}
+
+/* ══════════ 碰撞 ══════════ */
 function collide(){
   const pz = player.z;
   const feet = player.y;
@@ -1212,87 +1826,126 @@ function collide(){
       const o = list[i];
       if (o.hit) continue;
       const dz = o.z - pz;
+      // 已经跑过去了（z 减小，dz>0）：判定「擦身 / 越杆 / 压线」
+      if (!o.passed && dz > 1.20){
+        o.passed = true;
+        onPass(o);
+        continue;
+      }
       if (dz > 3.0){ continue; }
       if (dz < -2.2){ continue; }
       const dx = Math.abs(LANE_X[o.lane] - player.x);
       if (dx > 1.30) continue;
-      // 竖直判定
       let hits = false;
       if (o.kind === 'barrier') hits = feet < 1.05;
       else if (o.kind === 'gate') hits = (feet + headY) > 1.55;
       else hits = (feet+headY) > 0.2;
       if (hits && Math.abs(dz) < 1.15){
-        o.hit = true; hideObstacle(o);
+        o.hit = true; o.passed = true; hideObstacle(o);
         onHit();
-        return;
+        if (G.state !== 'playing') return;
       }
     }
   }
 
-  // 磁带
+  // 磁带（同框高的时候会吸过来）
   if (tapeIM){
+    const magnet = pair.bond >= 70 ? 1.35 : 0;
+    const lateral = 1.20 + magnet;
     for (let i=0;i<tapeData.length;i++){
       const t = tapeData[i];
       if (t.taken) continue;
       if (Math.abs(t.z - pz) < 1.3){
-        if (Math.abs(LANE_X[t.lane] - player.x) < 1.2 && Math.abs((ROOF_Y+t.y) - (ROOF_Y+feet+0.8)) < 1.5){
+        if (Math.abs(LANE_X[t.lane] - player.x) < lateral &&
+            Math.abs((ROOF_Y+t.y) - (ROOF_Y+feet+0.8)) < 1.45){
           t.taken = true; onPick(i);
         }
       }
     }
   }
+
+  // 三种说法：同一道线，你只能带走一种
+  if (rumorIM && pair.mode !== 'none'){
+    let best = -1, bestDx = 1.15;
+    for (let i=0;i<rumorData.length;i++){
+      const r = rumorData[i];
+      if (r.taken) continue;
+      const dz = r.z - pz;
+      if (dz > 1.4 || dz < -1.4) continue;
+      const dx = Math.abs(LANE_X[r.lane] - player.x);
+      if (dx < bestDx){ bestDx = dx; best = i; }
+    }
+    if (best >= 0) onRumor(rumorData[best]);
+  }
 }
 
 function onHit(){
+  if (G.state !== 'playing') return;
+  // 同框拉满时，这条线替你挡一下
+  if (pair.armed && !pair.used){
+    pair.used = true; pair.armed = false;
+    pair.bond = Math.max(0, pair.bond - 42);
+    G.flash = 0.42; trauma = 0.75;
+    st.shieldUsed++;
+    sfxShield();
+    toast('没散 · 挡了一下');
+    updateHUD();
+    return;
+  }
   st.hearts--; st.combo = 0; st.hitAt = G.t;
   G.hits++; G.flash = 0.55; trauma = 1.0;
   sfxHit();
   G.pen = 0.7;
+  pair.bond = Math.max(0, pair.bond - 14);
+  updateHUD();
   if (st.hearts <= 0) endRun(false);
+}
+
+function onPass(o){
+  const dx = Math.abs(LANE_X[o.lane] - player.x);
+  let pts = 0, label = '';
+  if (o.kind === 'barrier' && player.y > 0.55 && dx < 1.30){ pts = 45; label = '越杆'; }
+  else if (o.kind === 'gate' && player.slide > 0 && dx < 1.30){ pts = 45; label = '压线'; }
+  else if (dx > 0.90 && dx < 1.95){ pts = 28; label = '擦身'; }
+  else return;
+
+  st.combo++;
+  st.bestCombo = Math.max(st.bestCombo, st.combo);
+  const add = Math.round(pts * (1 + Math.min(2, st.combo*0.05)));
+  st.score += add;
+  if (label === '擦身') st.near++; else st.precise++;
+  showPop(label + ' +' + add);
 }
 
 function onPick(i){
   st.tapes++; st.combo++; st.bestCombo = Math.max(st.bestCombo, st.combo);
-  st.score += 60 + st.combo*8;
+  st.score += Math.round(80 * (1 + Math.min(2, st.combo*0.05)));
+  // 磁带是一段记忆：拿到它，两个人会靠近一点
+  pair.bond = Math.min(BOND_MAX, pair.bond + 1.2);
+  pair.gap = Math.max(0.55, pair.gap - 0.08);
   sfxPick();
-  const t = tapeData[i];
-  // 隐藏
   _mm.makeScale(0.0001,0.0001,0.0001);
   tapeIM.setMatrixAt(i, _mm);
   tapeIM.instanceMatrix.needsUpdate = true;
-  toast('磁带 +1');
+  if (tapeHaloIM) tapeHaloIM.setMatrixAt(i, _mm);
+  if (tapeHaloIM) tapeHaloIM.instanceMatrix.needsUpdate = true;
+  toast(st.combo >= 4 ? ('磁带 +1 · 连 ×' + st.combo) : '磁带 +1');
 }
 
-
-let tlShown = {};
-let tlT = null;
-
-function checkTimeline(){
-  const e = G.era;
-  const local = (G.dist - e*ERA_LEN) / ERA_LEN;
-  const list = TIMELINE[e] || [];
-  for (let i=0;i<list.length;i++){
-    const k = e + '_' + i;
-    if (!tlShown[k] && local >= list[i].at){
-      tlShown[k] = true;
-      showTL(list[i]);
-      st.tlCount = (st.tlCount||0) + 1;
-    }
-  }
+function onRumor(r){
+  r.taken = true;
+  st.rumor = r.idx;
+  st.rumorShort = RUMOR_VERSIONS[r.idx].short;
+  st.score += 250;
+  st.combo++;
+  sfxRumor();
+  const V = RUMOR_VERSIONS[r.idx];
+  showTL({ y: V.y, t: V.t }, 7600);
+  toast('带走了一种说法');
+  updateHUD();
 }
 
-function showTL(it){
-  const el = document.getElementById('tl');
-  if (!el) return;
-  el.querySelector('.tlY').textContent = it.y;
-  el.querySelector('.tlT').textContent = it.t;
-  el.classList.add('on');
-  clearTimeout(tlT);
-  tlT = setTimeout(()=> el.classList.remove('on'), 5200);
-  blip(1320, 0.06, 'sine', 0.03);
-}
-
-/* ══════════ 粒子 ══════════ */
+/* ══════════ 粒子 / 说法旋转 ══════════ */
 function updateParticles(dt){
   const E = curPal || ERAS[0];
   const spd = G.speed;
@@ -1331,22 +1984,67 @@ function updateParticles(dt){
       _qq.setFromEuler(_ee);
       _mm.compose(D, _qq, new THREE.Vector3(1,1,1));
       tapeIM.setMatrixAt(i, _mm);
+      if (tapeHaloIM) tapeHaloIM.setMatrixAt(i, _mm);
     }
     tapeIM.instanceMatrix.needsUpdate = true;
+    if (tapeHaloIM) tapeHaloIM.instanceMatrix.needsUpdate = true;
   }
 }
 
+function updateRumor(dt){
+  if (!rumorIM) return;
+  for (let i=0;i<rumorData.length;i++){
+    const r = rumorData[i];
+    const D = new THREE.Vector3(LANE_X[r.lane], ROOF_Y + 1.55 + Math.sin(G.t*1.8 + r.spin)*0.10, r.z);
+    if (r.taken){ _mm.makeScale(0.0001,0.0001,0.0001); }
+    else {
+      _ee.set(G.t*1.2 + r.spin, G.t*2.0 + r.spin, 0.4);
+      _qq.setFromEuler(_ee);
+      _mm.compose(D, _qq, new THREE.Vector3(1,1,1));
+    }
+    rumorIM.setMatrixAt(i, _mm);
+    if (rumorHalos[i]) rumorHalos[i].visible = !r.taken;
+  }
+  rumorIM.instanceMatrix.needsUpdate = true;
+}
+
 /* ══════════ HUD / 文案 ══════════ */
+let popT = null;
+function showPop(txt){
+  const el = HUD.combo;
+  if (!el) return;
+  el.textContent = txt;
+  el.classList.add('on');
+  clearTimeout(popT);
+  popT = setTimeout(()=> el.classList.remove('on'), 620);
+  if (txt.indexOf('擦身') === 0) sfxNear();
+}
+
 function updateHUD(){
   if (HUD.score) HUD.score.textContent = Math.floor(st.score).toLocaleString('en-US');
+  if (HUD.mult)  HUD.mult.textContent = '×' + bondMult();
   if (HUD.tape)  HUD.tape.textContent = st.tapes;
+  if (HUD.comboMini) HUD.comboMini.textContent = '连 ' + st.combo;
   if (HUD.hearts) HUD.hearts.textContent = '●'.repeat(Math.max(0,st.hearts)) + '○'.repeat(Math.max(0,3-st.hearts));
-  if (HUD.combo){
-    if (st.combo > 1){ HUD.combo.textContent = '×' + st.combo; HUD.combo.classList.add('on'); }
-    else HUD.combo.classList.remove('on');
+  if (HUD.bar) HUD.bar.style.width = Math.min(100, G.dist/(ERA_LEN*6)*100) + '%';
+
+  if (HUD.bondFill){
+    HUD.bondFill.style.width = (pair.mode === 'none' ? 0 : pair.bond) + '%';
+    HUD.bondFill.classList.toggle('low', pair.bond < 22);
+    HUD.bondFill.classList.toggle('armed', pair.armed);
   }
-  if (HUD.bar){
-    HUD.bar.style.width = Math.min(100, G.dist/(ERA_LEN*6)*100) + '%';
+  if (HUD.bondGap){
+    HUD.bondGap.textContent = (pair.mode === 'both') ? ('间距 ' + pair.gap.toFixed(1) + 'm') :
+      (pair.mode === 'one' ? '间距 —' : '间距 —');
+  }
+  if (HUD.bondTag) HUD.bondTag.textContent = pairLabel();
+  if (HUD.bondWrap){
+    HUD.bondWrap.classList.toggle('low', pair.bond < 22 || pair.mode === 'none');
+    HUD.bondWrap.classList.toggle('out', pair.mode !== 'none' && G.state === 'playing' && !pair.inFrame);
+  }
+  if (HUD.rumor){
+    if (st.rumor === null){ HUD.rumor.textContent = ''; HUD.rumor.classList.remove('on'); }
+    else { HUD.rumor.textContent = '说法 · ' + st.rumorShort + '（未证实）'; HUD.rumor.classList.add('on'); }
   }
 }
 
@@ -1367,79 +2065,150 @@ function toast(msg){
   el.textContent = msg;
   el.classList.add('on');
   clearTimeout(toastT);
-  toastT = setTimeout(()=>el.classList.remove('on'), 900);
+  toastT = setTimeout(()=>el.classList.remove('on'), 950);
+}
+
+let tlShown = {};
+let tlT = null;
+function checkTimeline(){
+  const e = G.era;
+  const local = (G.dist - e*ERA_LEN) / ERA_LEN;
+  const list = TIMELINE[e] || [];
+  for (let i=0;i<list.length;i++){
+    const k = e + '_' + i;
+    if (!tlShown[k] && local >= list[i].at){
+      tlShown[k] = true;
+      showTL(list[i]);
+      st.tlCount++;
+      st.perEra[e] = true;
+    }
+  }
+}
+
+function showTL(it, ms){
+  const el = document.getElementById('tl');
+  if (!el) return;
+  el.querySelector('.tlY').textContent = it.y;
+  el.querySelector('.tlT').textContent = it.t;
+  el.classList.add('on');
+  clearTimeout(tlT);
+  tlT = setTimeout(()=> el.classList.remove('on'), ms || 5200);
+  blip(1320, 0.06, 'sine', 0.03);
 }
 
 /* ══════════ 结局 ══════════ */
 function startReveal(){
   G.state = 'reveal'; revealT = 0;
+  st.bondEnd = pair.bond;
+  st.gapEnd = pair.gap;
+  const gen = RUN;
   document.getElementById('flash').classList.add('on');
   setTimeout(()=>{
+    if (gen !== RUN) return;           // 上一局的定时器不许动新一局
     worldGroup.visible = false;
     particles.visible = false;
     player.model.g.visible = false;
+    pair.group.visible = false;
     if (tapeIM) tapeIM.visible = false;
+    if (tapeHaloIM) tapeHaloIM.visible = false;
+    if (rumorIM) rumorIM.visible = false;
+    rumorHalos.forEach(s=> s.visible = false);
     Object.values(obIM).forEach(r=> r.im.visible = false);
     ringGroup.visible = true;
     document.getElementById('flash').classList.remove('on');
-    camera.position.set(0, 76, 78);
-    camera.fov = 45; camera.updateProjectionMatrix();
-    camera.lookAt(0,0,0);
+    // 结局的天空：把 ???? 那一站的黑，换成一点凌晨的紫
+    skyMat.uniforms.uTop.value.set('#050610');
+    skyMat.uniforms.uBot.value.set('#1a1226');
+    skyMat.uniforms.uSun.value.set('#ffcf9a');
+    skyMat.uniforms.uSunI.value = 0.32;
+    ambLight.color.set('#3a3048'); ambLight.intensity = 0.45;
+    sunLight.color.set('#e8d4ff'); sunLight.intensity = 0.65;
+    renderer.toneMappingExposure = 1.04;
+    scene.fog = null;
+    // 俯视要够高够远，否则环形轨道的近端会掉出画面
+    camera.position.set(0, 74, 106);
+    camera.fov = 50; camera.updateProjectionMatrix();
+    camera.lookAt(0, -2, 0);
+    skyMesh.position.copy(camera.position);
     sfxEnd();
+    const rb = document.getElementById('revealBond');
+    if (rb) rb.textContent = '同框 ' + Math.round(pair.bond) + ' · 间距 ' + pair.gap.toFixed(1) + 'm';
     document.getElementById('revealText').classList.add('on');
   }, 700);
 }
 
 function updateReveal(dt){
   revealT += dt;
-  const a = revealT * 0.16;
+  const a = revealT * 0.10;
   ringGroup.userData.dots.rotation.y = a;
-  scene.children[0].position.copy(camera.position);
+  skyMesh.position.copy(camera.position);
   ringGroup.rotation.z = Math.sin(revealT*0.2)*0.02;
-  if (revealT > 1.2 && document.getElementById('revealText').classList.contains('on') === false){
-    document.getElementById('revealText').classList.add('on');
-  }
-  if (revealT > 9 && !document.getElementById('choiceRow').classList.contains('on')){
+  if (revealT > 6.2 && !document.getElementById('choiceRow').classList.contains('on')){
+    // 底部选项目前和最后一站的时间线字幕共用同一块地方：按钮出现时收起字幕
+    const tl = document.getElementById('tl');
+    if (tl) tl.classList.remove('on');
     document.getElementById('choiceRow').classList.add('on');
   }
 }
 
 function endRun(crashed){
   G.state = 'result';
+  RUN++;
   document.getElementById('revealText').classList.remove('on');
   document.getElementById('choiceRow').classList.remove('on');
   document.getElementById('endKick').textContent = 'EARLY OUT';
   document.getElementById('endTitle').textContent = '提前下车';
   document.getElementById('endLine').textContent = '你被流言撞了三次。列车没有停，只是你不再看窗外了。';
   document.getElementById('over').classList.add('on');
+  st.bondEnd = pair.bond; st.gapEnd = pair.gap;
   showResult(true);
 }
 
 function pickEnding(off){
   G.state = 'result';
+  RUN++;
   G.endPick = off ? 'off' : 'stay';
   document.getElementById('choiceRow').classList.remove('on');
   document.getElementById('revealText').classList.remove('on');
   ringGroup.visible = false;
   document.getElementById('endKick').textContent = 'ENDING';
   document.getElementById('endTitle').textContent = off ? '下车' : '不下车';
+  const tight = st.bondEnd >= 60;
+  const loose = st.bondEnd < 30;
   document.getElementById('endLine').textContent = off
-    ? '你回到了 2026。站台很空，风把雪吹进轨道里。她还是那个会唱歌的人——只是不在你的车里了。'
-    : '你把自己留在了那节车厢里。窗外还是 2006 年的夏天，蝉在叫，有人在喊一个名字。';
+    ? (loose
+        ? '你下车的时候，那个画面已经散了。站台上风很大，你听见的每一个名字都像别人在说。'
+        : (tight
+            ? '你回到了 2026。你没有回头，但你知道身后那节车厢的灯还亮着，两个人还在同一个画面里。'
+            : '你回到了 2026。站台很空，风把雪吹进轨道里。你没有确认那两个人还在不在。'))
+    : (loose
+        ? '你把自己留在了那节车厢里。窗外还是 2006 年的夏天。画面散了，你还在等它重新连上。'
+        : (tight
+            ? '你把自己留在了那节车厢里。窗外还是 2006 年的夏天，蝉在叫，两个人在前面跑，中间那根线没有断。'
+            : '你把自己留在了那节车厢里。窗外还是 2006 年的夏天，有人在喊一个名字，你没听清是谁在喊。'));
   document.getElementById('over').classList.add('on');
   showResult(false);
   sfxEnd();
 }
 
 const TITLES = [
-  [9000,'短信投票冠军','一人一票投出来的'],
-  [7000,'二十年老粉，证件齐全','你连她的应援色都记得'],
-  [5500,'磁带收藏家，感情贫困户','收得越多，越说不清'],
-  [4000,'站票二十年','你一直在门外'],
-  [2800,'路过青春，没投过票','但你都记得'],
-  [1500,'上车是为了看她，下车是因为挤','很合理'],
+  [40000,'短信投票冠军','一人一票投出来的'],
+  [30000,'二十年老粉，证件齐全','你连她的应援色都记得'],
+  [22000,'磁带收藏家，感情贫困户','收得越多，越说不清'],
+  [15000,'站票二十年','你一直在门外'],
+  [9000,'路过青春，没投过票','但你都记得'],
+  [4000,'上车是为了看她，下车是因为挤','很合理'],
   [0,'提前下车，情有可原',''],
 ];
+
+function bondVerdict(){
+  const b = st.bondEnd;
+  if (pair.mode === 'none' && st.gapEnd === 0 && b <= 0) return '最后一站，台上是空的。';
+  if (b >= 75) return '大部分时候，她们留在同一个画面里。你没看清的，比看清的多。';
+  if (b >= 45) return '有时候在，有时候不在。像所有没被证实的事。';
+  if (b >= 20) return '画面散过很多次，你又捡回来一点。';
+  return '你没能把她们留在同一个画面里。';
+}
 
 function showResult(crashed){
   const s = Math.floor(st.score);
@@ -1451,11 +2220,51 @@ function showResult(crashed){
   document.getElementById('rTitle').textContent = t[1];
   document.getElementById('rTitle').classList.toggle('gold', hidden);
   document.getElementById('rSub').textContent = crashed ? '你提前下车了。' : t[2];
-  const lines = ['没下车，也没到站。','二十年，就换来一张站票。','磁带都收齐了，人没留住。',
-                 '我在 2014 那站睡着了。','你记得的比你以为的多。'];
-  document.getElementById('rQuote').textContent = lines[s % lines.length];
+  // 按这一局实际发生了什么挑一句，不能出现「磁带都收齐了」但其实只捡到一盘
+  const pool = ['没下车，也没到站。','二十年，就换来一张站票。','你记得的比你以为的多。'];
+  if (st.tapes >= 24) pool.push('磁带都快收齐了。');
+  if (st.tapes <= 2) pool.push('只有一两盘磁带，和一点没拼上的画面。');
+  if (st.bondEnd < 30) pool.push('画面散过很多次，这次没捡回来。');
+  if (st.bondEnd >= 70) pool.push('你跑完了，而且把她们留在了同一个画面里。');
+  if (st.near >= 10) pool.push('那么多次擦身而过，你都数着。');
+  if (st.perEra[2]) pool.push('2014 那站，你差点睡着。');
+  document.getElementById('rQuote').textContent = pool[(s + st.tapes*3) % pool.length];
   document.getElementById('rDetail').textContent =
-    `距离 ${Math.floor(G.dist)}m · 磁带 ${st.tapes} · 路过 ${st.tlCount||0} 个时间点 · 最高连击 ×${st.bestCombo}`;
+    `距离 ${Math.floor(G.dist)}m · 磁带 ${st.tapes} · 擦身 ${st.near} · 精准 ${st.precise} · 最高连击 ×${st.bestCombo}`;
+
+  // —— 同框结算：这是这一局你唯一能保住 / 弄丢的东西 ——
+  const bEnd = Math.round(st.bondEnd);
+  const bf = document.getElementById('rBondFill');
+  if (bf){ bf.style.width = Math.max(0, Math.min(100, st.bondEnd)) + '%'; bf.classList.toggle('low', bEnd < 22); }
+  const bt = document.getElementById('rBond');
+  if (bt) bt.textContent = '同框 ' + bEnd + ' · 间距 ' + (pair.mode === 'both' ? st.gapEnd.toFixed(1) + 'm' : '—');
+  const bv = document.getElementById('rBondTxt');
+  if (bv) bv.textContent = bondVerdict();
+
+  // 磁带条：一排 30 格
+  const strip = document.getElementById('rTapeStrip');
+  if (strip){
+    const n = Math.min(30, st.tapes);
+    strip.textContent = '▮'.repeat(n) + '▯'.repeat(30-n);
+  }
+  // 六个时代，走过哪几个
+  const eras = document.getElementById('rEras');
+  if (eras){
+    const years = ERAS.map(e=> e.id);
+    eras.textContent = years.map((y,i)=> (st.perEra[i] ? '●' : '○') + y).join('  ');
+  }
+  // 2007 那三种说法：只带走一种
+  const rr = document.getElementById('rRumor');
+  if (rr){
+    if (st.rumor === null){
+      rr.textContent = (G.dist >= 277)
+        ? '2007 那一站有三种说法，你一种都没带走。'
+        : '你没能跑到 2007 那一站。三种说法都还在那里，谁也没证实。';
+    } else {
+      rr.textContent = '2007 那一站你带走了一种说法：' + st.rumorShort +
+        '。另外两种，你没能同时带走——三种都没有第三方证据。';
+    }
+  }
 }
 
 /* ══════════ 错误兜底（黑屏时给出可读信息） ══════════ */
@@ -1473,15 +2282,108 @@ function showErr(msg){
 }
 window.addEventListener('error', e => { try{ showErr(e.message + '\n' + (e.filename||'') + ':' + (e.lineno||'')); }catch(_){} });
 
+/* ══════════ 重置（真正的 reset，不 reload） ══════════ */
+function resetRun(){
+  RUN++;
+  clearTimeout(capT); clearTimeout(toastT); clearTimeout(tlT); clearTimeout(popT);
+
+  // 可见性
+  worldGroup.visible = true;
+  particles.visible = true;
+  player.model.g.visible = true;
+  if (ringGroup) ringGroup.visible = false;
+  if (tapeIM) tapeIM.visible = true;
+  if (tapeHaloIM) tapeHaloIM.visible = true;
+  if (rumorIM) rumorIM.visible = true;
+  rumorHalos.forEach(s=> s.visible = true);
+  Object.values(obIM).forEach(r=> r.im.visible = true);
+  pair.group.visible = true;
+
+  // 状态
+  G.state = 'title'; G.t = 0; G.dist = 0; G.speed = SPEED0;
+  G.era = 0; G.hits = 0; G.pen = 0; G.flash = 0; G.endPick = null;
+  player.z = 0; player.x = 0; player.lane = 1; player.y = 0; player.vy = 0;
+  player.jumping = false; player.slide = 0; player.lean = 0; player.runPhase = 0;
+  player.model.g.rotation.set(0,0,0);
+  player.model.root.rotation.set(0,0,0);
+  player.model.root.position.set(0,0,0);
+
+  st.score = 0; st.tapes = 0; st.hearts = 3; st.combo = 0; st.bestCombo = 0;
+  st.perEra = []; st.near = 0; st.precise = 0; st.tlCount = 0;
+  st.rumor = null; st.rumorShort = ''; st.shieldUsed = 0;
+  st.bondEnd = 48; st.gapEnd = 1.0;
+
+  pair.bond = 48; pair.gap = PAIR_ERA[0].gap; pair.lane = 1; pair.cx = 0;
+  pair.mode = PAIR_ERA[0].mode; pair.used = false; pair.armed = false;
+  pair.inFrame = false; pair.laneT = 3.0; pair.flash = 0; pair.bond = 48;
+
+  tlShown = {};
+  eraMix = { from:0, to:0, t:1 };
+  camX = 0; camY = ROOF_Y + 2.70; camLookX = 0; trauma = 0; revealT = 0;
+  applyEra(0,0,1);
+
+  memsetTapes();
+  resetRumor();
+
+  // UI
+  document.getElementById('over').classList.remove('on');
+  document.getElementById('revealText').classList.remove('on');
+  document.getElementById('choiceRow').classList.remove('on');
+  document.getElementById('flash').classList.remove('on');
+  document.getElementById('caption').classList.remove('on');
+  document.getElementById('tl').classList.remove('on');
+  document.getElementById('toast').classList.remove('on');
+  document.getElementById('title').classList.add('gone');
+  document.getElementById('hud').classList.add('on');
+
+  camera.position.set(0, ROOF_Y + 2.70, 6.4);
+  camera.fov = 58; camera.updateProjectionMatrix();
+  camera.lookAt(0, ROOF_Y + 1.0, -15);
+  updateHUD();
+  renderer.render(scene, camera);
+}
+
+function resetRumor(){
+  for (const r of rumorData) r.taken = false;
+  if (rumorIM){
+    rumorData.forEach((r,i)=>{
+      _mm.compose(new THREE.Vector3(LANE_X[r.lane], ROOF_Y+1.55, r.z),
+                  new THREE.Quaternion(), new THREE.Vector3(1,1,1));
+      rumorIM.setMatrixAt(i,_mm);
+    });
+    rumorIM.instanceMatrix.needsUpdate = true;
+  }
+  rumorHalos.forEach(s=> s.visible = true);
+}
+
 /* ══════════ 启动 ══════════ */
+function makeGrain(){          // 真噪点贴图：规则渐变棋盘会变成"屏幕门"，随机噪点才像胶片
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  if (!x || typeof x.createImageData !== 'function') return;      // 无头测试里的假 canvas 直接跳过
+  const im = x.createImageData(128,128);
+  if (!im || !im.data) return;
+  const d = im.data;
+  for (let i=0;i<d.length;i+=4){ const v = Math.random()*255|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; }
+  x.putImageData(im,0,0);
+  const g = document.getElementById('grain');
+  if (g) g.style.backgroundImage = 'url(' + c.toDataURL() + ')';
+}
 function boot(){
   HUD.year = document.getElementById('hudYear');
   HUD.tag = document.getElementById('hudTag');
   HUD.score = document.getElementById('hudScore');
+  HUD.mult = document.getElementById('hudMult');
   HUD.tape = document.getElementById('hudTape');
   HUD.hearts = document.getElementById('hudHearts');
   HUD.combo = document.getElementById('combo');
+  HUD.comboMini = document.getElementById('hudCombo');
   HUD.bar = document.getElementById('eraBar');
+  HUD.bondFill = document.getElementById('bondFill');
+  HUD.bondGap = document.getElementById('bondGap');
+  HUD.bondTag = document.getElementById('bondTag');
+  HUD.bondWrap = document.getElementById('bondWrap');
+  HUD.rumor = document.getElementById('hudRumor');
 
   try {
     initScene();
@@ -1491,10 +2393,11 @@ function boot(){
   }
   bindInput();
 
+  makeGrain();
   document.getElementById('btnStart').addEventListener('click', startGame);
   document.getElementById('btnOff').addEventListener('click', ()=> pickEnding(true));
   document.getElementById('btnStay').addEventListener('click', ()=> pickEnding(false));
-  document.getElementById('btnAgain').addEventListener('click', ()=> location.reload());
+  document.getElementById('btnAgain').addEventListener('click', ()=>{ resetRun(); startGame(); });
 
   window.addEventListener('resize', onResize);
   onResize();
@@ -1514,17 +2417,29 @@ function onResize(){
 
 function startGame(){
   audioInit();
+  if (AC && AC.resume) { try { AC.resume(); } catch(e){} }
   document.getElementById('title').classList.add('gone');
   document.getElementById('hud').classList.add('on');
+  document.getElementById('over').classList.remove('on');
   G.state = 'playing';
   if (player.model) player.model.g.visible = true;
   G.t = 0; G.speed = SPEED0; G.era = 0;
   player.z = 0; player.x = 0; player.lane = 1; player.y = 0; player.vy = 0;
   player.jumping = false; player.slide = 0; player.lean = 0; G.pen = 0;
-  st.score = 0; st.tapes = 0; st.hearts = 3; st.combo = 0; st.bestCombo = 0; st.perEra = [];
+  st.score = 0; st.tapes = 0; st.hearts = 3; st.combo = 0; st.bestCombo = 0;
+  st.perEra = []; st.near = 0; st.precise = 0; st.tlCount = 0;
+  st.rumor = null; st.rumorShort = ''; st.shieldUsed = 0;
+  pair.bond = 48; pair.gap = PAIR_ERA[0].gap; pair.lane = 1; pair.cx = 0;
+  pair.mode = PAIR_ERA[0].mode; pair.used = false; pair.armed = false; pair.inFrame = false;
+  pair.laneT = 3.0;
   memsetTapes();
-  tlShown = {}; st.tlCount = 0;
+  resetRumor();
+  tlShown = {};
   document.getElementById('tl').classList.remove('on');
+  document.getElementById('revealText').classList.remove('on');
+  document.getElementById('choiceRow').classList.remove('on');
+  document.getElementById('flash').classList.remove('on');
+  document.getElementById('toast').classList.remove('on');
   eraMix = { from:0, to:0, t:1 };
   applyEra(0,0,1);
   showCaption(ERAS[0].year, ERAS[0].tag);
@@ -1533,25 +2448,53 @@ function startGame(){
 
 function memsetTapes(){
   if (!tapeIM) return;
-  tapeData.forEach((t,i)=>{ t.taken = false; });
+  tapeData.forEach((t)=>{ t.taken = false; });
   for (let i=0;i<tapeData.length;i++){
     _mm.compose(new THREE.Vector3(LANE_X[tapeData[i].lane], ROOF_Y+tapeData[i].y, tapeData[i].z),
                 new THREE.Quaternion(), new THREE.Vector3(1,1,1));
     tapeIM.setMatrixAt(i,_mm);
+    if (tapeHaloIM) tapeHaloIM.setMatrixAt(i,_mm);
   }
   tapeIM.instanceMatrix.needsUpdate = true;
-  obstacles.forEach(o=>{ o.hit = false; });
+  if (tapeHaloIM) tapeHaloIM.instanceMatrix.needsUpdate = true;
+  obstacles.forEach(o=>{ o.hit = false; o.passed = false; });
   placeObstacles();
 }
 
 function renderIdle(dt){
   const t = performance.now()*0.001;
-  camera.position.set(Math.sin(t*0.16)*1.4, ROOF_Y+2.9, 7.4);
-  camera.lookAt(0, ROOF_Y+1.0, -18);
-  camera.fov = 58; camera.updateProjectionMatrix();
-  scene.children[0].position.copy(camera.position);
+  camera.position.set(Math.sin(t*0.07)*0.9, ROOF_Y + 2.05, 7.4);
+  camera.lookAt(0, ROOF_Y + 1.30, -16);
+  camera.fov = 56; camera.updateProjectionMatrix();
+  skyMesh.position.copy(camera.position);
   updateParticles(dt);
   if (player.model) player.model.g.visible = false;
+
+  // 标题里的两个人：站在一起，慢慢分开一点，又靠近
+  if (pair.group){
+    pair.group.visible = true;
+    pair.z = -5.6;
+    pair.cx = Math.sin(t*0.19) * 0.62;
+    pair.gap = 1.02 + Math.sin(t*0.19 + 1.15) * 0.22;
+    pair.mode = 'both';
+    placePair(0.016);
+    // 待机时不跑，轻轻晃
+    const A = pair.a, B = pair.b;
+    A.g.visible = B.g.visible = true;
+    A.legL.hip.rotation.x = A.legR.hip.rotation.x = 0;
+    B.legL.hip.rotation.x = B.legR.hip.rotation.x = 0;
+    A.legL.kn.rotation.x = A.legR.kn.rotation.x = 0;
+    B.legL.kn.rotation.x = B.legR.kn.rotation.x = 0;
+    A.armL.rotation.x = Math.sin(t*0.8)*0.06;
+    A.armR.rotation.x = -Math.sin(t*0.8)*0.06;
+    B.armL.rotation.x = Math.sin(t*0.8+1.2)*0.06;
+    B.armR.rotation.x = -Math.sin(t*0.8+1.2)*0.06;
+    A.root.position.y = 0; B.root.position.y = 0;
+    A.g.rotation.z = Math.sin(t*0.35)*0.015;
+    B.g.rotation.z = -Math.sin(t*0.35)*0.015;
+    A.halo.material.opacity = 0.52;
+    B.halo.material.opacity = 0.52;
+  }
 }
 
 let last = 0;
@@ -1565,7 +2508,10 @@ function loop(){
 /* ══════════ 截图模式（开发用） ══════════ */
 function shotMode(){
   const d = parseFloat(Q.get('d') || '8');
-  document.getElementById('title').classList.add('gone');
+  // 截图模式不等标题淡出，否则夹具会拍到半透明的标题字压在场景上
+  const tEl = document.getElementById('title');
+  tEl.style.transition = 'none';
+  tEl.classList.add('gone');
   document.getElementById('hud').classList.add('on');
   G.state = 'playing';
   if (player.model) player.model.g.visible = true;
@@ -1574,13 +2520,29 @@ function shotMode(){
   G.dist = d;
   const e = Math.min(5, Math.floor(d / ERA_LEN));
   G.era = e; eraMix = { from:e, to:e, t:1 };
+  pair.mode = PAIR_ERA[e].mode;
+  pair.gap = PAIR_ERA[e].gap;
+  pair.lane = 1; pair.cx = 0;
+  pair.group.visible = pair.mode !== 'none';
   applyEra(e,e,1);
   camX = 0; camY = ROOF_Y + 2.70;
-  for (let i=0;i<3;i++){ update(1/60); }
+  for (let i=0;i<4;i++){ update(1/60); }
   const asp0 = camera.aspect;
-  camera.fov = (58 + 18*(G.speed-SPEED0)/(SPEED1-SPEED0)) * (asp0 < 1 ? (1+(1-asp0)*0.62) : 1);
+  camera.fov = (58 + 18*(G.speed-SPEED0)/(SPEED1-SPEED0)) * (asp0 < 1 ? (1+(1-asp0)*0.18) : 1);
   camera.updateProjectionMatrix();
   renderer.render(scene, camera);
+  // d 到终点时直接进反转镜头，截图夹具才能拍到环形轨道
+  if (d >= ERA_LEN*6 - 40){
+    startReveal();
+    setTimeout(()=>{
+      try{
+        // 夹具没有主循环：手动把反转推进到「两个按钮已出现」的那一帧
+        revealT = 6.25;
+        updateReveal(1/60);
+        renderer.render(scene, camera);
+      }catch(e){}
+    }, 760);
+  }
   window.__shotDone = true;
   document.title = 'shot ok ' + d;
 }

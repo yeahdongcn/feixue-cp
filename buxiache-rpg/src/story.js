@@ -432,39 +432,99 @@ function showEnding(){
     '文中公开事件均有报道可循；而「告密」至今是罗生门，双方各执一词，没有任何一方被证实。所有情感解读都是粉丝视角的虚构。<br><br>请把她们当歌手。她们唱过歌，这就够了。</div>' +
     '<button id="replay">再来一次</button>' +
     '</div>';
-  $('#replay').onclick = () => location.reload();
+  $('#replay').onclick = () => { resetGame(); playIntro(); };
 }
 
 /* ═══════════════════════════════════════════════════════════
-   启动
+   启动 / 重开
    ═══════════════════════════════════════════════════════════ */
-async function startGame(){
-  el.title.classList.add('gone');
-  buildMap();
-  ERA = ERAS['2026'];
+
+/* 真正的重置：不 reload 页面、不依赖查询参数。
+   点「再来一次」、或从结局回到开头，都走这里，等同一次干净的新开局。 */
+function resetGame(){
+  // 1) 清掉所有异步 / 模态状态
+  confirmQ.length = 0;
+  scriptLock = false;
+  dlgActive = false;
+  battleActive = false;
+  if (battleAnimId){ clearInterval(battleAnimId); battleAnimId = 0; }
+  tapeOpen = false; menuOpen = false;
+  endingShown = false;
+  el.tapeUI.classList.remove('on');
+  el.menu.classList.remove('on');
+  el.battle.classList.remove('on');
+  el.ending.classList.remove('on');
+  el.ending.innerHTML = '';
+  el.fade.classList.remove('on');
+  $('#toast').classList.remove('on');
+  clearTimeout(toastT);
+  dlgOff();
+  el.choices.innerHTML = '';
+  document.body.classList.remove('choosing');
+
+  // 2) 回到 2026 年秋天的站台
   S.era = '2026';
   S.tapes = [];
-  S.zhi = 0; S.qing = 0; S.hp = S.maxhp = 32; S.items = []; S.flags = {};
+  S.flags = {};
+  S.zhi = 0; S.qing = 0;
+  S.hp = S.maxhp = 32;
+  S.items = [];
+  S.ended = false;
+  ERA = ERAS['2026'];
+  P.x = 20*TS; P.y = 11*TS; P.dir = 0; P.fr = 0; P.t = 0;
   PLAYER_PAL.shirt = '#d94f63'; PLAYER_PAL.shirt2 = '#a83a4c';
-  P.x = 20*TS; P.y = 11*TS; P.dir = 0;
+  buildMap();
   bakeMap();
   initWeather(ERA.weather);
   NPCS = eraNPCs();
   OBJS = eraObjs();
   updateCamera();
   updateHUD();
-  running = true; paused = false;
-  lastT = performance.now();
-  requestAnimationFrame(loop);
+  for (const k in keys) keys[k] = false;
 
-  await delay(300);
+  // 3) 重新开一条干净的渲染循环
+  titleMode = false;
+  paused = false;
+  started = true;
+  document.body.classList.add('started');
+  startLoop();
+}
+
+async function playIntro(){
+  await delay(320);
+  const touch = document.body.classList.contains('touch');
   await runScript(async () => {
     await say('','2026年10月。夜里十一点四十。');
     await say('','你站在一列开往北方的车站台上。雪落在睫毛上，化得很快。');
     await say('','你不记得自己为什么会在这里。');
-    await say('','方向键走路，Z 说话，X 打开随身听。');
+    await say('', touch ? '左下角方向键走路，A 说话，右上「磁带」换年份。'
+                        : '方向键走路，Z 说话，X 打开随身听。');
     await say('','出站口那边，有个东西在雪里反光。');
   });
+}
+
+async function startGame(){
+  if (started && !endingShown) return;   // 防双击
+  el.title.classList.add('gone');
+  resetGame();
+  await playIntro();
+}
+
+function syncTouchMode(){
+  const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const hasTouch = ('ontouchstart' in window) ||
+    (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+  const narrow = (typeof window !== 'undefined' && window.innerWidth <= 680);
+  const on = !!(coarse || hasTouch || narrow);
+  document.body.classList.toggle('touch', on);
+  // 标题上的操作说明跟着输入方式走
+  const tk = $('.tkeys');
+  if (tk){
+    if (!tk.dataset.pc) tk.dataset.pc = tk.innerHTML;
+    tk.innerHTML = on
+      ? '左下方向键 走路　A 说话<br>右上「磁带」换年份　B 打开随身听'
+      : tk.dataset.pc;
+  }
 }
 
 function bindUI(){
@@ -472,6 +532,8 @@ function bindUI(){
 
   $('#tapeClose').onclick = closeTape;
   $('#menuClose').onclick = () => { menuOpen = false; el.menu.classList.remove('on'); };
+
+  syncTouchMode();
 
   // 触屏方向键
   document.querySelectorAll('[data-key]').forEach(b => {
@@ -488,8 +550,23 @@ function bindUI(){
   if (bb) bb.addEventListener('pointerdown', e => { e.preventDefault(); onCancel(); });
   if (tt) tt.addEventListener('pointerdown', e => { e.preventDefault(); onTapeKey(); });
 
-  // 点击画面推进对话
-  canvas.addEventListener('pointerdown', () => { if (dlgActive) onConfirm(); });
+  // 点画面 / 对话框推进对话。绑在 stage 上：canvas 之外的地方也能点
+  const stage = $('#stage');
+  stage.addEventListener('pointerdown', e => {
+    if (!dlgActive) return;
+    const t = e.target;
+    if (t && t.closest && t.closest('button,.sheet,#title,#ending')) return;
+    onConfirm();
+  });
+
+  // 点遮罩空白处关闭弹层
+  const sheet = $('#tapeUI');
+  if (sheet) sheet.addEventListener('pointerdown', e => { if (e.target === sheet) closeTape(); });
+  const menu = $('#menu');
+  if (menu) menu.addEventListener('pointerdown', e => {
+    if (e.target !== menu) return;
+    menuOpen = false; el.menu.classList.remove('on');
+  });
 
   // 数字键选择
   window.addEventListener('keydown', e => {
@@ -506,12 +583,25 @@ function bindUI(){
 
 function resizeCanvas(){
   const r = $('#stage').getBoundingClientRect();
+  const portrait = r.height > r.width * 1.02;
+  document.body.classList.toggle('portrait', portrait);
+  syncTouchMode();
+
   const sc = Math.max(0.2, Math.min(r.width / CW, r.height / CH));
   const w = Math.round(CW*sc), h = Math.round(CH*sc);
-  const L = Math.round((r.width-w)/2), T = Math.round((r.height-h)/2);
+  const L = Math.round((r.width-w)/2);
+  // 竖屏：画面贴顶，剩下的纵向空间交给手柄和对话框，避免上下两条大黑边
+  const T = portrait ? Math.round(Math.min(48, Math.max(8, r.height*0.018)))
+                     : Math.round((r.height-h)/2);
   const scr = $('#screen');
   scr.style.left = L+'px'; scr.style.top = T+'px';
   scr.style.width = w+'px'; scr.style.height = h+'px';
+  document.documentElement.style.setProperty('--sh', (T+h)+'px');
+
+  if (bgCanvas){
+    bgCanvas.width = Math.max(64, Math.round(r.width/4));
+    bgCanvas.height = Math.max(64, Math.round(r.height/4));
+  }
 }
 
 function boot(){
@@ -519,15 +609,31 @@ function boot(){
   canvas.width = CW; canvas.height = CH;
   ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
+  bgCanvas = $('#cvBg');
+  bgCtx = bgCanvas ? bgCanvas.getContext('2d') : null;
   cacheEls();
   bindInput();
   bindUI();
   resizeCanvas();
   window.addEventListener('load', resizeCanvas);
   setTimeout(resizeCanvas, 60);
-  // 标题画面用 2006 的天空
-  const g = ctx;
-  g.fillStyle = '#0d1330'; g.fillRect(0,0,CW,CH);
+  titleScene();
+}
+
+/* 标题背后就是 2026 年的站台：雪一直下，灯一直亮，镜头很慢地漂 */
+function titleScene(){
+  ERA = ERAS['2026'];
+  S.era = '2026';
+  buildMap(); bakeMap();
+  initWeather('snow');
+  NPCS = eraNPCs();
+  OBJS = eraObjs();
+  P.x = 20*TS; P.y = 14*TS; P.dir = 0;
+  updateCamera();
+  updateHUD();
+  titleMode = true; paused = true; started = false;
+  document.body.classList.remove('started');
+  startLoop();
 }
 
 boot();

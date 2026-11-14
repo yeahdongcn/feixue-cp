@@ -77,6 +77,28 @@ Object.values(groups).forEach(gs=>{
 });
 check(unsafe === 0, `没有三车道全封的死局 (${unsafe})`);
 
+// 同框机制：每个时代的形态/间距必须合法
+const PE = G('PAIR_ERA');
+check(PE.length === 6, 'PAIR_ERA 覆盖 6 个时代');
+check(PE.filter(e=>e.mode==='none').length === 1 && PE[5].mode === 'none', '只有最后一年框不住');
+PE.forEach((e,i)=>{
+  check(['both','one','none'].includes(e.mode), `era${i} mode 合法`);
+  check(e.gap >= 0 && e.gapMax >= e.gap, `era${i} 间距范围合法 (${e.gap}..${e.gapMax})`);
+  if (e.mode !== 'none') check(e.outRate > 0, `era${i} 掉出同框会掉线`);
+});
+
+// 罗生门：三块碎片同 z、不同道，且周围没有障碍挡着拿
+const RD = G('rumorData');
+check(RD.length === 3, `罗生门有 3 个版本 (${RD.length})`);
+check(new Set(RD.map(r=>r.lane)).size === 3, '三块碎片在三条不同的道上');
+check(Math.max(...RD.map(r=>r.z)) - Math.min(...RD.map(r=>r.z)) < 0.01, '三块碎片在同一位置');
+RD.forEach((r,i)=> check(r.z > -1140 && r.z < -190, `碎片 ${i} 在 2007 段内 (z=${r.z})`));
+const nearShard = obs.filter(o=>RD.some(r=>Math.abs(o.z-r.z) < 6.5));
+check(nearShard.length === 0, `碎片附近清空了障碍 (${nearShard.length})`);
+const RV = G('RUMOR_VERSIONS');
+check(RV.length === 3 && new Set(RV.map(v=>v.y)).size === 3, '三种说法互不相同');
+check(RV.every(v=>/未证实|没有第三方|没人能证实|说不清/.test(v.y)), '三种说法都写明没有第三方证据');
+
 // 时间线
 const TL = G('TIMELINE');
 check(TL.length === 6, '时间线覆盖 6 个时代');

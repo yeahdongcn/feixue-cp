@@ -100,10 +100,26 @@ function parseInto(root,html){
   const tail=html.slice(last); if(tail) stack[stack.length-1].appendChild(new TextNode(dec(tail)));
 }
 
-const html=fs.readFileSync('/home/xiaodongye/games/buxiache-rpg/index.html','utf8');
+const DIR='/home/xiaodongye/games/buxiache-rpg';
+/* 交付物必须是一个自包含的 index.html：构建过期、引用了外部文件、或偷偷 reload，都直接失败 */
+try{
+  require('child_process').execFileSync(process.execPath,[DIR+'/build.js','--check'],{stdio:'pipe'});
+}catch(e){
+  console.error('!!! index.html 与 src/ 不同步，先跑 node build.js');
+  process.exit(1);
+}
+const html=fs.readFileSync(DIR+'/index.html','utf8');
+const markup=html.replace(/<script>[\s\S]*?<\/script>/g,'');
+const ext=(markup.match(/(?:src|href)\s*=\s*["'](?!#)[^"']+/gi)||[]);
+if (ext.length){ console.error('!!! index.html 引用了外部资源：'+ext.join(', ')); process.exit(1); }
+if (/location\.reload/.test(html)){ console.error('!!! 还在用 location.reload 重开'); process.exit(1); }
+const inline=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+if (inline.length!==3){ console.error('!!! 期望 3 段内联脚本，实际 '+inline.length); process.exit(1); }
+
 const bodyStart=html.indexOf('<body'), bodyEnd=html.indexOf('<script');
 const document={
   body:new El('body'), hidden:false,
+  documentElement:{ style:{ setProperty(){}, removeProperty(){} } },
   createElement:t=>new El(t), createTextNode:t=>new TextNode(t),
   addEventListener(){}, querySelector(s){ return this.body.querySelector(s); },
   querySelectorAll(s){ return this.body.querySelectorAll(s); },
@@ -124,9 +140,8 @@ sandbox.window=sandbox; sandbox.globalThis=sandbox; sandbox.location={search:''}
 sandbox.addEventListener=(e,f)=>{ if(e==='keydown') sandbox.__kd=sandbox.__kd||[]; if(e==='keydown') sandbox.__kd.push(f); };
 const ctx=vm.createContext(sandbox);
 
-for (const f of ['game.js','ui.js','story.js']){
-  const code=fs.readFileSync('/home/xiaodongye/games/buxiache-rpg/src/'+f,'utf8');
-  vm.runInContext(code, ctx, {filename:f});
+for (let i=0;i<inline.length;i++){
+  vm.runInContext(inline[i], ctx, {filename:'inline#'+(i+1)});
 }
 
 console.log('[boot] scripts loaded');
@@ -214,6 +229,22 @@ const pump = ms => new Promise(r=>setTimeout(r,ms));
   const et=$('#ending h2');
   console.log('ending:', et?et.textContent:'(未触发)');
   console.log('ending on:', $('#ending').classList.contains('on'));
+
+  // 「再来一次」必须是真的重置，不是 location.reload
+  const replay=$('#replay');
+  if (!replay) throw new Error('结局页没有「再来一次」按钮');
+  if (!G('S').tapes.includes('????')) throw new Error('通关后磁带数不对');
+  replay.click();
+  await pump(1400);
+  if (G('S').tapes.length!==0) throw new Error('重开后磁带没清空: '+G('S').tapes.join(','));
+  if (G('S').zhi!==0 || G('S').qing!==0) throw new Error('重开后执念/清醒没归零');
+  if (G('titleMode')) throw new Error('重开后还停在标题画面');
+  if ($('#ending').classList.contains('on')) throw new Error('重开后结局页没关');
+  if (!G('started') || G('paused')) throw new Error('重开后没有回到可操作状态');
+  if (G('S').era!=='2026' || G('S').hp!==32) throw new Error('重开后状态没回到 2026 / 满心力');
+  console.log('replay 重置:', 'ok  tapes='+G('S').tapes.length, 'ending='+$('#ending').classList.contains('on'),
+    'era='+G('S').era, 'paused='+G('paused'), 'introText='+($('#dtext').textContent||'(已播完)'));
+
   console.log('\n=== PASS ===');
   process.exit(0);
 })().catch(e=>{

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>不下车 · 三个版本</title>
+<style>
+  :root{ --bg:#08080a; --fg:#e8e4dc; --dim:#8d877a; --dim2:#5d594f; --acc:#ffc98a; --line:#262420; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:var(--bg); color:var(--fg); }
+  body{
+    font-family:"Songti SC","Noto Serif SC",STSong,SimSun,serif;
+    min-height:100vh; padding:clamp(28px,7vw,88px) clamp(20px,6vw,72px);
+    display:flex; flex-direction:column; gap:clamp(26px,4vw,52px);
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #17152050, transparent 70%),
+      radial-gradient(900px 500px at 85% 110%, #2a1a1015, transparent 70%);
+  }
+  header{ max-width:1080px; }
+  .kicker{ font-size:12px; letter-spacing:.42em; color:var(--dim2); margin-bottom:18px; }
+  h1{ font-size:clamp(26px,4.2vw,44px); font-weight:400; letter-spacing:.06em; line-height:1.35; }
+  h1 em{ font-style:normal; color:var(--acc); }
+  .sub{ margin-top:16px; color:var(--dim); font-size:clamp(13px,1.35vw,15px); line-height:2; max-width:62ch; }
+
+  .grid{ display:grid; gap:clamp(14px,2vw,22px); grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); max-width:1080px; }
+  a.card{
+    position:relative; display:flex; flex-direction:column; gap:14px;
+    padding:clamp(22px,2.6vw,34px); text-decoration:none; color:inherit;
+    background:linear-gradient(160deg,#16161a,#0f0f12); border:1px solid #2b2823;
+    border-radius:3px; overflow:hidden; transition:border-color .25s, transform .25s, background .25s;
+  }
+  a.card::after{
+    content:""; position:absolute; inset:auto 0 0 0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--acc),transparent);
+    opacity:0; transition:opacity .3s;
+  }
+  a.card:hover{ border-color:#4a4437; transform:translateY(-2px); background:linear-gradient(160deg,#141416,#0c0c0e); }
+  a.card:hover::after{ opacity:.85; }
+  .no{ font-size:11px; letter-spacing:.3em; color:var(--dim2); }
+  .nm{ font-size:clamp(20px,2.2vw,26px); letter-spacing:.04em; }
+  .nm small{ font-size:12px; color:var(--acc); letter-spacing:.18em; margin-left:10px; vertical-align:2px; }
+  .pitch{ font-size:13.5px; line-height:1.95; color:var(--dim); }
+  .meta{ display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--dim2); letter-spacing:.12em; margin-top:auto; padding-top:6px; }
+  .go{ font-size:12px; color:var(--acc); letter-spacing:.24em; opacity:.55; transition:opacity .25s, letter-spacing .25s; }
+  a.card:hover .go{ opacity:1; letter-spacing:.34em; }
+
+  footer{ max-width:1080px; color:var(--dim2); font-size:11.5px; line-height:2.1; letter-spacing:.03em; border-top:1px solid var(--line); padding-top:22px; }
+  footer a{ color:var(--dim); }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">2 0 0 6 — — 2 0 2 6</div>
+  <h1>同一段往事，<em>三种坐法</em>。</h1>
+  <p class="sub">
+    许飞和厉娜，同届，同宿舍，一个冠军一个季军。此后二十年，互相扶持过，也互相消耗过，七年断了联系，
+    又在同一档节目里重新坐在了一起。三个游戏共用这一份底色，但玩法毫不相干——你想怎么靠近她们，就选哪一个。
+  </p>
+</header>
+
+<div class="grid">
+  <a class="card" href="buxiache-rpg/index.html">
+    <div class="no">0 1</div>
+    <div class="nm">不下车 <small>像素 RPG</small></div>
+    <div class="pitch">六个时代，六盘磁带，三场战斗，六个结局。<br>走进每一节车厢，把能捡的都捡起来。</div>
+    <div class="meta"><span>约 20 分钟</span><span>键盘 / 触屏</span></div>
+    <div class="go">进 入 →</div>
+  </a>
+
+  <a class="card" href="buxiache-3d/dist/index.html">
+    <div class="no">0 2</div>
+    <div class="nm">不下车 <small>3D 跑酷</small></div>
+    <div class="pitch">在车顶上跑过六节车厢，七十秒跑完二十年。<br>你以为在往前，其实一直在同一个圈里。</div>
+    <div class="meta"><span>约 3 分钟</span><span>左 / 右 / 跳</span></div>
+    <div class="go">进 入 →</div>
+  </a>
+
+  <a class="card" href="buxiache-draw/index.html">
+    <div class="no">0 3</div>
+    <div class="nm">画地为牢 <small>画圈</small></div>
+    <div class="pitch">绳子就是周长。圈住什么，就只剩什么。<br>六站，绳子一年比一年短。</div>
+    <div class="meta"><span>约 8 分钟</span><span>鼠标 / 手指拖动</span></div>
+    <div class="go">进 入 →</div>
+  </a>
+</div>
+
+<footer>
+  三个版本都是粉丝作品：不扮演真人，不使用真人照片、节目影像或任何节目素材，所有画面与声音均为代码实时生成。<br>
+  关于"告密"，没有任何第三方证据。三个游戏里都只呈现"说不清"的状态，不对任何真人下判断。<br>
+  更早的文字版：<a href="buxiache/index.html">《不下车》文字 AVG</a>
+</footer>
+</body>
+</html>

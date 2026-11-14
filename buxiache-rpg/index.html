@@ -15,9 +15,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
   font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   user-select:none;-webkit-user-select:none}
 #stage{position:fixed;inset:0;overflow:hidden;background:#04060b}
+/* 「环境光」：把游戏画面放大模糊后铺满整块屏，竖屏/宽屏的黑边不再是死黑 */
+#cvBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;
+  filter:blur(16px) saturate(1.22) brightness(.72);opacity:.95}
 #cv{position:absolute;left:0;top:0;width:100%;height:100%;display:block;
-  image-rendering:pixelated;image-rendering:crisp-edges}
-#screen{position:absolute;pointer-events:none}
+  image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:auto}
+#screen{position:absolute;pointer-events:none;z-index:1;
+  box-shadow:0 0 0 1px #ffffff14,0 24px 90px #000a}
 #stage{background:radial-gradient(120% 90% at 50% 40%,#0a1020,#03050a 70%)}
 
 /* ── HUD ── */
@@ -30,8 +34,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
 .hb{width:52px;height:4px;background:#ffffff1a;border-radius:2px;position:relative;overflow:hidden}
 .hb i{position:absolute;inset:0 auto 0 0;width:0;background:var(--danger);transition:width .45s cubic-bezier(.3,1,.4,1)}
 .hb.q i{background:var(--accent2)}
-#hint{position:absolute;left:14px;bottom:10px;font-size:10.5px;letter-spacing:.14em;color:#7c86a0;
-  pointer-events:none;z-index:5;text-shadow:0 1px 6px #000}
+#hint{position:absolute;left:14px;bottom:10px;font-size:11.5px;letter-spacing:.12em;color:#a6b1c8;
+  pointer-events:none;z-index:5;text-shadow:0 1px 6px #000,0 0 12px #000}
 #hint::before{content:"▸ ";color:var(--accent)}
 
 /* ── 对话 ── */
@@ -66,7 +70,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
 .opt{
   display:flex;align-items:center;gap:11px;width:100%;text-align:left;cursor:pointer;
   background:linear-gradient(180deg,#141c2e,#0d1320);border:2px solid #333d59;color:#dfe6f4;
-  font:inherit;font-size:14.5px;padding:11px 14px;border-radius:3px;transition:.12s;
+  font:inherit;font-size:14.5px;padding:12px 14px;min-height:44px;border-radius:3px;transition:.12s;
   box-shadow:0 2px 0 #0007;animation:optin .18s both;
 }
 @keyframes optin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -76,7 +80,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
 /* ── 触屏 ── */
 #touch{position:absolute;inset:0;pointer-events:none;z-index:6;display:none}
 #touch .pad{position:absolute;pointer-events:auto;display:grid;gap:4px;
-  grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);left:14px;bottom:14px}
+  grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);left:16px;bottom:16px}
 #touch .pad button{
   background:#121a2a66;border:1px solid #ffffff1f;border-radius:8px;color:#cfd8ea;font-size:16px;
   backdrop-filter:blur(3px);touch-action:none
@@ -89,16 +93,24 @@ html,body{margin:0;height:100%;overflow:hidden;background:#04060b;color:var(--in
   color:#dfe6f4;font-size:13px;letter-spacing:.1em;backdrop-filter:blur(3px);touch-action:none
 }
 #touch .abtn button:active{background:#ffd47933;border-color:var(--accent);color:#fff}
-#touch .abtn #btnT{width:44px;height:44px;font-size:11px;margin-top:34px}
+#touch .abtn #btnT{width:46px;height:46px;font-size:11.5px;margin-top:34px}
 body.touch #touch{display:block}
+body.choosing #touch{display:none}
+/* 标题阶段不显示 HUD / 提示 / 虚拟手柄，避免透过半透明标题露出 */
+body:not(.started) #hud,body:not(.started) #hint,body:not(.started) #touch{display:none}
+/* 竖屏：画面上移到顶部，手柄落在画面与对话框之间；横屏：手柄贴左右中段 */
+body.touch:not(.portrait) #touch .pad{top:50%;bottom:auto;transform:translateY(-50%);left:14px}
+body.touch:not(.portrait) #touch .abtn{top:50%;bottom:auto;transform:translateY(-50%);right:14px}
+body.portrait #touch .pad{top:calc(var(--sh, 220px) + 118px);bottom:auto;left:16px}
+body.portrait #touch .abtn{top:calc(var(--sh, 220px) + 148px);bottom:auto;right:16px}
 
 /* ── 磁带盒 ── */
 .sheet{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;
-  background:#04060bd9;backdrop-filter:blur(8px);padding:24px}
+  background:#04060b8c;backdrop-filter:blur(10px) saturate(1.15);padding:24px}
 .sheet.on{display:flex;animation:pin .22s}
 @keyframes pin{from{opacity:0}to{opacity:1}}
-.sheet-in{width:min(560px,94vw);background:linear-gradient(180deg,#0d1322,#080c15);
-  border:2px solid #38415c;border-radius:5px;padding:18px;box-shadow:0 0 0 2px #05080e,0 24px 70px #000d}
+.sheet-in{width:min(560px,94vw);background:linear-gradient(180deg,#151d31,#0a0f1a);
+  border:2px solid #414c6b;border-radius:5px;padding:18px;box-shadow:0 0 0 2px #05080e,0 24px 70px #000d,inset 0 0 40px #7fd7ff0a}
 .sheet-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
 .sheet-hd h3{margin:0;font-size:14px;letter-spacing:.28em;color:var(--accent);font-weight:600}
 .sheet-hd button{background:none;border:1px solid #333d59;color:#8b94a8;font:inherit;font-size:11px;
@@ -117,26 +129,28 @@ body.touch #touch{display:block}
 .tspool{width:11px;height:11px;border-radius:50%;border:2px solid #5a6588;background:#131a2a}
 .tspool.r{opacity:.5}
 .tlab{font-size:11.5px;letter-spacing:.08em;color:var(--accent)}
-.tno{font-size:9px;letter-spacing:.14em;color:#5d6784;margin-top:4px}
+.tno{font-size:11px;letter-spacing:.12em;color:#7a86a8;margin-top:4px}
 
 /* ── 菜单 ── */
 #menuBody{max-height:58vh;overflow-y:auto}
-.msec{font-size:10px;letter-spacing:.3em;color:var(--accent);margin:16px 0 8px;opacity:.85}
+.msec{font-size:11px;letter-spacing:.28em;color:var(--accent);margin:16px 0 8px;opacity:.9}
 .msec:first-child{margin-top:0}
-.mrow{display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #1a2133;font-size:13px;color:#c6d0e2}
+.mrow{display:flex;justify-content:space-between;padding:8px 2px;border-bottom:1px solid #1a2133;font-size:13px;color:#c6d0e2}
 .mrow b{font-weight:500;color:#eef2fa}
-.mrow.dim{color:#59627a}.mrow.dim b{color:#59627a}
+.mrow.dim{color:#7d8aa8}.mrow.dim b{color:#7d8aa8}
 
 /* ── 战斗 ── */
 #battle{position:fixed;inset:0;z-index:28;display:none;flex-direction:column;
-  background:radial-gradient(120% 80% at 50% 30%,#160d1c,#05070b 70%);padding:18px}
+  background:radial-gradient(110% 85% at 50% 24%,#2b1836,#090911 72%);padding:18px}
 #battle.on{display:flex;animation:pin .3s}
 .b-top{display:flex;align-items:center;gap:12px;color:#e8e3f0}
 #bEnemyName{font-size:14px;letter-spacing:.2em;color:#ff9ad5;flex:none}
 .bar{flex:1;height:7px;background:#ffffff14;border-radius:4px;overflow:hidden;border:1px solid #ffffff10}
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff6b81,#ff9ad5);transition:width .4s}
-.b-stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
-#enemyCv{width:min(300px,52vh);height:auto;image-rendering:pixelated;filter:drop-shadow(0 12px 40px #ff5fa233)}
+.b-stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;
+  background:radial-gradient(46% 52% at 50% 46%,#ff9ad52e,#ff9ad500 72%)}
+#enemyCv{height:min(300px,100%);width:auto;aspect-ratio:1/1;max-width:100%;image-rendering:pixelated;
+  filter:drop-shadow(0 12px 40px #ff5fa233)}
 .b-log{height:76px;overflow-y:auto;font-size:12.5px;line-height:1.8;color:#a9b3c8;
   border-top:1px solid #ffffff12;border-bottom:1px solid #ffffff12;padding:8px 2px;margin:8px 0}
 .b-log div{animation:pin .2s}
@@ -150,37 +164,47 @@ body.touch #touch{display:block}
   padding:9px 12px;color:#dfe6f4;transition:.12s
 }
 .bcmd b{font-size:14px;letter-spacing:.08em}
-.bcmd span{font-size:10.5px;color:#7c86a0}
+.bcmd span{font-size:11.5px;color:#8b96ad}
 .bcmd:hover{border-color:#ff9ad5;transform:translateY(-1px)}
 
 /* ── 标题 ── */
+/* 背景故意半透明：让 draw 的站台实景（含雪与灯）透上来，标题不再压在一整块死黑上 */
 #title{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(90% 70% at 50% 35%,#101a33,#03050a 72%);padding:26px;transition:opacity .6s}
-#title.gone{opacity:0;pointer-events:none}
-.tin{text-align:center;max-width:520px}
-.tsub{font-size:10px;letter-spacing:.5em;color:#5d6b8c;margin-bottom:20px;text-indent:.5em}
-.tin h1{margin:0;font-size:clamp(42px,11vw,72px);letter-spacing:.16em;font-weight:300;color:#f4f6fb;
-  text-indent:.16em;text-shadow:0 0 40px #ffd47922,0 0 90px #7fd7ff18}
-.tline{margin-top:14px;font-size:12.5px;letter-spacing:.3em;color:#8f9cb8;text-indent:.3em}
-.tplay{margin-top:34px;background:transparent;border:2px solid #46507a;color:#dfe6f4;font:inherit;
-  font-size:13px;letter-spacing:.4em;padding:13px 40px;border-radius:3px;cursor:pointer;transition:.25s;text-indent:.4em}
-.tplay:hover{background:#ffd479;color:#0a0e18;border-color:#ffd479;box-shadow:0 0 40px #ffd47944}
-.tkeys{margin-top:26px;font-size:10.5px;line-height:2.1;color:#4f5a75;letter-spacing:.04em}
-.ttip{margin-top:30px;font-size:10px;line-height:1.95;color:#3d465e;text-align:left}
+  background:
+    radial-gradient(85% 65% at 50% 44%, #080d1a5c, #03050a14 78%),
+    linear-gradient(180deg, #03050ac2 0%, #03050a30 38%, #03050abf 100%);
+  padding:26px;transition:opacity .6s ease,visibility 0s linear .6s}
+#title.gone{opacity:0;pointer-events:none;visibility:hidden}
+.tin{text-align:center;max-width:520px;padding:20px 12px 16px}
+.tsub{font-size:11px;letter-spacing:.46em;color:#a7b6d6;margin-bottom:18px;text-indent:.46em;
+  text-shadow:0 1px 8px #000}
+.tin h1{margin:0;font-size:clamp(42px,11vw,72px);letter-spacing:.16em;font-weight:300;color:#f6f8fd;
+  text-indent:.16em;text-shadow:0 0 40px #ffd47940,0 0 90px #7fd7ff25,0 2px 18px #000,0 0 8px #0009}
+.tline{margin-top:14px;font-size:12.5px;letter-spacing:.3em;color:#b3c0da;text-indent:.3em;text-shadow:0 1px 8px #000}
+.tplay{margin-top:32px;background:#04070dcc;border:2px solid #6b78a3;color:#eef2fb;font:inherit;
+  font-size:13px;letter-spacing:.4em;padding:13px 40px;border-radius:3px;cursor:pointer;text-indent:.4em;
+  transition:background .25s,color .25s,border-color .25s,box-shadow .25s;
+  box-shadow:0 0 0 1px #0008,0 10px 40px #000a}
+.tplay:hover{background:#ffd479;color:#0a0e18;border-color:#ffd479;box-shadow:0 0 40px #ffd47966}
+.tkeys{margin-top:24px;font-size:11.5px;line-height:2.05;color:#a9b6d0;letter-spacing:.03em;text-shadow:0 1px 8px #000}
+.ttip{margin-top:22px;font-size:11px;line-height:1.85;color:#9dabc6;text-align:left;letter-spacing:.01em;
+  background:#04070e99;border:1px solid #ffffff0f;border-radius:4px;padding:11px 13px;text-shadow:0 1px 6px #000}
 
 /* ── 结局 ── */
-#ending{position:fixed;inset:0;z-index:45;display:none;overflow-y:auto;background:#05060a;padding:0}
+#ending{position:fixed;inset:0;z-index:45;display:none;overflow-y:auto;padding:0;
+  background:radial-gradient(78% 48% at 50% 0%,#161d2b,#05060a 66%)}
 #ending.on{display:block;animation:pin 1s}
-.end-in{max-width:640px;margin:0 auto;padding:60px 24px 90px}
-.etag{font-size:10px;letter-spacing:.4em;color:#8a7f66;margin-bottom:16px;text-indent:.4em}
-#ending h2{font-size:38px;font-weight:300;letter-spacing:.1em;margin:0 0 6px;color:#f2efe8}
-.esub{font-size:12px;color:#7d7688;letter-spacing:.18em;margin-bottom:32px}
-.ebody p{font-size:15px;line-height:2.05;color:#d6d3dc;margin:0 0 1.05em}
-.erule{height:1px;background:#20202a;margin:34px 0}
-.estats{display:flex;gap:20px;font-size:11px;letter-spacing:.16em;color:#8a7f66;margin-bottom:22px}
-.enote{font-size:11px;line-height:2;color:#5e5a6a}
-#replay{display:block;width:100%;margin-top:34px;padding:14px;background:transparent;border:1px solid #2f2c36;
-  color:#d9d6de;font:inherit;font-size:12px;letter-spacing:.35em;border-radius:2px;cursor:pointer;text-indent:.35em}
+.end-in{max-width:700px;margin:0 auto;padding:30px 24px 36px}
+.etag{font-size:11px;letter-spacing:.4em;color:#9d906f;margin-bottom:12px;text-indent:.4em}
+#ending h2{font-size:32px;font-weight:300;letter-spacing:.1em;margin:0 0 4px;color:#f2efe8}
+.esub{font-size:12px;color:#8d869a;letter-spacing:.18em;margin-bottom:20px}
+.ebody p{font-size:14.5px;line-height:1.82;color:#d6d3dc;margin:0 0 .78em}
+.erule{height:1px;background:#20202a;margin:20px 0}
+.estats{display:flex;gap:20px;font-size:11.5px;letter-spacing:.16em;color:#a89a78;margin-bottom:14px}
+.enote{font-size:11px;line-height:1.8;color:#8c8797}
+#replay{position:sticky;bottom:0;display:block;width:100%;margin-top:20px;padding:12px;background:#05060af2;
+  border:1px solid #3a3644;color:#d9d6de;font:inherit;font-size:12.5px;letter-spacing:.35em;border-radius:2px;
+  cursor:pointer;text-indent:.35em;backdrop-filter:blur(4px)}
 #replay:hover{background:#d9d6de;color:#05060a}
 
 /* ── 其它 ── */
@@ -195,14 +219,30 @@ body.touch #touch{display:block}
   #dtext{font-size:14px;line-height:1.9}
   #dlg{padding:14px 14px 14px;min-height:88px}
   #tapeList{grid-template-columns:repeat(2,1fr)}
-  #bCmds{grid-template-columns:1fr}
   .b-log{height:62px;font-size:11.5px}
+  .tin{padding:22px 12px 18px}
+  .ttip{font-size:11px;line-height:1.8}
+  #toast{bottom:calc(118px + env(safe-area-inset-bottom))}
 }
+/* 横屏手机：战斗指令横排，别把敌人挤没 */
+@media (max-height:520px) and (min-width:700px){
+  #battle{padding:12px}
+  #bCmds{grid-template-columns:repeat(4,1fr)}
+  .b-log{height:46px;font-size:11.5px}
+}
+/* 横屏 / 矮屏：标题整体缩放，保证 h1 和开始键都在屏内 */
+@media (max-height:560px){ .tin{transform:scale(.82);transform-origin:center center} }
+@media (max-height:430px){ .tin{transform:scale(.64);transform-origin:center center} }
+/* 竖屏手机：画面上移贴顶，给中段手柄和底部对话框让位 */
+body.portrait #screen{box-shadow:0 6px 40px #000c}
+body.portrait #hud{padding-top:8px}
+body.portrait #hint{bottom:8px;font-size:11px}
 </style>
 </head>
 <body>
 
 <div id="stage">
+  <canvas id="cvBg" width="160" height="100" aria-hidden="true"></canvas>
   <div id="screen">
     <canvas id="cv"></canvas>
     <div id="hud">
@@ -288,8 +328,1717 @@ body.touch #touch{display:block}
   <div id="toast"></div>
 </div>
 
-<script src="src/game.js"></script>
-<script src="src/ui.js"></script>
-<script src="src/story.js"></script>
+<script>
+/* ───── src/game.js ───── */
+/* ═══════════════════════════════════════════════════════════
+   《不下车》 —— 一盒磁带，六个夏天
+   2D 像素 JRPG / 时空跳转
+   ═══════════════════════════════════════════════════════════ */
+
+/* ───────── 基础常量 ───────── */
+const CW = 320, CH = 180, TS = 16;
+const MAPW = 40, MAPH = 24;
+
+const T = { PAVE:0, ROAD:1, WALL:2, FENCE:3, GRASS:4, TREE:5, LAMP:6, PROP:7, DOOR:8, PLAT:9, WATER:10 };
+const SOLID = { 2:1, 3:1, 5:1, 6:1, 7:1, 9:0, 10:1 };
+
+/* ───────── 全局状态 ───────── */
+const S = {
+  era: '2006',
+  tapes: ['2006'],
+  flags: {},
+  zhi: 0,
+  qing: 0,
+  hp: 32,
+  maxhp: 32,
+  items: [],
+  ended: false,
+};
+
+const P = { x: 20*TS, y: 18*TS, dir: 0, fr: 0, t: 0, moving: false, speed: 62 };
+const cam = { x: 0, y: 0 };
+
+let ctx = null, canvas = null, atlas = null, atlasEra = null;
+let bgCanvas = null, bgCtx = null;   // 屏幕外的柔光层（黑边不再是死黑）
+let LAMPS = [];                       // 路灯坐标，用来打光池
+let running = false, paused = true, titleMode = true, rafId = 0;
+
+/* ───────── 工具 ───────── */
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const rnd = (a,b) => a + Math.random()*(b-a);
+const lerp = (a,b,t) => a + (b-a)*t;
+const $ = s => document.querySelector(s);
+
+function tileAt(px,py){
+  const tx = Math.floor(px/TS), ty = Math.floor(py/TS);
+  if (tx<0||ty<0||tx>=MAPW||ty>=MAPH) return T.WALL;
+  return MAP[ty*MAPW+tx];
+}
+function solidAt(px,py){
+  const t = tileAt(px,py);
+  return !!SOLID[t] && t !== T.PLAT;
+}
+
+/* ───────── 地图 ───────── */
+let MAP = new Uint8Array(MAPW*MAPH);
+
+function buildMap(){
+  const m = new Uint8Array(MAPW*MAPH).fill(T.PAVE);
+  const set = (x,y,v) => { if(x>=0&&y>=0&&x<MAPW&&y<MAPH) m[y*MAPW+x]=v; };
+  const rect = (x,y,w,h,v) => { for(let j=0;j<h;j++) for(let i=0;i<w;i++) set(x+i,y+j,v); };
+
+  // 外围
+  rect(0,0,MAPW,1,T.WALL);
+  rect(0,MAPH-1,MAPW,1,T.WALL);
+  rect(0,0,1,MAPH,T.WALL);
+  rect(MAPW-1,0,1,MAPH,T.WALL);
+
+  // 广电大楼（左上主体）
+  rect(2,1,34,6,T.WALL);
+  set(19,7,T.DOOR); set(20,7,T.DOOR);
+
+  // 广场绿化
+  set(4,10,T.TREE); set(12,10,T.LAMP); set(24,10,T.TREE); set(32,10,T.TREE);
+  set(8,12,T.TREE); set(30,12,T.TREE);
+  set(5,9,T.PAVE);
+
+  // 街道隔离栏（留缺口）
+  for(let x=2;x<=12;x++) set(x,13,T.FENCE);
+  for(let x=26;x<=37;x++) set(x,13,T.FENCE);
+  for(let x=3;x<=20;x++) set(x,20,T.FENCE);
+
+  // 报刊亭 / 摊位
+  set(5,16,T.PROP); set(16,16,T.PROP); set(30,16,T.PROP);
+
+  // 路面
+  rect(2,14,36,1,T.ROAD);
+  rect(2,15,36,1,T.ROAD);
+  rect(2,16,36,1,T.ROAD);
+  rect(2,17,36,1,T.ROAD);
+  // 站台（右下）
+  rect(21,21,16,2,T.PLAT);
+
+  // 长椅
+  set(3,18,T.PROP); set(26,18,T.PROP);
+
+  MAP = m;
+  LAMPS = [];
+  for (let i=0;i<MAP.length;i++) if (MAP[i] === T.LAMP)
+    LAMPS.push({ x:(i%MAPW)*TS, y:((i/MAPW)|0)*TS });
+}
+
+function isWalk(tx,ty){ return !SOLID[MAP[ty*MAPW+tx]]; }
+
+/* ───────── 时代调色板 ───────── */
+const ERAS = {
+  '2006': {
+    year:'2006', label:'夏 · 长沙',
+    pal:{ sky:'#0d1330', pave:'#4a4238', pave2:'#544b3f', road:'#2c2a30', road2:'#34323a',
+          wall:'#3a2f2c', wall2:'#4a3d37', win:'#ffd98a', fence:'#5b5a55', grass:'#3a4a2e',
+          leaf:'#4e7a3a', leaf2:'#6a9a4a', trunk:'#4a3728', lamp:'#ffe6a0', prop:'#61492f',
+          tint:'#ff8a3d', tintA:0.10, fog:'#1a1030', fogA:0.22 },
+    weather:'heat', amb:'night', music:'warm',
+  },
+  '2007': {
+    year:'2007', label:'冬 · 雪',
+    pal:{ sky:'#1a2333', pave:'#7d8494', pave2:'#8b92a2', road:'#3c414c', road2:'#464b57',
+          wall:'#4a4f5c', wall2:'#585e6c', win:'#9fc4e8', fence:'#6d7484', grass:'#5a6472',
+          leaf:'#6b7480', leaf2:'#7d8694', trunk:'#3f4652', lamp:'#dce8f5', prop:'#4e5462',
+          tint:'#6fa8dc', tintA:0.14, fog:'#16202e', fogA:0.26 },
+    weather:'snow', amb:'cold', music:'cold',
+  },
+  '2014': {
+    year:'2014', label:'春 · 北京 五环',
+    pal:{ sky:'#26282b', pave:'#4f5155', pave2:'#595b60', road:'#2b2d31', road2:'#33353a',
+          wall:'#3b3d42', wall2:'#474950', win:'#c9c2a8', fence:'#5a5d63', grass:'#3f4a3c',
+          leaf:'#4a5a44', leaf2:'#5c6e54', trunk:'#3a3730', lamp:'#cfd6dd', prop:'#43454b',
+          tint:'#8fa3b0', tintA:0.09, fog:'#20232a', fogA:0.30 },
+    weather:'rain', amb:'grey', music:'grey',
+  },
+  '2020': {
+    year:'2020', label:'春 · 录制基地外',
+    pal:{ sky:'#150a1c', pave:'#3b3040', pave2:'#463a4c', road:'#241a2b', road2:'#2d2134',
+          wall:'#2f1f38', wall2:'#3c2947', win:'#ff7ac2', fence:'#5a4368', grass:'#3a2a44',
+          leaf:'#6a3f7a', leaf2:'#8a5299', trunk:'#3a2442', lamp:'#ff9ad5', prop:'#4a3255',
+          tint:'#ff5fa2', tintA:0.16, fog:'#1a0a24', fogA:0.28 },
+    weather:'dust', amb:'stage', music:'stage',
+  },
+  '2026': {
+    year:'2026', label:'秋 · 站台',
+    pal:{ sky:'#071018', pave:'#39434f', pave2:'#434e5c', road:'#20262e', road2:'#282f38',
+          wall:'#2a333d', wall2:'#35404c', win:'#a8dcff', fence:'#4b5766', grass:'#2f3b46',
+          leaf:'#5c7284', leaf2:'#7d95a8', trunk:'#38424e', lamp:'#cdeeff', prop:'#3a4552',
+          tint:'#7ec8ff', tintA:0.10, fog:'#0a1420', fogA:0.30 },
+    weather:'snow', amb:'night', music:'snow',
+  },
+  '????': {
+    year:'????', label:'后台',
+    pal:{ sky:'#050505', pave:'#1a1a1a', pave2:'#202020', road:'#0e0e0e', road2:'#141414',
+          wall:'#141414', wall2:'#1c1c1c', win:'#f0e8d0', fence:'#2a2a2a', grass:'#161616',
+          leaf:'#242424', leaf2:'#2e2e2e', trunk:'#181818', lamp:'#efe6cc', prop:'#1e1e1e',
+          tint:'#ffffff', tintA:0.02, fog:'#000000', fogA:0.42 },
+    weather:'none', amb:'void', music:'void',
+  },
+};
+
+let ERA = ERAS['2006'];
+
+/* ───────── 烘焙地图 ───────── */
+function bakeMap(){
+  const e = ERA, p = e.pal;
+  const cv = document.createElement('canvas');
+  cv.width = MAPW*TS; cv.height = MAPH*TS;
+  const g = cv.getContext('2d');
+  g.imageSmoothingEnabled = false;
+
+  for (let ty=0; ty<MAPH; ty++){
+    for (let tx=0; tx<MAPW; tx++){
+      const t = MAP[ty*MAPW+tx];
+      const X = tx*TS, Y = ty*TS;
+      drawTile(g, t, X, Y, tx, ty, p, e);
+    }
+  }
+  atlas = cv; atlasEra = e.year;
+}
+
+function drawTile(g, t, X, Y, tx, ty, p, e){
+  const dot = (x,y,w,h,c) => { g.fillStyle=c; g.fillRect(X+x, Y+y, w, h); };
+  const noise = (c, n) => {
+    g.fillStyle = c;
+    let seed = (tx*73856093 ^ ty*19349663) >>> 0;
+    for (let i=0;i<n;i++){
+      seed = (seed*1664525 + 1013904223) >>> 0;
+      const rx = (seed>>>8)%TS, ry = (seed>>>16)%TS;
+      g.fillRect(X+rx, Y+ry, 1, 1);
+    }
+  };
+
+  if (t === T.PAVE || t === T.PLAT){
+    dot(0,0,TS,TS, p.pave);
+    noise(p.pave2, 14);
+    if (t === T.PLAT){
+      dot(0,0,TS,2, '#2b3540');
+      dot(0,TS-4,TS,4, p.pave2);
+      dot(0,TS-6,TS,1, '#c9a227');
+    }
+  }
+  else if (t === T.ROAD){
+    dot(0,0,TS,TS, p.road);
+    noise(p.road2, 10);
+    if (ty === 15 && (tx % 4 < 2)) dot(2,7,12,2, '#c9b06a');
+  }
+  else if (t === T.WALL){
+    dot(0,0,TS,TS, p.wall);
+    dot(0,0,TS,3, p.wall2);
+    // 窗户
+    const wy = (ty%2===0) ? 4 : 8;
+    if (tx%2===0){
+      const lit = ((tx*13+ty*7) % 5) < (e.year==='2014'?2:3);
+      dot(3,wy,5,4, lit ? p.win : '#20242c');
+      dot(10,wy,5,4, lit ? p.win : '#20242c');
+      if (lit){ g.fillStyle = p.win; g.globalAlpha = 0.10; g.fillRect(X+3,Y+wy,5,4); g.globalAlpha=1; }
+    }
+    if (ty === 6) dot(0,TS-2,TS,2, p.wall2);
+  }
+  else if (t === T.DOOR){
+    dot(0,0,TS,TS, p.wall);
+    dot(2,0,12,TS, '#10141a');
+    dot(3,1,10,TS-2, p.win);
+    g.globalAlpha = .5; dot(3,1,10,TS-2, '#000'); g.globalAlpha = 1;
+    dot(6,0,1,TS, '#0a0d12'); dot(9,0,1,TS, '#0a0d12');
+  }
+  else if (t === T.FENCE){
+    dot(0,TS-8,TS,3, p.fence);
+    dot(2,TS-11,2,11, p.fence);
+    dot(12,TS-11,2,11, p.fence);
+  }
+  else if (t === T.GRASS){
+    dot(0,0,TS,TS, p.grass);
+    noise(p.leaf, 8);
+  }
+  else if (t === T.TREE){
+    dot(0,0,TS,TS, p.pave);
+    dot(7,9,3,7, p.trunk);
+    if (e.year==='2007' || e.year==='????'){
+      // 枯枝
+      dot(4,3,9,2, p.leaf); dot(6,1,2,4, p.leaf); dot(10,5,2,4, p.leaf); dot(3,6,3,2, p.leaf);
+      dot(9,2,1,1, p.leaf2);
+    } else {
+      dot(2,1,13,9, p.leaf);
+      dot(4,0,9,2, p.leaf2);
+      dot(3,3,3,4, p.leaf2);
+      dot(11,4,3,3, p.leaf2);
+      dot(0,3,2,4, p.leaf);
+    }
+  }
+  else if (t === T.LAMP){
+    dot(0,0,TS,TS, p.pave);
+    dot(7,2,2,14, '#2b2f36');
+    dot(4,1,8,3, p.lamp);
+    g.globalAlpha = .28; dot(2,0,12,5, p.lamp); g.globalAlpha = 1;
+  }
+  else if (t === T.PROP){
+    dot(0,0,TS,TS, p.pave);
+    if (e.year === '2006'){
+      // 报刊亭
+      dot(1,6,14,9, p.prop);
+      dot(0,4,16,3, '#7a3b2e');
+      dot(2,8,4,4, '#d8cfae'); dot(8,8,4,4, '#d8cfae');
+    } else if (e.year === '2007'){
+      dot(0,0,TS,TS, p.pave);
+      dot(2,8,12,6, p.prop);
+      dot(1,6,14,3, '#3a4048');
+    } else {
+      dot(1,7,14,7, p.prop);
+      dot(0,5,16,3, p.wall2);
+    }
+  }
+  else if (t === T.WATER){
+    dot(0,0,TS,TS, '#14202e');
+    noise('#1d3040', 12);
+  }
+}
+
+/* ───────── 角色绘制 ───────── */
+function drawChar(g, px, py, pal, dir, fr, opt){
+  opt = opt || {};
+  const X = Math.round(px), Y = Math.round(py);
+  const R = (dx,dy,w,h,c) => { g.fillStyle = c; g.fillRect(X+dx, Y+dy, w, h); };
+
+  // 影子
+  g.fillStyle = 'rgba(0,0,0,.28)';
+  g.fillRect(X+3, Y+14, 10, 2);
+
+  const skin  = pal.skin  || '#e8b98f';
+  const skin2 = pal.skin2 || '#c9946d';
+  const hair  = pal.hair  || '#241a14';
+  const shirt = pal.shirt || '#d94f63';
+  const shirt2= pal.shirt2|| '#a83a4c';
+  const pants = pal.pants || '#2f3a52';
+  const shoe  = pal.shoe  || '#1a1512';
+  const long  = !!opt.longHair;
+  const hat   = opt.hat;
+  const bag   = opt.bag;
+
+  // 腿
+  if (fr === 0){ R(5,13,3,3, pants); R(9,13,3,3, pants); R(5,15,3,1, shoe); R(9,15,3,1, shoe); }
+  else          { R(4,13,3,3, pants); R(10,13,3,3, pants); R(4,15,3,1, shoe); R(11,15,3,1, shoe); }
+
+  // 身体
+  R(4,8,8,6, shirt);
+  R(4,8,8,2, shirt2);
+  R(3,9,1,4, shirt2);
+  R(12,9,1,4, shirt2);
+
+  if (bag) { R(12,9,3,4, '#4a3a2a'); R(12,9,3,1, '#6a5540'); }
+
+  if (dir === 3){
+    // 背面
+    R(3,1,10,7, hair);
+    if (long) R(2,4,12,12, hair);
+    R(4,8,8,6, shirt); R(4,8,8,2, shirt2);
+    return;
+  }
+
+  // 头发 / 头
+  R(4,1,8,2, hair);
+  R(3,2,10,6, skin);
+  R(4,1,8,4, hair);
+  if (dir !== 3){
+    if (dir === 0){ R(5,4,2,2, '#1b1410'); R(9,4,2,2, '#1b1410'); }
+    else if (dir === 1){ R(4,4,2,2, '#1b1410'); }
+    else { R(9,4,2,2, '#1b1410'); }
+  }
+  R(5,6,2,1, skin2); R(9,6,2,1, skin2);
+  if (long) R(2,3,2,10, hair), R(12,3,2,10, hair);
+
+  if (hat === 'cap'){ R(3,0,10,3, '#2b3242'); R(2,2,12,1, '#3a4358'); }
+  if (hat === 'beanie'){ R(3,0,10,3, '#8a4a5a'); R(3,1,10,2, '#a35c6e'); }
+  if (hat === 'headset'){ R(3,3,1,3, '#333'); R(12,3,1,3, '#333'); R(2,2,12,1, '#333'); }
+  if (opt.glow){
+    g.globalAlpha = .35;
+    g.fillStyle = opt.glow;
+    g.fillRect(X+2, Y-2, 12, 18);
+    g.globalAlpha = 1;
+  }
+}
+
+/* ───────── 天气粒子 ───────── */
+let parts = [];
+function initWeather(kind){
+  parts = [];
+  if (kind === 'none') return;
+  const n = kind === 'snow' ? 70 : kind === 'rain' ? 80 : kind === 'heat' ? 40 : 45;
+  for (let i=0;i<n;i++) parts.push(newPart(kind, true));
+}
+function newPart(kind, anywhere){
+  const base = { kind, x: rnd(0, CW), y: anywhere ? rnd(0, CH) : -6, life: 1 };
+  if (kind === 'snow'){ base.vy = rnd(10,26); base.vx = rnd(-8,4); base.s = Math.random()<.3?2:1; base.c='#eaf6ff'; }
+  if (kind === 'rain'){ base.vy = rnd(120,190); base.vx = rnd(-18,-8); base.s = 1; base.c='#9fc4e8'; }
+  if (kind === 'heat'){ base.vy = rnd(-14,-6); base.vx = rnd(-4,4); base.s = 1; base.c='#ffd9a0'; base.y = rnd(0,CH); }
+  if (kind === 'dust'){ base.vy = rnd(-4,4); base.vx = rnd(-6,6); base.s = 1; base.c='#ffb0e0'; }
+  base.a = rnd(.25,.7);
+  return base;
+}
+function stepWeather(dt){
+  if (!parts.length) return;
+  const kind = ERA.weather;
+  for (let i=0;i<parts.length;i++){
+    const q = parts[i];
+    q.x += q.vx*dt; q.y += q.vy*dt;
+    if (q.y > CH+8 || q.y < -12 || q.x < -10 || q.x > CW+10){
+      if (kind === 'none') continue;
+      const np = newPart(kind, kind==='heat'||kind==='dust');
+      np.x = kind==='snow'||kind==='rain' ? rnd(0,CW) : rnd(0,CW);
+      np.y = kind==='snow'||kind==='rain' ? -6 : rnd(0,CH);
+      parts[i] = np;
+    }
+  }
+}
+function drawWeather(g){
+  for (const q of parts){
+    g.globalAlpha = q.a;
+    g.fillStyle = q.c;
+    if (q.kind === 'rain'){ g.fillRect(q.x|0, q.y|0, 1, 4); }
+    else g.fillRect(q.x|0, q.y|0, q.s, q.s);
+  }
+  g.globalAlpha = 1;
+}
+
+/* ───────── 实体 ───────── */
+let NPCS = [];      // 当前时代 NPC
+let OBJS = [];      // 当前时代可拾取物
+
+function eraNPCs(){
+  const list = (ERA_SCRIPT[S.era] && ERA_SCRIPT[S.era].npcs) || [];
+  return list.filter(n => !n.when || n.when());
+}
+function eraObjs(){
+  const list = (ERA_SCRIPT[S.era] && ERA_SCRIPT[S.era].objs) || [];
+  return list.filter(o => !o.when || o.when());
+}
+
+/* ───────── 相机 / 渲染 ───────── */
+function updateCamera(){
+  const tx = P.x + 8 - CW/2, ty = P.y + 8 - CH/2;
+  cam.x = clamp(tx, 0, MAPW*TS - CW);
+  cam.y = clamp(ty, 0, MAPH*TS - CH);
+}
+
+function render(dt){
+  const g = ctx, p = ERA.pal;
+  g.imageSmoothingEnabled = false;
+
+  if (atlasEra !== ERA.year) bakeMap();
+
+  g.clearRect(0,0,CW,CH);
+  g.fillStyle = p.sky; g.fillRect(0,0,CW,CH);
+
+  if (atlas){
+    g.drawImage(atlas, Math.round(cam.x), Math.round(cam.y), CW, CH, 0, 0, CW, CH);
+  }
+
+  // 实体按 y 排序
+  const ents = [];
+  for (const n of NPCS) ents.push({ y:n.y, kind:'npc', ref:n });
+  for (const o of OBJS) ents.push({ y:o.y, kind:'obj', ref:o });
+  ents.push({ y:P.y, kind:'player', ref:P });
+  ents.sort((a,b)=>a.y-b.y);
+
+  for (const e of ents){
+    const sx = e.ref.x - cam.x, sy = e.ref.y - cam.y;
+    if (sx < -24 || sy < -24 || sx > CW+24 || sy > CH+24) continue;
+    if (e.kind === 'player'){
+      drawChar(g, sx, sy, PLAYER_PAL, P.dir, P.fr);
+    } else if (e.kind === 'npc'){
+      const n = e.ref;
+      drawChar(g, sx, sy, n.pal || NPC_PAL, n.dir ?? 0, n.fr ?? 0, n.opt);
+      n._sx = sx; n._sy = sy;
+    } else {
+      drawObj(g, sx, sy, e.ref);
+    }
+  }
+
+  // 路灯的光池：每个时代一个暖/冷光源焦点
+  for (const L of LAMPS){
+    const lx = L.x - cam.x + 8, ly = L.y - cam.y + 5;
+    if (lx < -50 || ly < -50 || lx > CW+50 || ly > CH+50) continue;
+    const lg = g.createRadialGradient(lx, ly, 1, lx, ly, 38);
+    lg.addColorStop(0, rgba(p.lamp, .42));
+    lg.addColorStop(.35, rgba(p.lamp, .14));
+    lg.addColorStop(1, rgba(p.lamp, 0));
+    g.fillStyle = lg; g.fillRect(lx-38, ly-38, 76, 76);
+  }
+
+  drawWeather(g);
+
+  // 光照 / 色调
+  g.fillStyle = p.tint; g.globalAlpha = p.tintA;
+  g.fillRect(0,0,CW,CH); g.globalAlpha = 1;
+
+  // 暗角
+  const grd = g.createRadialGradient(CW/2, CH/2, CH*0.35, CW/2, CH/2, CH*0.95);
+  grd.addColorStop(0, 'rgba(0,0,0,0)');
+  grd.addColorStop(1, p.fog);
+  g.globalAlpha = p.fogA * (titleMode ? 1.0 : 1.6);
+  g.fillStyle = grd; g.fillRect(0,0,CW,CH);
+  g.globalAlpha = 1;
+
+  // 标题镜头的暖光池（标题文字背后的焦点光源）
+  if (titleMode){
+    // 抬一点曝光：标题不能压在一整块死黑上
+    g.fillStyle = '#182640'; g.globalAlpha = .30;
+    g.fillRect(0,0,CW,CH); g.globalAlpha = 1;
+    const gx = CW*0.5, gy = CH*0.40;
+    const tg = g.createRadialGradient(gx, gy, 2, gx, gy, 104);
+    tg.addColorStop(0, 'rgba(255,228,176,.26)');
+    tg.addColorStop(.45, 'rgba(255,196,128,.10)');
+    tg.addColorStop(1, 'rgba(255,180,100,0)');
+    g.fillStyle = tg; g.fillRect(0,0,CW,CH);
+  }
+
+  // 背景层是全屏 CSS 模糊，没必要 60fps 重画：~12fps 就够，省移动端 GPU
+  const nowMs = performance.now();
+  if (nowMs - lastBgPaint > 80){ lastBgPaint = nowMs; paintBackdrop(); }
+}
+
+/* 把主画面 cover 裁切后画进小号背景层，由 CSS 模糊铺满屏幕 */
+let lastBgPaint = 0;
+function paintBackdrop(){
+  if (!bgCtx || !bgCanvas) return;
+  const bw = bgCanvas.width, bh = bgCanvas.height;
+  const s = Math.max(bw/CW, bh/CH);
+  const dw = CW*s, dh = CH*s;
+  bgCtx.drawImage(canvas, (bw-dw)/2, (bh-dh)/2, dw, dh);
+}
+
+function rgba(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + (n>>16&255) + ',' + (n>>8&255) + ',' + (n&255) + ',' + a + ')';
+}
+
+function drawObj(g, x, y, o){
+  const bob = Math.sin(performance.now()/380 + (o.y||0)) * 1.2;
+  if (o.type === 'tape'){
+    g.fillStyle = 'rgba(255,240,180,.18)';
+    g.beginPath(); g.arc(x+8, y+8+bob, 9, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#2a2a30'; g.fillRect(x+2, y+5+bob, 12, 8);
+    g.fillStyle = '#d9d2c0'; g.fillRect(x+4, y+7+bob, 8, 4);
+    g.fillStyle = '#c04a5a'; g.fillRect(x+4, y+7+bob, 8, 1);
+    g.fillStyle = '#e8e2d0'; g.fillRect(x+5, y+9+bob, 2, 2); g.fillRect(x+9, y+9+bob, 2, 2);
+  } else if (o.type === 'note'){
+    g.fillStyle = 'rgba(160,220,255,.18)';
+    g.beginPath(); g.arc(x+8, y+8+bob, 8, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#e8eef8'; g.fillRect(x+4, y+4+bob, 8, 10);
+    g.fillStyle = '#9aa8bc';
+    for (let i=0;i<4;i++) g.fillRect(x+5, y+6+bob+i*2, 6, 1);
+  }
+}
+
+/* ───────── 玩家移动 ───────── */
+const keys = {};
+
+function updatePlayer(dt){
+  if (paused || scriptLock) { P.moving = false; return; }
+  let dx = 0, dy = 0;
+  if (keys['ArrowLeft'] || keys['a']) dx -= 1;
+  if (keys['ArrowRight']|| keys['d']) dx += 1;
+  if (keys['ArrowUp']   || keys['w']) dy -= 1;
+  if (keys['ArrowDown'] || keys['s']) dy += 1;
+
+  P.moving = !!(dx || dy);
+  if (!P.moving){ P.fr = 0; P.t = 0; return; }
+
+  if (dx && !dy) P.dir = dx < 0 ? 1 : 2;
+  else if (dy && !dx) P.dir = dy < 0 ? 3 : 0;
+  else if (dy < 0) P.dir = 3;
+  else if (dy > 0) P.dir = 0;
+
+  const len = Math.hypot(dx,dy) || 1;
+  const sp = P.speed * dt / len;
+  const nx = P.x + dx*sp, ny = P.y + dy*sp;
+
+  // 碰撞盒（脚部）
+  const bx = 4, by = 9, bw = 8, bh = 7;
+  const hits = (x,y) =>
+    solidAt(x+bx, y+by) || solidAt(x+bx+bw, y+by) ||
+    solidAt(x+bx, y+by+bh) || solidAt(x+bx+bw, y+by+bh);
+
+  if (!hits(nx, P.y)) P.x = nx;
+  if (!hits(P.x, ny)) P.y = ny;
+
+  P.t += dt;
+  P.fr = (P.t * 6 | 0) % 2;
+  P.x = clamp(P.x, TS, MAPW*TS - TS*2);
+  P.y = clamp(P.y, TS, MAPH*TS - TS*2);
+}
+
+/* ───────── 交互目标 ───────── */
+function facingTile(){
+  const cx = P.x + 8, cy = P.y + 8;
+  const d = [[0,10],[ -10,0],[10,0],[0,-10]][P.dir];
+  return { tx: Math.floor((cx+d[0])/TS), ty: Math.floor((cy+d[1])/TS) };
+}
+function nearEntity(){
+  const cx = P.x+8, cy = P.y+8;
+  let best = null, bd = 26;
+  for (const n of NPCS){
+    const d = Math.hypot(n.x+8-cx, n.y+8-cy);
+    if (d < bd){ bd = d; best = { kind:'npc', ref:n }; }
+  }
+  for (const o of OBJS){
+    const d = Math.hypot(o.x+8-cx, o.y+8-cy);
+    if (d < bd){ bd = d; best = { kind:'obj', ref:o }; }
+  }
+  return best;
+}
+
+/* ───────── 主循环 ───────── */
+let lastT = 0;
+function loop(t){
+  if (!running) return;
+  const dt = Math.min(0.05, (t - lastT) / 1000 || 0);
+  lastT = t;
+
+  if (titleMode){
+    // 标题画面：镜头极缓地漂移，人物不动，雪一直下
+    updateCamera();
+    cam.x = clamp(cam.x + Math.sin(t/11000)*10, 0, MAPW*TS - CW);
+    cam.y = clamp(cam.y + Math.cos(t/15000)*4, 0, MAPH*TS - CH);
+  } else {
+    updatePlayer(dt);
+    updateCamera();
+  }
+  stepWeather(dt);
+
+  // NPC 朝向玩家
+  for (const n of NPCS){
+    if (n.wander){
+      n.wt = (n.wt||0) + dt;
+      if (n.wt > 2.2){ n.wt = 0; n.dir = (Math.random()*4)|0; }
+    }
+  }
+  render(dt);
+  rafId = requestAnimationFrame(loop);
+}
+
+/* 只允许有一条渲染循环：重开/重进时代都不会叠帧 */
+function startLoop(){
+  if (rafId) cancelAnimationFrame(rafId);
+  lastT = performance.now();
+  running = true;
+  rafId = requestAnimationFrame(loop);
+}
+function stopLoop(){
+  running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = 0;
+}
+
+/* ───────── 输入 ───────── */
+const CONFIRM = ['z','Z','Enter',' '];
+const CANCEL  = ['x','X','Escape'];
+
+function bindInput(){
+  window.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+    if (CONFIRM.includes(e.key)) onConfirm();
+    if (CANCEL.includes(e.key)) onCancel();
+    if (e.key === 't' || e.key === 'T') onTapeKey();
+  });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+}
+</script>
+<script>
+/* ───── src/ui.js ───── */
+
+/* ═══════════════════════════════════════════════════════════
+   UI 层 · 对话 / 选项 / 磁带 / 菜单 / 战斗 / 结局
+   ═══════════════════════════════════════════════════════════ */
+
+const esc = s => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+let scriptLock = false;
+let confirmQ = [];
+let dlgActive = false;
+let started = false;        // 标题按下「开始」之后才接受输入
+
+const el = {
+  dlg:null, dname:null, dtext:null, choices:null, hudEra:null, hudTape:null,
+  hudZhi:null, hudQing:null, tapeUI:null, tapeList:null, battle:null, enemyCv:null,
+  menu:null, fade:null, title:null, ending:null, hint:null,
+};
+
+function cacheEls(){
+  el.dlg = $('#dlg'); el.dname = $('#dname'); el.dtext = $('#dtext');
+  el.choices = $('#choices');
+  el.hudEra = $('#hudEra'); el.hudTape = $('#hudTape');
+  el.hudZhi = $('#hudZhi'); el.hudQing = $('#hudQing');
+  el.tapeUI = $('#tapeUI'); el.tapeList = $('#tapeList');
+  el.battle = $('#battle'); el.enemyCv = $('#enemyCv');
+  el.menu = $('#menu'); el.fade = $('#fade');
+  el.title = $('#title'); el.ending = $('#ending'); el.hint = $('#hint');
+}
+
+function updateHUD(){
+  if (!el.hudEra) return;
+  el.hudEra.textContent = ERA.year === '????' ? '????' : ERA.year;
+  const hp = (typeof ERA_SCRIPT !== 'undefined' && ERA_SCRIPT[S.era]) ? ERA_SCRIPT[S.era].hint : '';
+  if (el.hint) el.hint.textContent = (typeof hp === 'function') ? hp() : (hp || '');
+  el.hudTape.textContent = '磁带 ' + S.tapes.length + '/6';
+  el.hudZhi.style.width = Math.min(100, S.zhi/22*100) + '%';
+  el.hudQing.style.width = Math.min(100, S.qing/22*100) + '%';
+}
+
+/* ───────── 对话 ───────── */
+function dlgOn(name){
+  dlgActive = true;
+  el.dlg.classList.add('on');
+  if (name){ el.dname.textContent = name; el.dname.style.display = 'inline-block'; }
+  else { el.dname.style.display = 'none'; }
+}
+function dlgOff(){
+  dlgActive = false;
+  el.dlg.classList.remove('on');
+  el.choices.classList.remove('on');
+  el.choices.innerHTML = '';
+}
+
+function waitConfirm(){
+  return new Promise(res => confirmQ.push(res));
+}
+
+async function say(name, text){
+  dlgOn(name);
+  el.choices.classList.remove('on');
+  let i = 0, typing = true;
+  el.dtext.textContent = '';
+  const iv = setInterval(() => {
+    i += 1;
+    el.dtext.textContent = text.slice(0, i);
+    if (i >= text.length){ typing = false; clearInterval(iv); }
+  }, 22);
+
+  while (true){
+    await waitConfirm();
+    if (typing){ clearInterval(iv); el.dtext.textContent = text; typing = false; }
+    else break;
+  }
+  el.dlg.classList.remove('on');
+  await delay(60);
+}
+
+async function choose(opts){
+  el.dlg.classList.add('on');
+  el.choices.innerHTML = '';
+  el.choices.classList.add('on');
+  document.body.classList.add('choosing');   // 选择时暂时收起虚拟手柄
+  return new Promise(res => {
+    opts.forEach((o, i) => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.innerHTML = '<b>' + (i+1) + '</b>' + esc(typeof o === 'string' ? o : o.t);
+      b.onclick = () => {
+        el.choices.classList.remove('on');
+        el.choices.innerHTML = '';
+        el.dlg.classList.remove('on');
+        document.body.classList.remove('choosing');
+        res(i);
+      };
+      el.choices.appendChild(b);
+    });
+    choose._pick = i => {
+      const b = el.choices.children[i];
+      if (b) b.click();
+    };
+  });
+}
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+/* ───────── 输入路由 ───────── */
+function onConfirm(){
+  if (!started || titleMode) return;
+  if (confirmQ.length){ confirmQ.shift()(); return; }
+  if (dlgActive || tapeOpen || menuOpen || battleActive || endingShown) return;
+  tryInteract();
+}
+function onCancel(){
+  if (!started || titleMode) return;
+  if (dlgActive || scriptLock) return;
+  if (battleActive) return;
+  toggleMenu();
+}
+function onTapeKey(){
+  if (!started || titleMode) return;
+  if (dlgActive || scriptLock || battleActive || menuOpen) return;
+  toggleTape();
+}
+
+async function tryInteract(){
+  if (paused || scriptLock) return;
+  const t = nearEntity();
+  if (!t) return;
+  if (t.kind === 'npc'){
+    runScript(() => t.ref.script());
+  } else {
+    runScript(() => pickObj(t.ref));
+  }
+}
+
+async function pickObj(o){
+  if (o.type === 'tape'){
+    await say('', o.text || '一盘磁带。');
+    if (o.tape && !S.tapes.includes(o.tape)) unlockTape(o.tape, o.tapeName);
+    if (o.flag) S.flags[o.flag] = true;
+    if (o.once) o.hidden = true;
+    if (o.after) await o.after();
+  } else if (o.type === 'note'){
+    await say('', o.text || '一张纸。');
+  } else if (o.script){
+    await o.script();
+  }
+}
+
+async function runScript(fn){
+  if (scriptLock) return;
+  scriptLock = true;
+  paused = true;
+  try { await fn(); }
+  catch (e) { console.error(e); }
+  finally {
+    scriptLock = false; if (!endingShown) paused = false;
+    dlgOff();
+    NPCS = eraNPCs(); OBJS = eraObjs();
+    updateHUD();
+  }
+}
+
+/* ───────── 磁带 ───────── */
+let tapeOpen = false;
+const TAPE_ORDER = ['2006','2007','2014','2020','2026','????'];
+
+function tapeName(y){
+  return ({ '2006':'2006 · 夏','2007':'2007 · 冬','2014':'2014 · 春','2020':'2020 · 春','2026':'2026 · 秋','????':'？？？？' })[y] || y;
+}
+
+function unlockTape(y, nm){
+  if (S.tapes.includes(y)) return;
+  S.tapes.push(y);
+  updateHUD();
+  toast('获得磁带 · ' + (nm || tapeName(y)));
+  if (!S.flags.tapeTut){
+    S.flags.tapeTut = 1;
+    setTimeout(()=>{ toast('按 T 可以回到任何一盘磁带的年份'); }, 1600);
+  }
+}
+
+function toggleTape(){
+  if (tapeOpen){ closeTape(); return; }
+  if (S.tapes.length <= 1 && !S.flags.tapeTut){ toast('你还没有别的磁带'); return; }
+  tapeOpen = true;
+  el.tapeUI.classList.add('on');
+  renderTapeList();
+}
+function closeTape(){ tapeOpen = false; el.tapeUI.classList.remove('on'); }
+
+function renderTapeList(){
+  el.tapeList.innerHTML = '';
+  TAPE_ORDER.forEach((y, i) => {
+    const has = S.tapes.includes(y);
+    const d = document.createElement('button');
+    d.className = 'tape' + (has ? '' : ' locked') + (S.era === y ? ' cur' : '');
+    d.innerHTML =
+      '<div class="tslot"><div class="tspool"></div><div class="tspool r"></div></div>' +
+      '<div class="tlab">' + (has ? esc(tapeName(y)) : '－－－') + '</div>' +
+      '<div class="tno">NO.0' + (i+1) + '</div>';
+    if (has) d.onclick = () => { closeTape(); jumpTo(y); };
+    el.tapeList.appendChild(d);
+  });
+}
+
+async function jumpTo(y, spawn){
+  if (!S.tapes.includes(y)) return;
+  await fadeOut();
+  S.era = y;
+  ERA = ERAS[y];
+  P.x = ((spawn && spawn.x) ?? eraSpawn(y).x) * TS;
+  P.y = ((spawn && spawn.y) ?? eraSpawn(y).y) * TS;
+  P.dir = 0;
+  bakeMap();
+  initWeather(ERA.weather);
+  NPCS = eraNPCs();
+  OBJS = eraObjs();
+  updateCamera();
+  updateHUD();
+  await fadeIn();
+}
+
+function eraSpawn(y){
+  const d = { '2006':{x:20,y:18}, '2007':{x:20,y:18}, '2014':{x:20,y:18},
+              '2020':{x:20,y:18}, '2026':{x:20,y:11}, '????':{x:20,y:12} };
+  return d[y] || {x:20,y:18};
+}
+
+let fading = false;
+async function fadeOut(){
+  fading = true;
+  el.fade.classList.add('on');
+  await delay(520);
+}
+async function fadeIn(){
+  el.fade.classList.remove('on');
+  await delay(420);
+  fading = false;
+}
+
+/* ───────── 菜单 ───────── */
+let menuOpen = false;
+function toggleMenu(){
+  menuOpen = !menuOpen;
+  el.menu.classList.toggle('on', menuOpen);
+  if (menuOpen) renderMenu();
+}
+function renderMenu(){
+  const tapes = TAPE_ORDER.map((y,i) => {
+    const has = S.tapes.includes(y);
+    return '<div class="mrow' + (has?'':' dim') + '"><span>磁带 0'+(i+1)+'</span><b>' + (has?esc(tapeName(y)):'未获得') + '</b></div>';
+  }).join('');
+  const its = S.items.length
+    ? S.items.map(t=>'<div class="mrow"><b>'+esc(t)+'</b></div>').join('')
+    : '<div class="mrow dim"><b>空的</b></div>';
+  $('#menuBody').innerHTML =
+    '<div class="msec">磁带</div>' + tapes +
+    '<div class="msec">碎片</div>' + its +
+    '<div class="msec">状态</div>' +
+    '<div class="mrow"><span>执念</span><b>' + S.zhi + '</b></div>' +
+    '<div class="mrow"><span>清醒</span><b>' + S.qing + '</b></div>';
+}
+
+/* ───────── toast ───────── */
+let toastT = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>t.classList.remove('on'), 2200);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   战斗
+   ═══════════════════════════════════════════════════════════ */
+let battleActive = false;
+let battleAnimId = 0;
+
+const ENEMIES = {
+  whisper: { name:'告密者', hp:26, atk:3, art:'whisper',
+    lines:['「我知道是谁说的。」','「你敢不敢赌一次？」','「你心里其实有答案。」','「别装了。」'],
+    intro:'一个戴口罩的人挡住了路灯。他的声音是从很多个帖子里拼起来的。' },
+  seven: { name:'七年', hp:34, atk:4, art:'seven',
+    lines:['「两千五百五十五天。」','「你数的过来吗？」','「这七年，谁赔？」','「忘了它吧。」'],
+    intro:'地铁口的风把一张旧日历吹到你脚边。上面的数字一直在跳。' },
+  mirror: { name:'你的想象', hp:46, atk:5, art:'mirror',
+    lines:['「她们一定曾经——」','「你比谁都清楚。」','「再想一遍，就一遍。」','「你不是在关心她，你是在享受。」'],
+    intro:'站台的玻璃上映出一个人。那个人和你穿一样的衣服，说你想说的话。' },
+};
+
+function drawEnemy(g, art, t, hurt){
+  g.clearRect(0,0,128,128);
+  g.imageSmoothingEnabled = false;
+  const bob = Math.sin(t/500)*3;
+  const shake = hurt ? (Math.random()*5-2.5) : 0;
+
+  if (art === 'whisper'){
+    g.save(); g.translate(shake, bob);
+    g.fillStyle = 'rgba(20,26,20,.9)';
+    g.beginPath(); g.ellipse(64,74,26,34,0,0,Math.PI*2); g.fill();
+    g.fillStyle = '#0d120d'; g.beginPath(); g.ellipse(64,52,20,16,0,0,Math.PI*2); g.fill();
+    g.fillStyle = '#8ef2c0'; g.fillRect(55,52,5,4); g.fillRect(70,52,5,4);
+    g.fillStyle = 'rgba(142,242,192,.25)'; g.fillRect(53,50,9,8); g.fillRect(68,50,9,8);
+    // 气泡
+    for (let i=0;i<3;i++){
+      const bx = 20+i*38, by = 12 + Math.sin(t/300+i)*6;
+      g.fillStyle = 'rgba(230,240,255,'+(0.10+i*0.05)+')';
+      g.fillRect(bx, by, 26, 14);
+      g.fillRect(bx+6, by+14, 4, 3);
+    }
+    g.restore();
+  }
+  else if (art === 'seven'){
+    g.save(); g.translate(shake, bob);
+    g.fillStyle = '#1a1f26'; g.fillRect(34,30,60,68);
+    g.fillStyle = '#2b323c'; g.fillRect(37,33,54,62);
+    g.fillStyle = '#c9d6e8';
+    g.font = 'bold 34px system-ui, sans-serif'; g.textAlign='center';
+    g.fillText(String(2007 + (t/900|0)%8), 64, 70);
+    g.font = '11px system-ui, sans-serif'; g.fillStyle='#7d8a9c';
+    g.fillText('D A Y S', 64, 86);
+    g.fillStyle = 'rgba(160,200,255,.10)';
+    g.fillRect(37,33,54,4);
+    g.restore();
+  }
+  else if (art === 'mirror'){
+    g.save(); g.translate(shake, 0);
+    g.fillStyle = 'rgba(170,220,255,.10)'; g.fillRect(26,14,76,96);
+    g.strokeStyle = 'rgba(170,220,255,.5)'; g.lineWidth = 2;
+    g.strokeRect(26,14,76,96);
+    // 里面的人
+    const px = 52, py = 34 + Math.sin(t/500)*2;
+    g.fillStyle = '#0b1218'; g.fillRect(px+4, py, 16, 5);
+    g.fillStyle = '#a8dcff'; g.fillRect(px+4, py+5, 16, 16);
+    g.fillStyle = '#0b1218'; g.fillRect(px+2, py+5, 20, 6);
+    g.fillStyle = '#7ec8ff'; g.fillRect(px+3, py+21, 18, 26);
+    g.fillStyle = '#2a3644'; g.fillRect(px+5, py+47, 6, 14); g.fillRect(px+13, py+47, 6, 14);
+    g.fillStyle = 'rgba(126,200,255,.35)'; g.fillRect(28,16,72,2);
+    g.restore();
+  }
+}
+
+async function battle(key, cfg){
+  if (battleActive) return true;
+  cfg = cfg || {};
+  const src = ENEMIES[key];
+  const st = { hp: src.hp, max: src.hp, atk: src.atk, guard: 0 };
+  battleActive = true;
+  el.battle.classList.add('on');
+  $('#bEnemyName').textContent = src.name;
+  $('#bHpN').textContent = S.hp + '/' + S.maxhp;
+  const log = $('#bLog'); log.innerHTML = '';
+  blog(src.intro);
+  drawEnemy(el.enemyCv.getContext('2d'), src.art, 0, false);
+  if (battleAnimId) clearInterval(battleAnimId);
+  battleAnimId = setInterval(()=>{
+    if (!battleActive) return;
+    drawEnemy(el.enemyCv.getContext('2d'), src.art, performance.now(), false);
+  }, 90);
+
+  const chat = m => blog(m);
+  function blog(m){
+    const d = document.createElement('div');
+    d.textContent = m;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+  function bars(){
+    $('#bEnemyHp').style.width = Math.max(0, st.hp/st.max*100) + '%';
+    $('#bHp').style.width = Math.max(0, S.hp/S.maxhp*100) + '%';
+    $('#bHpN').textContent = Math.max(0,S.hp) + '/' + S.maxhp;
+  }
+  bars();
+
+  const cmd = () => new Promise(res => {
+    const box = $('#bCmds'); box.innerHTML = '';
+    const list = [['举证','说清楚，把话说死'],['存疑','保留一点余地'],['关掉手机','喘口气'],];
+    if (cfg.flee) list.push(['走开','不看了']);
+    list.forEach(([t, s], i) => {
+      const b = document.createElement('button');
+      b.className = 'bcmd';
+      b.innerHTML = '<b>'+t+'</b><span>'+s+'</span>';
+      b.onclick = () => { box.innerHTML=''; res(i); };
+      box.appendChild(b);
+    });
+  });
+
+  let won = false;
+  let turns = 0;
+  while (turns++ < 30){
+    const c = await cmd();
+    if (c === 0){
+      const dmg = 6 + (Math.random()*3|0);
+      st.hp -= dmg;
+      chat('你举证：' + dmg + ' 点。可信度下降。');
+    } else if (c === 1){
+      const dmg = 2 + (Math.random()*2|0);
+      st.hp -= dmg; st.guard = Math.min(3, st.guard+1);
+      chat('你说：我不确定。对方的气焰低了一截。');
+    } else if (c === 2){
+      S.hp = Math.min(S.maxhp, S.hp + 8);
+      chat('你关掉手机。世界安静了五秒。心力 +8。');
+    } else {
+      chat('你走开了。');
+      battleActive = false;
+      clearInterval(battleAnimId); battleAnimId = 0;
+      el.battle.classList.remove('on');
+      return false;
+    }
+    bars();
+    if (st.hp <= 0){ won = true; break; }
+
+    await delay(360);
+    const atk = Math.max(1, st.atk - st.guard);
+    S.hp -= atk;
+    bars();
+    chat(src.lines[(Math.random()*src.lines.length)|0] + '  （心力 -' + atk + '）');
+    if (S.hp <= 0){
+      chat('你被说服了。');
+      await delay(700);
+      battleActive = false;
+      clearInterval(battleAnimId); battleAnimId = 0;
+      el.battle.classList.remove('on');
+      S.zhi += 3; S.hp = 10; updateHUD();
+      await delay(500);
+      await say('', '你醒过来的时候，天已经亮了。有些话你没能反驳，于是它住进了你心里。');
+      return false;
+    }
+    await delay(260);
+  }
+
+  clearInterval(battleAnimId); battleAnimId = 0;
+  battleActive = false;
+  el.battle.classList.remove('on');
+  if (won){
+    S.qing += cfg.q || 2;
+    S.zhi = Math.max(0, S.zhi - (cfg.zdown || 1));
+    updateHUD();
+    return true;
+  }
+  return false;
+}
+</script>
+<script>
+/* ───── src/story.js ───── */
+
+/* ═══════════════════════════════════════════════════════════
+   剧本 · 六个年份
+   ═══════════════════════════════════════════════════════════ */
+
+const PLAYER_PAL = { skin:'#e8b98f', skin2:'#c9946d', hair:'#241a14', shirt:'#d94f63', shirt2:'#a83a4c', pants:'#2f3a52', shoe:'#1a1512' };
+const NPC_PAL    = { skin:'#e0b088', skin2:'#bd8a63', hair:'#2a1e18', shirt:'#4a5a7a', shirt2:'#38465e', pants:'#2b3244', shoe:'#191410' };
+
+const PAL = {
+  xm:   { skin:'#eec39a', skin2:'#c99670', hair:'#3a2418', shirt:'#5f8fd6', shirt2:'#4770ad', pants:'#3a3f52', shoe:'#1a1512' },
+  guard:{ skin:'#d8a878', skin2:'#b5875c', hair:'#1e1a16', shirt:'#2f3a46', shirt2:'#232c36', pants:'#1f2730', shoe:'#14100e' },
+  scalper:{ skin:'#dcae82', skin2:'#b8895f', hair:'#2a2018', shirt:'#7a5a3a', shirt2:'#5e4429', pants:'#3a3028', shoe:'#171310' },
+  poster:{ skin:'#e2b78e', skin2:'#bd9068', hair:'#241c16', shirt:'#3f4a3a', shirt2:'#2f382c', pants:'#2a2f2a', shoe:'#151310' },
+  busker:{ skin:'#e6bd93', skin2:'#c1966d', hair:'#33241a', shirt:'#6a4a7a', shirt2:'#523960', pants:'#31303e', shoe:'#171216' },
+  worker:{ skin:'#dcb48c', skin2:'#b78f68', hair:'#1f1b17', shirt:'#54606e', shirt2:'#3e4854', pants:'#2a3038', shoe:'#141210' },
+  mod:  { skin:'#ecc49c', skin2:'#c79c74', hair:'#2e1f18', shirt:'#d0709a', shirt2:'#a8557a', pants:'#3a2e40', shoe:'#1a1218' },
+  pap:  { skin:'#e0b48a', skin2:'#bb9068', hair:'#241a14', shirt:'#2a2a34', shirt2:'#1e1e26', pants:'#232330', shoe:'#121014' },
+  fan:  { skin:'#e9c09a', skin2:'#c49873', hair:'#2c1e16', shirt:'#c85a52', shirt2:'#a0443e', pants:'#33384a', shoe:'#181412' },
+  grey: { skin:'#c9c9c9', skin2:'#a4a4a4', hair:'#141414', shirt:'#2a2a2a', shirt2:'#1e1e1e', pants:'#1c1c1c', shoe:'#0e0e0e' },
+};
+
+/* ───────── 2006 ───────── */
+async function npcXiaoman(){
+  if (!S.flags.xm1){
+    await say('小满','你也是飞雪的？');
+    await say('小满','她们今天住一个宿舍。我表哥在里面当志愿者，真的。');
+    await say('小满','厉娜爱干净，天天晾白T恤。许飞被她喂鸭舌，现在自己也上瘾了。');
+    S.flags.xm1 = 1;
+    await say('','（你记住了。有些细节会跟着你一辈子。）');
+    await say('小满','哎，你那台随身听，借我看看。');
+    await say('','你递过去。她按了一下播放键，什么声音都没有。');
+    await say('小满','空的。……你后面地上那个是什么？');
+  } else if (S.tapes.includes('2007')){
+    await say('小满','你今天话怎么这么少？');
+    await say('小满','刚才那个瞬间，你会记很久吧。');
+    S.qing += 1; updateHUD();
+  } else {
+    await say('小满','快去门口啊，一会儿人就满了。');
+  }
+}
+
+async function npcGuard(){
+  if (S.flags.door1){
+    await say('保安','散了散了，人都走完了。');
+    if (S.tapes.includes('2007')) await say('保安','……你站这儿半天了，不冷啊？');
+    return;
+  }
+  await say('保安','票呢？');
+  const c = await choose(['有。（其实没有）','没有。']);
+  if (c === 0){
+    await say('保安','拿出来看看。');
+    await say('','你把手伸进兜里，摸到一张皱掉的公交票。');
+    await say('保安','……行吧，站这边，别挤。');
+    S.zhi += 1;
+  } else {
+    await say('保安','那站远点。');
+    await say('','你站到警戒线外面。你还是很高兴。');
+  }
+
+  await delay(200);
+  await say('','就在这时，里面传来一阵尖叫。');
+  await say('','大屏幕切到后台：灯光很亮，两个人站在台口。');
+  await say('','主持人问厉娜：你这一票，投给谁？标准是什么？');
+  await say('','她没看镜头。');
+  await say('厉娜','于公于私，于情于理。');
+  await say('','然后她举起了许飞的手。');
+  await say('','整条街都在叫。你也在叫，叫到听不见自己。');
+  await say('','那天晚上回去，你在随身听里塞进了第一盘磁带。');
+  await say('','你也不记得自己是什么时候录的。');
+  S.flags.door1 = 1;
+  unlockTape('2007','2007 · 冬');
+  S.qing += 1; updateHUD();
+}
+
+/* ───────── 2007 ───────── */
+async function npcPoster(){
+  if (!S.flags.poster1){
+    await say('发帖的人','包夜十块。机器在里面。');
+    await say('','他屏幕上是天涯的页面。标题很长。');
+    await say('发帖的人','《关于某超女解约那点事，我知道的不多，但都是真的》。');
+    await say('','楼主只说了三句话。');
+    await say('','一、她不是自己要走的。');
+    await say('','二、她的计划，只有一个人知道。');
+    await say('','三、那个人，现在还在台上。');
+    await say('','下面跟了两千一百三十七楼。');
+    S.flags.poster1 = 1;
+  } else {
+    await say('发帖的人','还在看啊。');
+  }
+  await say('发帖的人','你说，这三句话，哪句是真的？');
+  const c = await choose(['第一句。','第二句。','第三句。','一句都不是。']);
+  S.flags.belief = c;
+  if (c === 3){ await say('发帖的人','那你来这儿干嘛。'); S.qing += 2; }
+  else { await say('发帖的人','嗯。我也是这么想的。'); S.zhi += 2; }
+  updateHUD();
+}
+
+async function npcWhisper(){
+  await say('','一个戴口罩的人站在路灯下。');
+  await say('口罩人','你也想知道是谁说的，对吧。');
+  await say('口罩人','我告诉你。');
+  const ok = await battle('whisper', { flee:true, q:3, zdown:2 });
+  if (ok){
+    await say('','你说：我不知道。而且，我可能永远都不会知道。');
+    await say('','他笑了一下，散成了一堆没有上下文的句子。');
+    await say('','地上留下一盘磁带。标签：2007 · 冬。');
+    unlockTape('2014','2014 · 春');
+    S.flags.whisperDone = 1;
+  } else {
+    await say('','你没能反驳他。');
+    await say('','他说的那些话，你带回了家。');
+    S.flags.whisperFail = 1;
+  }
+}
+
+/* ───────── 2014 ───────── */
+async function npcBusker(){
+  await say('','地铁口有个弹吉他的人。他唱的歌你听过。');
+  await say('卖唱的人','这首歌不要钱。');
+  await say('','他在唱一个父亲写给女儿的字。你站在风里听完。');
+  const c = await choose(['给他十块。','站着听完，没钱。']);
+  if (c === 0){ S.zhi += 1; await say('卖唱的人','谢谢。你也在等人吧。'); }
+  else { S.qing += 1; await say('卖唱的人','站着听就挺好。'); }
+  await say('卖唱的人','我在这儿唱了三年，从来没人点她的歌。');
+  await say('卖唱的人','你是第一个听出来的。');
+  updateHUD();
+}
+
+async function npcWorker(){
+  if (!S.flags.worker1){
+    await say('加班的人','借个火。');
+    await say('','你没火。他还是站着没走。');
+    await say('加班的人','你手机屏保是06年超女？');
+    await say('','你赶紧按灭了屏幕。');
+    await say('加班的人','我当年也投过。一条一块，我投了三十条。');
+    await say('加班的人','后来她消失了七年。你算过吗，七年是多少天。');
+    S.flags.worker1 = 1;
+  } else {
+    await say('加班的人','两千五百五十五天。');
+  }
+  await say('加班的人','你自己算算。');
+}
+
+async function npcSeven(){
+  await say('','地铁口的风把一张旧日历吹到你脚边。');
+  await say('','上面的数字一直在跳。');
+  const ok = await battle('seven', { flee:true, q:3, zdown:2 });
+  if (ok){
+    await say('','你说：七年就是七年。它已经过去了。');
+    await say('','日历落在地上，停在了今天。');
+    await say('','你捡起来，背面是一盘磁带。');
+    unlockTape('2020','2020 · 春');
+  } else {
+    await say('','你算不过来。数字把你埋了。');
+  }
+}
+
+/* ───────── 2020 ───────── */
+async function npcMod(){
+  if (S.flags.mod1){ await say('群管','群还在。安静得像没人。'); return; }
+  await say('群管','486个人，十分钟999+。你也是群主吧。');
+  await say('','她手机屏幕上全是红点。');
+  await say('群管','他们让我踢人。踢谁？踢说真话的，还是踢说假话的？');
+  const c = await choose(['控评。把骂她的都踢了。','打一段很长的话，然后删掉。','把群解散。']);
+  if (c === 0){ S.zhi += 2; await say('群管','好。那我先走了。'); await say('','群里少了一半人。你盯着那个数字看了很久。'); }
+  if (c === 1){ S.qing += 2; await say('群管','……你打了多久？'); await say('','四十分钟。你一个字都没发出去。'); }
+  if (c === 2){ S.qing += 3; await say('','486个人，一瞬间安静。'); await say('群管','挺好的。'); }
+  S.flags.mod1 = 1;
+  await say('','那天晚上，另一个人的回应只有六个字。');
+  await say('厉娜','我们不说别人了，乖。');
+  await say('','就这一句。热搜上没人转。');
+  unlockTape('2026','2026 · 秋');
+  S.flags.got2026 = 1;
+  updateHUD();
+}
+
+async function npcPap(){
+  await say('代拍','姐，让一下。');
+  await say('','她扛着一台长焦，站了三个小时。');
+  await say('代拍','我拍这个八年了。她们俩同框，我一共拍到过两次。');
+  await say('代拍','一次是今年，一次是……很久以前。');
+  await say('代拍','你说，这算不算一个故事？');
+  const c = await choose(['算。','不算，这是两个人的人生。']);
+  if (c === 1){ S.qing += 2; await say('代拍','……你说得对。'); }
+  else { S.zhi += 1; await say('代拍','那我这八年没白站。'); }
+  updateHUD();
+}
+
+/* ───────── 2026 ───────── */
+async function npcStation(){
+  await say('站姐','你也来啦。');
+  await say('站姐','从今天早上六点开始，这儿已经站了四十多个人。');
+  await say('站姐','她们待会儿从那个门出来。就那一个门。');
+  await say('站姐','你说，我要是把相机放下，我还能干什么？');
+  const c = await choose(['继续拍。','把相机放下。']);
+  if (c === 0){ S.zhi += 2; await say('站姐','对，拍。拍到没得拍为止。'); }
+  else { S.qing += 2; await say('站姐','……我试试。'); }
+  updateHUD();
+}
+
+async function npcPasserby(){
+  await say('路人','这节目真好看。');
+  await say('路人','我妈都看哭了。她说这两个人怎么这么犟。');
+  await say('','你笑了笑，没解释。');
+  await say('路人','哎，你说她们到底怎么了？');
+  const c = await choose(['一个人说了什么。','什么都没发生。','我不知道。']);
+  if (c === 2){ S.qing += 2; }
+  else { S.zhi += 1; }
+  await say('路人','哦。');
+  updateHUD();
+}
+
+async function objPlatform(){
+  if (S.flags.platformDone){ await say('','站台上空了。风把雪吹进轨道里。'); return; }
+  await say('','站台尽头停着保姆车。');
+  await say('','一个女人走到车边，蹲了下去。');
+  await say('','她在系鞋带。');
+  await delay(300);
+  await say('','……她的鞋带，是系好的。');
+  await say('','她解开，又系上。第二次。');
+  await say('','第三次。她抬头看了一眼另一辆车的方向。');
+  await say('','第四次。她站起来，上了那辆车。');
+  await delay(400);
+  await say('','车门关上了。');
+  await say('','弹幕开始刷。有人说「她就是在等」，有人说「别过度解读」。');
+  await say('','两边吵了三千楼。');
+  await say('','你忽然意识到：这个画面里，唯一不知道自己在演什么的人，可能是她本人。');
+  S.flags.platformDone = 1;
+  S.items.push('一段十一秒的视频');
+  S.zhi += 2; updateHUD();
+
+  await say('','你转过身，看见玻璃上映出一个人。');
+  await say('','那个人和你穿一样的衣服。');
+  const ok = await battle('mirror', { q:5, zdown:3 });
+  if (ok){
+    await say('','你对他说：你只是我。');
+    await say('','他点了点头，像终于被允许离开。');
+    await say('','玻璃碎了，后面是一盘磁带。');
+    await say('','标签上什么都没写。');
+    unlockTape('????','？？？？');
+  } else {
+    await say('','他说得对。你一直是这么想的。');
+    await say('','……但你还是站在这儿。');
+    await say('','你从兜里摸出一盘没有标签的磁带。');
+    unlockTape('????','？？？？');
+  }
+}
+
+/* ───────── ???? ───────── */
+async function npcVoid(){
+  await say('','这里什么都没有。只有一扇门，和一个人。');
+  await say('灰','你终于来了。');
+  await say('灰','门后面是 2006 年。你随时可以回去。');
+  await say('灰','但你要先回答我一个问题。');
+  await say('灰','这二十年，你爱的到底是她们，还是你自己那段十七岁？');
+  const c = await choose(['是她们。','是我自己。','我不想分。']);
+  S.flags.final = c + 1;   // 0 是假值，不能直接用
+  if (c === 0){ S.zhi += 3; }
+  if (c === 1){ S.qing += 4; }
+  if (c === 2){ S.zhi += 1; S.qing += 2; }
+  await say('灰','进去吧。');
+  updateHUD();
+}
+
+async function objDoor(){
+  if (!S.flags.final){
+    await say('','门锁着。');
+    await say('','（还有个人在等你说话。）');
+    return;
+  }
+  await say('','门后面很亮。');
+  await say('','你听见很多年前的声音：整条街都在叫。');
+  showEnding();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   时代配置
+   ═══════════════════════════════════════════════════════════ */
+const ERA_SCRIPT = {
+  '2006': {
+    hint:'去广电门口看看',
+    npcs:[
+      { id:'xm', name:'小满', tx:20, ty:11, dir:0, pal:PAL.xm, opt:{longHair:true}, script:npcXiaoman },
+      { id:'guard', name:'保安', tx:20, ty:9, dir:0, pal:PAL.guard, opt:{hat:'cap'}, script:npcGuard },
+      { id:'sc', name:'黄牛', tx:13, ty:12, dir:2, pal:PAL.scalper, opt:{bag:true}, script:async()=>{ await say('黄牛','票要不要？内场三百。'); const c=await choose(['太贵了。','……买。']); if(c===0){S.qing+=1; await say('黄牛','穷鬼。');} else {S.zhi+=2; await say('黄牛','爽快。'); await say('','你花了三百块，买了一张根本进不去的票。');} updateHUD(); } },
+      { id:'fan2', name:'举牌的人', tx:26, ty:13, dir:1, pal:PAL.fan, opt:{longHair:true}, script:async()=>{ await say('举牌的人','飞雪 forever！'); await say('','她把两个人的名字写在同一张纸上，中间画了一颗心。'); await say('举牌的人','你说她们会一直这么好吗？'); const c=await choose(['会。','不会。']); if(c===0){S.zhi+=2;} else {S.qing+=2;} updateHUD(); } },
+    ],
+    objs:[
+      { id:'t1', type:'tape', tx:9, ty:12,
+        text:'地上一盘磁带。标签上手写着：2006 · 夏。\n你完全不记得自己录过这个。',
+        tape:'2006', tapeName:'2006 · 夏',
+        after: async()=>{ await say('','你把它塞进随身听。按下了播放。'); await say('','里面是你自己的呼吸声，很吵，很远。'); await say('','然后是一个女孩的声音，在喊一个名字。'); await say('','……按 T，你可以回到这一年。任何时候。'); } },
+    ],
+  },
+
+  '2007': {
+    hint:'网吧 / 路灯下那个戴口罩的人',
+    npcs:[
+      { id:'po', name:'发帖的人', tx:6, ty:17, dir:0, pal:PAL.poster, opt:{bag:true}, script:npcPoster },
+      { id:'wh', name:'口罩人', tx:27, ty:12, dir:3, pal:PAL.grey, opt:{hat:'beanie'},
+        when:()=>!S.flags.whisperDone, script:npcWhisper },
+      { id:'wd', name:'扫雪的人', tx:14, ty:18, dir:1, pal:PAL.worker,
+        script:async()=>{ await say('扫雪的人','今年的雪，下得比哪年都大。'); await say('','他扫出一条路，风又把它填回去。'); } },
+    ],
+    objs:[],
+  },
+
+  '2014': {
+    hint:'地铁口',
+    npcs:[
+      { id:'bu', name:'卖唱的人', tx:6, ty:17, dir:1, pal:PAL.busker, opt:{longHair:true}, script:npcBusker },
+      { id:'wo', name:'加班的人', tx:28, ty:17, dir:3, pal:PAL.worker, opt:{bag:true}, script:npcWorker },
+      { id:'sv', name:'七年', tx:30, ty:11, dir:0, pal:PAL.grey, when:()=>!S.tapes.includes('2020'), script:npcSeven },
+    ],
+    objs:[],
+  },
+
+  '2020': {
+    hint:'录制基地外',
+    npcs:[
+      { id:'mo', name:'群管', tx:14, ty:12, dir:0, pal:PAL.mod, opt:{longHair:true}, script:npcMod },
+      { id:'pa', name:'代拍', tx:26, ty:12, dir:2, pal:PAL.pap, opt:{hat:'cap'}, script:npcPap },
+    ],
+    objs:[],
+  },
+
+  '2026': {
+    hint:()=> S.tapes.includes('2026') ? '站台尽头' : '雪地里好像有东西在反光',
+    npcs:[
+      { id:'st', name:'站姐', tx:17, ty:11, dir:0, pal:PAL.fan, opt:{longHair:true}, script:npcStation },
+      { id:'ps', name:'路人', tx:24, ty:17, dir:3, pal:PAL.worker, script:npcPasserby },
+    ],
+    objs:[
+      { id:'t0', type:'tape', tx:20, ty:13, once:true,
+        when:()=> !S.tapes.includes('2006'),
+        text:'雪地里有个东西在反光。\n是一盒磁带。标签旧得发黄，上面写着：2006 · 夏。',
+        tape:'2006', tapeName:'2006 · 夏',
+        after: async()=>{
+          await say('','你把它塞进随身听，按下播放。');
+          await say('','里面是蝉鸣。很吵。还有很远的人声，在喊一个名字。');
+          await say('','（按 T，打开磁带盒。）');
+        } },
+      { id:'plat', type:'station', tx:27, ty:19, text:'',
+        when:()=> S.tapes.includes('2026'), script:objPlatform },
+    ],
+  },
+
+  '????': {
+    hint:'那扇门',
+    npcs:[
+      { id:'gr', name:'灰', tx:20, ty:11, dir:0, pal:PAL.grey, opt:{glow:'#f0e8d0'}, script:npcVoid },
+    ],
+    objs:[
+      { id:'door', type:'door', tx:20, ty:8, text:'', script:objDoor },
+    ],
+  },
+};
+
+/* 覆盖：把 tile 坐标转成像素 */
+function eraNPCs(){
+  const l = (ERA_SCRIPT[S.era] && ERA_SCRIPT[S.era].npcs) || [];
+  return l.filter(n => !n.when || n.when()).map(n => Object.assign({}, n, { x:n.tx*TS, y:n.ty*TS }));
+}
+function eraObjs(){
+  const l = (ERA_SCRIPT[S.era] && ERA_SCRIPT[S.era].objs) || [];
+  return l.filter(o => !o.hidden)
+          .filter(o => !o.when || o.when())
+          .map(o => Object.assign({}, o, { x:o.tx*TS, y:o.ty*TS }));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   结局
+   ═══════════════════════════════════════════════════════════ */
+let endingShown = false;
+
+const ENDINGS = {
+  be: { tag:'ENDING 01', t:'意难平', s:'你还在那间屋子里',
+    p:['节目结束以后，你还是每天刷她们的词条。',
+       '你把那十一秒的视频存下来，调成 0.5 倍速，一帧一帧地看。你在评论区认识了很多和你一样的人。你们互相确认：那双鞋，是有话要说的。',
+       '你开始写。你把二十年写成一条时间线，细到自己都相信了。',
+       '有天深夜你写到一半，停下来问自己：这件事里，我到底知道什么？',
+       '你真正确认过的，只有一些画面。鸭舌。白T恤。一只举起来的手。四次没松过的鞋带。一句「我画地为牢」。一份麦当劳。两扇没有打开的车门。',
+       '剩下的全是你的。',
+       '你没有关掉那个文档。你只是把标题从「真相」改成了「我以为」。'] },
+  peace: { tag:'ENDING 02', t:'各自安好', s:'你把灯牌放下了',
+    p:['你发了一条很长的微博。写完删，删完写，最后发出去的只有一句：',
+       '「谢谢你们唱过歌。」',
+       '你把超话取关了。没有告别，没有仪式。第二天醒来，世界并没有变。地铁还是那么挤，你还是坐过了两站。',
+       '后来你偶尔还会刷到她们。一个接了新的商演，一个发了新歌。评论区还是有人在问那个问题，还是有人给出不同的答案。',
+       '你不再点进去了。',
+       '你不是不爱了。你只是终于分清了：你爱的是她们唱过的歌，不是她们必须成为你想象的样子。'] },
+  wall: { tag:'ENDING 03', t:'画地为牢', s:'你承认你也是那个人',
+    p:['你没有脱粉，也没有再上头。你就那么待在原地。',
+       '那句「我画地为牢」，你听了不止一遍。你起初觉得那是她在说她自己。后来你发现，说这句话的人，可以是任何一个在深夜里翻旧账的人。',
+       '你想起十七岁那年，你在灯牌背面写了三个字，又涂掉。你涂得很用力，马克笔都洇开了。',
+       '二十年后那三个字露出来了。你才明白，有些东西不是被涂掉的，是被压在下面的。',
+       '你继续做你的粉丝。你买票，你听歌，你在她们各自的评论区里留一句「好听」。',
+       '你不催她们和好，也不再帮她们编故事。',
+       '你只是把那盏灯牌留着了。有一天你也许会扔掉。但不是今天。'] },
+  out: { tag:'ENDING 04', t:'局外人', s:'你只是看了一档好节目',
+    p:['你把整季看完，关掉视频，去洗了个碗。',
+       '节目确实好看。剪辑、配乐、那个海拔四千米的悬崖小屋，都好看。',
+       '有人问你：你磕吗？',
+       '你说：不磕，但我理解。',
+       '你理解一个人在原地站了十五年，也理解另一个人根本不知道有这间屋子。你理解深情，也理解钝感。你甚至理解那个深夜发视频的编剧——大家只是想在自己的人生里，找到一个不会散的版本。',
+       '你没有收集那些料。你只是记得，有两个女孩在 2006 年的夏天，同住过一间宿舍。',
+       '一个爱干净，天天晾白T恤。一个被人递了一袋鸭舌，从此吃上瘾。',
+       '这就够了。剩下的，是别人的二十年。'] },
+};
+
+function showEnding(){
+  if (endingShown) return;
+  endingShown = true;
+  paused = true;
+  let key;
+  const z = S.zhi, q = S.qing;
+  if (z >= 9 && z - q >= 4) key = 'be';
+  else if (q >= 8 && q - z >= 2) key = 'peace';
+  else if (z >= 5) key = 'wall';
+  else key = 'out';
+  const E = ENDINGS[key];
+  el.ending.classList.add('on');
+  el.ending.innerHTML =
+    '<div class="end-in">' +
+    '<div class="etag">' + E.tag + '</div>' +
+    '<h2>' + E.t + '</h2>' +
+    '<div class="esub">' + E.s + '</div>' +
+    '<div class="ebody">' + E.p.map(x=>'<p>'+x+'</p>').join('') + '</div>' +
+    '<div class="erule"></div>' +
+    '<div class="estats"><span>执念 '+z+'</span><span>清醒 '+q+'</span><span>磁带 '+S.tapes.length+'/6</span></div>' +
+    '<div class="enote">本作是非官方同人。许飞与厉娜是真实的歌手，2006 年《超级女声》长沙赛区的冠军与季军，全国第五与第六。' +
+    '文中公开事件均有报道可循；而「告密」至今是罗生门，双方各执一词，没有任何一方被证实。所有情感解读都是粉丝视角的虚构。<br><br>请把她们当歌手。她们唱过歌，这就够了。</div>' +
+    '<button id="replay">再来一次</button>' +
+    '</div>';
+  $('#replay').onclick = () => { resetGame(); playIntro(); };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   启动 / 重开
+   ═══════════════════════════════════════════════════════════ */
+
+/* 真正的重置：不 reload 页面、不依赖查询参数。
+   点「再来一次」、或从结局回到开头，都走这里，等同一次干净的新开局。 */
+function resetGame(){
+  // 1) 清掉所有异步 / 模态状态
+  confirmQ.length = 0;
+  scriptLock = false;
+  dlgActive = false;
+  battleActive = false;
+  if (battleAnimId){ clearInterval(battleAnimId); battleAnimId = 0; }
+  tapeOpen = false; menuOpen = false;
+  endingShown = false;
+  el.tapeUI.classList.remove('on');
+  el.menu.classList.remove('on');
+  el.battle.classList.remove('on');
+  el.ending.classList.remove('on');
+  el.ending.innerHTML = '';
+  el.fade.classList.remove('on');
+  $('#toast').classList.remove('on');
+  clearTimeout(toastT);
+  dlgOff();
+  el.choices.innerHTML = '';
+  document.body.classList.remove('choosing');
+
+  // 2) 回到 2026 年秋天的站台
+  S.era = '2026';
+  S.tapes = [];
+  S.flags = {};
+  S.zhi = 0; S.qing = 0;
+  S.hp = S.maxhp = 32;
+  S.items = [];
+  S.ended = false;
+  ERA = ERAS['2026'];
+  P.x = 20*TS; P.y = 11*TS; P.dir = 0; P.fr = 0; P.t = 0;
+  PLAYER_PAL.shirt = '#d94f63'; PLAYER_PAL.shirt2 = '#a83a4c';
+  buildMap();
+  bakeMap();
+  initWeather(ERA.weather);
+  NPCS = eraNPCs();
+  OBJS = eraObjs();
+  updateCamera();
+  updateHUD();
+  for (const k in keys) keys[k] = false;
+
+  // 3) 重新开一条干净的渲染循环
+  titleMode = false;
+  paused = false;
+  started = true;
+  document.body.classList.add('started');
+  startLoop();
+}
+
+async function playIntro(){
+  await delay(320);
+  const touch = document.body.classList.contains('touch');
+  await runScript(async () => {
+    await say('','2026年10月。夜里十一点四十。');
+    await say('','你站在一列开往北方的车站台上。雪落在睫毛上，化得很快。');
+    await say('','你不记得自己为什么会在这里。');
+    await say('', touch ? '左下角方向键走路，A 说话，右上「磁带」换年份。'
+                        : '方向键走路，Z 说话，X 打开随身听。');
+    await say('','出站口那边，有个东西在雪里反光。');
+  });
+}
+
+async function startGame(){
+  if (started && !endingShown) return;   // 防双击
+  el.title.classList.add('gone');
+  resetGame();
+  await playIntro();
+}
+
+function syncTouchMode(){
+  const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const hasTouch = ('ontouchstart' in window) ||
+    (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+  const narrow = (typeof window !== 'undefined' && window.innerWidth <= 680);
+  const on = !!(coarse || hasTouch || narrow);
+  document.body.classList.toggle('touch', on);
+  // 标题上的操作说明跟着输入方式走
+  const tk = $('.tkeys');
+  if (tk){
+    if (!tk.dataset.pc) tk.dataset.pc = tk.innerHTML;
+    tk.innerHTML = on
+      ? '左下方向键 走路　A 说话<br>右上「磁带」换年份　B 打开随身听'
+      : tk.dataset.pc;
+  }
+}
+
+function bindUI(){
+  $('#startBtn').onclick = () => { startGame(); };
+
+  $('#tapeClose').onclick = closeTape;
+  $('#menuClose').onclick = () => { menuOpen = false; el.menu.classList.remove('on'); };
+
+  syncTouchMode();
+
+  // 触屏方向键
+  document.querySelectorAll('[data-key]').forEach(b => {
+    const k = b.dataset.key;
+    const on = e => { e.preventDefault(); keys[k] = true; };
+    const off = e => { e.preventDefault(); keys[k] = false; };
+    b.addEventListener('pointerdown', on);
+    b.addEventListener('pointerup', off);
+    b.addEventListener('pointerleave', off);
+    b.addEventListener('pointercancel', off);
+  });
+  const a = $('#btnA'), bb = $('#btnB'), tt = $('#btnT');
+  if (a) a.addEventListener('pointerdown', e => { e.preventDefault(); onConfirm(); });
+  if (bb) bb.addEventListener('pointerdown', e => { e.preventDefault(); onCancel(); });
+  if (tt) tt.addEventListener('pointerdown', e => { e.preventDefault(); onTapeKey(); });
+
+  // 点画面 / 对话框推进对话。绑在 stage 上：canvas 之外的地方也能点
+  const stage = $('#stage');
+  stage.addEventListener('pointerdown', e => {
+    if (!dlgActive) return;
+    const t = e.target;
+    if (t && t.closest && t.closest('button,.sheet,#title,#ending')) return;
+    onConfirm();
+  });
+
+  // 点遮罩空白处关闭弹层
+  const sheet = $('#tapeUI');
+  if (sheet) sheet.addEventListener('pointerdown', e => { if (e.target === sheet) closeTape(); });
+  const menu = $('#menu');
+  if (menu) menu.addEventListener('pointerdown', e => {
+    if (e.target !== menu) return;
+    menuOpen = false; el.menu.classList.remove('on');
+  });
+
+  // 数字键选择
+  window.addEventListener('keydown', e => {
+    if (!dlgActive) return;
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 9){
+      const b = el.choices.children[n-1];
+      if (b && el.choices.classList.contains('on')){ e.preventDefault(); b.click(); }
+    }
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+}
+
+function resizeCanvas(){
+  const r = $('#stage').getBoundingClientRect();
+  const portrait = r.height > r.width * 1.02;
+  document.body.classList.toggle('portrait', portrait);
+  syncTouchMode();
+
+  const sc = Math.max(0.2, Math.min(r.width / CW, r.height / CH));
+  const w = Math.round(CW*sc), h = Math.round(CH*sc);
+  const L = Math.round((r.width-w)/2);
+  // 竖屏：画面贴顶，剩下的纵向空间交给手柄和对话框，避免上下两条大黑边
+  const T = portrait ? Math.round(Math.min(48, Math.max(8, r.height*0.018)))
+                     : Math.round((r.height-h)/2);
+  const scr = $('#screen');
+  scr.style.left = L+'px'; scr.style.top = T+'px';
+  scr.style.width = w+'px'; scr.style.height = h+'px';
+  document.documentElement.style.setProperty('--sh', (T+h)+'px');
+
+  if (bgCanvas){
+    bgCanvas.width = Math.max(64, Math.round(r.width/4));
+    bgCanvas.height = Math.max(64, Math.round(r.height/4));
+  }
+}
+
+function boot(){
+  canvas = $('#cv');
+  canvas.width = CW; canvas.height = CH;
+  ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  bgCanvas = $('#cvBg');
+  bgCtx = bgCanvas ? bgCanvas.getContext('2d') : null;
+  cacheEls();
+  bindInput();
+  bindUI();
+  resizeCanvas();
+  window.addEventListener('load', resizeCanvas);
+  setTimeout(resizeCanvas, 60);
+  titleScene();
+}
+
+/* 标题背后就是 2026 年的站台：雪一直下，灯一直亮，镜头很慢地漂 */
+function titleScene(){
+  ERA = ERAS['2026'];
+  S.era = '2026';
+  buildMap(); bakeMap();
+  initWeather('snow');
+  NPCS = eraNPCs();
+  OBJS = eraObjs();
+  P.x = 20*TS; P.y = 14*TS; P.dir = 0;
+  updateCamera();
+  updateHUD();
+  titleMode = true; paused = true; started = false;
+  document.body.classList.remove('started');
+  startLoop();
+}
+
+boot();
+</script>
 </body>
 </html>

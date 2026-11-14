@@ -8,6 +8,7 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':
 let scriptLock = false;
 let confirmQ = [];
 let dlgActive = false;
+let started = false;        // 标题按下「开始」之后才接受输入
 
 const el = {
   dlg:null, dname:null, dtext:null, choices:null, hudEra:null, hudTape:null,
@@ -78,6 +79,7 @@ async function choose(opts){
   el.dlg.classList.add('on');
   el.choices.innerHTML = '';
   el.choices.classList.add('on');
+  document.body.classList.add('choosing');   // 选择时暂时收起虚拟手柄
   return new Promise(res => {
     opts.forEach((o, i) => {
       const b = document.createElement('button');
@@ -87,6 +89,7 @@ async function choose(opts){
         el.choices.classList.remove('on');
         el.choices.innerHTML = '';
         el.dlg.classList.remove('on');
+        document.body.classList.remove('choosing');
         res(i);
       };
       el.choices.appendChild(b);
@@ -102,16 +105,19 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
 /* ───────── 输入路由 ───────── */
 function onConfirm(){
+  if (!started || titleMode) return;
   if (confirmQ.length){ confirmQ.shift()(); return; }
   if (dlgActive || tapeOpen || menuOpen || battleActive || endingShown) return;
   tryInteract();
 }
 function onCancel(){
+  if (!started || titleMode) return;
   if (dlgActive || scriptLock) return;
   if (battleActive) return;
   toggleMenu();
 }
 function onTapeKey(){
+  if (!started || titleMode) return;
   if (dlgActive || scriptLock || battleActive || menuOpen) return;
   toggleTape();
 }
@@ -270,6 +276,7 @@ function toast(msg){
    战斗
    ═══════════════════════════════════════════════════════════ */
 let battleActive = false;
+let battleAnimId = 0;
 
 const ENEMIES = {
   whisper: { name:'告密者', hp:26, atk:3, art:'whisper',
@@ -347,7 +354,8 @@ async function battle(key, cfg){
   const log = $('#bLog'); log.innerHTML = '';
   blog(src.intro);
   drawEnemy(el.enemyCv.getContext('2d'), src.art, 0, false);
-  const anim = setInterval(()=>{
+  if (battleAnimId) clearInterval(battleAnimId);
+  battleAnimId = setInterval(()=>{
     if (!battleActive) return;
     drawEnemy(el.enemyCv.getContext('2d'), src.art, performance.now(), false);
   }, 90);
@@ -397,7 +405,7 @@ async function battle(key, cfg){
     } else {
       chat('你走开了。');
       battleActive = false;
-      clearInterval(anim);
+      clearInterval(battleAnimId); battleAnimId = 0;
       el.battle.classList.remove('on');
       return false;
     }
@@ -413,7 +421,7 @@ async function battle(key, cfg){
       chat('你被说服了。');
       await delay(700);
       battleActive = false;
-      clearInterval(anim);
+      clearInterval(battleAnimId); battleAnimId = 0;
       el.battle.classList.remove('on');
       S.zhi += 3; S.hp = 10; updateHUD();
       await delay(500);
@@ -423,7 +431,7 @@ async function battle(key, cfg){
     await delay(260);
   }
 
-  clearInterval(anim);
+  clearInterval(battleAnimId); battleAnimId = 0;
   battleActive = false;
   el.battle.classList.remove('on');
   if (won){
