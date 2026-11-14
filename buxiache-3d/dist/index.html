@@ -47,6 +47,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
   font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(0,0,0,.85)}
 .hudScore #hudMult{font-family:var(--sans);font-size:13px;margin-left:7px;color:var(--era);
   text-shadow:0 0 18px var(--era)}
+.hudScore .multLabel{font-size:10px;letter-spacing:.12em;color:#b6c2d4;margin-left:4px;vertical-align:2px;text-shadow:0 1px 6px #000}
 .hudTapeRow{margin-top:5px;font-size:12px;letter-spacing:.16em;color:var(--dim);
   text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .hudTapeRow b{color:var(--era);font-weight:600;font-family:var(--mono)}
@@ -137,9 +138,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
 #btnStart:hover{background:#ffd479;border-color:#ffd479;color:#0a0e18;box-shadow:0 0 60px #ffd47955}
 .tmeta{margin-top:13px;font-size:11.5px;letter-spacing:.2em;color:#8f9bb2}
 .tmech{margin-top:20px;font-size:11.5px;line-height:1.95;color:#aab5c9;letter-spacing:.02em;
-  border-left:2px solid rgba(255,179,92,.55);padding:2px 0 2px 11px;text-align:left}
+  border-left:2px solid rgba(255,179,92,.55);padding:2px 0 2px 11px;text-align:left;
+  text-wrap:pretty}
 .tmech b{color:#ffcf8a;font-weight:600}
 .tkeys{margin-top:18px;font-size:11.5px;line-height:2.0;color:#8b96ab;letter-spacing:.03em}
+.tkeysRow{display:block}
 .ttip{margin-top:16px;font-size:11.5px;line-height:1.85;color:#98a2b8;text-align:left;letter-spacing:.01em}
 
 /* ── 结局 / 结算 ── */
@@ -261,7 +264,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
         </div>
       </div>
       <div class="hudRight">
-        <div class="hudScore"><span id="hudScore">0</span><span id="hudMult">×3</span></div>
+        <div class="hudScore"><span id="hudScore">0</span><span id="hudMult">×3</span><span class="multLabel">倍率</span></div>
         <div class="hudTapeRow">磁带 <b id="hudTape">0</b> · <i id="hudCombo">连 0</i></div>
         <div id="hudHearts">●●●</div>
         <div id="hudRumor"></div>
@@ -297,8 +300,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
       <div class="tline">2006 年，你挤上了一趟车。<br>车顶上跑着两个人，中间隔着一根线。<br>你保不住她们的二十年，只能让她们留在同一个画面里。</div>
       <button id="btnStart">刷 卡 上 车</button>
       <div class="tmeta">70 秒 · 1140 米 · 不用登录</div>
-      <div class="tmech"><b>同 框</b>：跑在两人中间，线就紧。线断了，分数倍率掉、磁带吸不过来；<br>拉到最满，它能替你挡一次撞。那是这局里你唯一能失去、也唯一能保住的东西。</div>
-      <div class="tkeys">← → 换道　空格 起跳　↓ 滑铲　（手机：左右滑 / 上滑跳 / 下滑铲）</div>
+      <div class="tmech"><b>同 框</b>：跑在两人中间，线就紧。线断了，倍率掉、磁带吸不过来；拉到最满，它能替你挡一次撞。那是这局里你唯一能失去、也唯一能保住的东西。</div>
+      <div class="tkeys"><span class="tkeysRow">← → 换道　空格 起跳　↓ 滑铲</span><span class="tkeysRow">手机：左右滑 换道　上滑 起跳　下滑 滑铲</span></div>
       <div class="ttip">
         本作为虚构怀旧创作。人物与情节均经艺术化处理，不指向任何真实个人的私生活与关系；
         文中所有事件细节来自公开报道与节目内容，未经证实的部分不作断言。请勿据此对真人求证或攻讦。
@@ -379,7 +382,7 @@ const SHOT = Q.get('shot');
    in/out 玩家站在两人之间时每秒回多少 / 离开时每秒掉多少
    drift 每秒自然撕开的距离；extra 这个时代无论怎样都在掉的量          */
 const PAIR_ERA = [
-  { mode:'both', gap:1.00, gapMax:1.80, inRate:6, outRate:12, drift:0.02, extra:0.3, tag:'并肩' },
+  { mode:'both', gap:1.75, gapMax:2.60, inRate:6, outRate:12, drift:0.02, extra:0.3, tag:'并肩' },
   { mode:'both', gap:1.70, gapMax:4.40, inRate:3, outRate:14, drift:0.11, extra:1.2, tag:'渐远' },
   { mode:'one',  gap:0.00, gapMax:0.90, inRate:0, outRate:14, drift:0.02, extra:3.0, tag:'只剩一个' },
   { mode:'both', gap:3.60, gapMax:4.80, inRate:4, outRate:14, drift:0.04, extra:2.0, tag:'更远' },
@@ -443,8 +446,8 @@ const ERAS = [
 
   { id:'????', year:'????', tag:'画地为牢',
     skyTop:'#050508', skyBot:'#141018', sun:'#ffffff', sunI:0.0,
-    fog:'#0a0a10', fogN:18, fogF:95,
-    amb:'#3a3540', ambI:0.85, dir:'#d8d0e0', dirI:0.55,
+    fog:'#0a0a10', fogN:26, fogF:112,
+    amb:'#423c50', ambI:0.98, dir:'#ded6ec', dirI:0.72,
     ground:'#06060a', roofC:'#4a4353', roofC2:'#2e2a3a', trim:'#a89ac0',
     accent:'#c8b8e8', glow:'#e8dcff', weather:'dust', pcol:'#c8b8e8',
     lit:'#9a8ac0' },
@@ -564,7 +567,7 @@ const G = {
 };
 
 const player = {
-  lane:1, x:0, y:0, vy:0, jumping:false, slide:0, z:0,
+  lane:1, x:0, y:0, vy:0, jumping:false, slide:0, slideT:0, slideHold:0, z:0,
   runPhase:0, lean:0, dead:false, model:null,
   limbs:{},
 };
@@ -598,8 +601,10 @@ function makeSky(){
         float d = max(dot(normalize(vDir), normalize(uSunPos)), 0.0);
         col += uSun * pow(d, 220.0) * 1.6 * uSunI;
         col += uSun * pow(d, 9.0) * 0.16 * uSunI;
+        // 软肩：原来的太阳盘会顶到 1.0 被硬裁，留下一圈“贴图感”的硬边
+        col = 1.0 - exp(-max(col, vec3(0.0)) * 1.35);
         // ShaderMaterial 不参与 three 的输出色彩空间转换，手动编码回 sRGB
-        gl_FragColor = vec4(pow(max(col, vec3(0.0)), vec3(0.4545)), 1.0);
+        gl_FragColor = vec4(pow(col, vec3(0.4545)), 1.0);
       }`
   });
   const m = new THREE.Mesh(geo, skyMat);
@@ -663,6 +668,12 @@ function buildEra(era, z0){
     // 车顶护栏（两侧）
     b.box(0.12, 0.30, CAR_LEN+0.2, -CAR_W/2-0.20, 3.55, cz, E.trim);
     b.box(0.12, 0.30, CAR_LEN+0.2,  CAR_W/2+0.20, 3.55, cz, E.trim);
+    // 车道分界虚线：让人看得出自己在哪条道（±1.25 是三道边界）
+    for (let d = 0; d < 7; d++){
+      const dz = cz - CAR_LEN/2 + 1.0 + d*2.0;
+      b.box(0.085, 0.014, 1.20, -1.25, 3.432, dz, 0xb9a984);
+      b.box(0.085, 0.014, 1.20,  1.25, 3.432, dz, 0xb9a984);
+    }
     // 车顶导引亮条（两侧）
     b.box(0.26, 0.06, CAR_LEN+0.4, -CAR_W/2+0.18, 3.43, cz, E.trim);
     b.box(0.26, 0.06, CAR_LEN+0.4,  CAR_W/2-0.18, 3.43, cz, E.trim);
@@ -685,9 +696,11 @@ function buildEra(era, z0){
     // 车顶空调机组：底座 + 上盖 + 散热片，别再是光秃秃的灰盒子
     for (let k=-1;k<=1;k+=2){
       const vx = k*2.25, vz = cz + 3.4;
-      b.box(1.05, 0.18, 1.35, vx, 3.45, vz, metalC(E.roofC,0.10,0.76));
-      b.box(0.86, 0.13, 1.15, vx, 3.58, vz, metalC(E.roofC,0.08,0.94));
-      for (let q=0;q<4;q++) b.box(0.90, 0.02, 0.05, vx, 3.65, vz-0.40+q*0.26, metalC(E.roofC,0.10,0.58));
+      // 机组比车顶板亮一档 + 上盖留一条高光边，否则近处看是一块黑窟窿
+      b.box(1.05, 0.18, 1.35, vx, 3.45, vz, metalC(E.roofC,0.22,0.92));
+      b.box(0.86, 0.14, 1.15, vx, 3.58, vz, metalC(E.roofC,0.20,1.16));
+      b.box(0.52, 0.05, 0.78, vx, 3.66, vz, metalC(E.roofC,0.18,1.16));
+      for (let q=0;q<4;q++) b.box(0.90, 0.02, 0.05, vx, 3.65, vz-0.40+q*0.26, metalC(E.roofC,0.20,0.72));
     }
     // 车厢连接处：风挡 + 车钩，让"一节一节"读得出来
     if (i < nCar-1){
@@ -730,10 +743,10 @@ function buildEra(era, z0){
     if (type === 'pole'){
       for (let k=0;k<7;k++){
         const pz = z - k*22;
-        b.cyl(0.14, 9.5, s*(8.5), 4.6, pz, shadeC(E.trim,0.55).getHex());
-        b.box(3.4, 0.16, 0.16, s*(7.0), 8.6, pz, shadeC(E.trim,0.45).getHex());
-        g.box(0.9, 0.16, 0.16, s*(6.2), 8.5, pz, E.glow);   // 灯
-        g.box(1.2, 1.2, 1.2, s*(6.2), 8.2, pz, E.glow);     // 光晕（合并几何，够用）
+        b.cyl(0.14, 11.2, s*(8.5), 5.6, pz, shadeC(E.trim,0.55).getHex());
+        b.box(3.4, 0.10, 0.10, s*(7.0), 10.72, pz, 0x232a2e);   // 灯臂抬到画面外：贴脸时会在 HUD 上压出一条灰带
+        // ???? 是空站台：灯全灭，只留灯杆和灯臂，别在画面顶上挂两块灰片
+        if (E.id !== '????') g.box(0.9, 0.16, 0.16, s*(6.2), 10.62, pz, E.glow);   // 灯
       }
     } else if (type === 'blocks'){
       // 远处楼群
@@ -779,7 +792,8 @@ function buildEra(era, z0){
         const pz = z - k*40;
         b.box(0.25, 5.0, 0.25, s*8.0, 2.5, pz, shadeC(E.trim,0.5).getHex());
         b.box(3.6, 1.5, 0.2, s*8.0, 4.4, pz, shadeC(E.ground,1.6).getHex());
-        g.box(3.2, 1.1, 0.1, s*8.0, 4.4, pz, E.glow);
+        // 灯箱面用当站的主色，纯白会像一块没贴图的洞
+        g.box(3.2, 1.0, 0.1, s*8.0, 4.4, pz, E.accent);
       }
     } else if (type === 'trees'){
       for (let k=0;k<11;k++){
@@ -828,8 +842,8 @@ function buildEra(era, z0){
   const gateCol = E.accent;
   b.box(0.5, 7.5, 0.5, -9.5, 3.75, z0-2, shadeC(gateCol,0.7).getHex());
   b.box(0.5, 7.5, 0.5,  9.5, 3.75, z0-2, shadeC(gateCol,0.7).getHex());
-  b.box(20, 0.7, 0.7, 0, 7.6, z0-2, shadeC(gateCol,0.8).getHex());
-  g.box(9, 0.34, 0.34, 0, 7.4, z0-2.1, E.glow);
+  b.box(20, 0.7, 0.7, 0, 11.2, z0-2, shadeC(gateCol,0.8).getHex());
+  g.box(9, 0.34, 0.34, 0, 11.0, z0-2.1, E.glow);
 
   /* ── 道旁剪影 + 站台 ── */
   const sil = SIL[era] || SIL[5];
@@ -922,10 +936,11 @@ function genEntities(){
       } else if (r < 0.46){
         // 三闸：横梁 -> 滑
         for (let l=0;l<3;l++) obstacles.push({ kind:'gate', lane:l, z, hit:false });
-      } else if (r < 0.70){
+      } else if (r < 0.62){
+        // 单道高墙 -> 只能换道。墙比人高得多，看一眼就知道跳不过去
         const l = (rnd()*3)|0;
         obstacles.push({ kind:'block', lane:l, z, hit:false });
-      } else if (r < 0.88){
+      } else if (r < 0.72){
         const l = (rnd()*3)|0;
         const l2 = (l + 1 + ((rnd()*2)|0)) % 3;
         obstacles.push({ kind:'block', lane:l, z, hit:false });
@@ -934,12 +949,13 @@ function genEntities(){
         const l = (rnd()*3)|0;
         obstacles.push({ kind:'barrier', lane:l, z, hit:false });
       }
-      z -= 15 + rnd()*9;
+      z -= 17 + rnd()*8;
     }
     // 磁带
     let tz = z0 - 24;
     for (let i=0;i<5;i++){
-      tapeData.push({ lane:(rnd()*3)|0, z: tz, y: 1.15 + rnd()*0.9, taken:false, spin: rnd()*6.28 });
+      // 高度压在 1.15 以下：同框线在 1.34，磁带浮到线上就会把「两个人在一条线上」挡掉
+      tapeData.push({ lane:(rnd()*3)|0, z: tz, y: 0.70 + rnd()*0.34, taken:false, spin: rnd()*6.28 });
       tz -= 30 + rnd()*8;
     }
   }
@@ -952,6 +968,21 @@ function genEntities(){
   }
   for (let i=tapeData.length-1;i>=0;i--){
     if (Math.abs(tapeData[i].z - rz) < 4) tapeData.splice(i,1);
+  }
+
+  // 每一站开头留一条能并排跑的道：第一道障碍若只堵住中间，挪到空着的边道，
+  // 让「同框」在开头几秒是看得见的。
+  for (let e=0;e<6;e++){
+    const z0 = -e*ERA_LEN;
+    const first = obstacles.filter(o => Math.abs(o.z - (z0-26)) < 0.51);
+    if (first.length < 3){
+      const mid = first.find(o=>o.lane===1);
+      if (mid){
+        const used = new Set(first.map(o=>o.lane));
+        const free = [0,2].find(l=>!used.has(l));
+        if (free !== undefined) mid.lane = free;
+      }
+    }
   }
 
   obstacles.sort((a,b)=> b.z - a.z);   // 从远到近（z 递减）
@@ -968,8 +999,8 @@ function genEntities(){
    你保不住她们的二十年，只能保住「她们还在同一个画面里」。
    ══════════════════════════════════════════════════════════════ */
 
-const SPEED0 = 12, SPEED1 = 19;
-const JUMP_V = 7.9, GRAV = 22;
+const SPEED0 = 11, SPEED1 = 17;
+const JUMP_V = 8.6, GRAV = 22;
 const LANE_LERP = 13;
 
 let camX = 0, camY = 0, camLookX = 0;
@@ -991,8 +1022,8 @@ const st = {
 const pair = {
   bond: 48, gap: 1.0, lane: 1, cx: 0, mode: 'both',
   inFrame: false, armed: false, used: false,
-  group: null, a: null, b: null, segs: [], haloA: null, haloB: null,
-  laneT: 3.4, runT: 0, z: 0, flash: 0,
+  group: null, a: null, b: null, segs: [], shadowSegs: [], knots: [], haloA: null, haloB: null,
+  laneT: 3.4, runT: 0.9, z: 0, flash: 0,
 };
 
 function pairTol(gap){ return Math.max(0.30, 1.95 - gap * 0.24); }
@@ -1044,9 +1075,11 @@ function makePlayer(){
     shirt:'#c8342b', pants:'#232a35', skin:'#e0a882', dark:'#14161a', acc:'#f2d24b',
     shoe:'#1b1d22', hair:'#14161a'
   };
-  const M = c => new THREE.MeshLambertMaterial({ color:c, flatShading:true });
-  const matShirt = M(COL.shirt), matPants = M(COL.pants), matSkin = M(COL.skin);
-  const matDark = M(COL.dark), matAcc = M(COL.acc), matShoe = M(COL.shoe), matHair = M(COL.hair);
+  // 一点自发光：最后一站「灯全灭」时，人不至于变成一团黑
+  const M = (c,e) => new THREE.MeshLambertMaterial({ color:c, flatShading:true,
+    emissive: new THREE.Color(e || 0x000000), emissiveIntensity: 1 });
+  const matShirt = M(COL.shirt,'#3a1210'), matPants = M(COL.pants,'#0d1118'), matSkin = M(COL.skin,'#241a12');
+  const matDark = M(COL.dark,'#0a0c10'), matAcc = M(COL.acc,'#3d3208'), matShoe = M(COL.shoe,'#090a0d'), matHair = M(COL.hair,'#0a0c10');
   const add = (parent, w,h,d, x,y,z, mat) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
     m.position.set(x,y,z); parent.add(m); return m;
@@ -1089,9 +1122,20 @@ function makePlayer(){
   };
   const legL = mkLeg(-1), legR = mkLeg(1);
 
+  // 软阴影：硬边黑圆片像一块悬浮的板
+  const SN=64, sd=new Uint8Array(SN*SN*4);
+  for (let y=0;y<SN;y++) for (let x=0;x<SN;x++){
+    const r=Math.hypot(x-(SN-1)/2, y-(SN-1)/2)/((SN-1)/2);
+    // 0.6 次方：平方/1.5 次方只留下脚底一小点（人看着像悬着），
+    // 但平铺又硬得像一个洞 —— 实测 0.6 才是「软但有」的那一档
+    const a=Math.max(0,1-r), v=Math.round(255*Math.pow(a,0.6)), i=(y*SN+x)*4;
+    sd[i]=sd[i+1]=sd[i+2]=v; sd[i+3]=255;
+  }
+  const shTex=new THREE.DataTexture(sd,SN,SN,THREE.RGBAFormat);
+  shTex.magFilter=THREE.LinearFilter; shTex.minFilter=THREE.LinearFilter; shTex.needsUpdate=true;
   const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(0.42, 14),
-    new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.34, depthWrite:false })
+    new THREE.CircleGeometry(0.66, 22),
+    new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.44, alphaMap:shTex, depthWrite:false })
   );
   shadow.rotation.x = -Math.PI/2;
   shadow.position.y = 0.02;
@@ -1104,17 +1148,17 @@ function makePlayer(){
 /* ══════════ 她们：两个不说话的剪影 ══════════ */
 function makePairFigure(which){
   const cool = which === 0;
-  const bodyC = cool ? '#2c3448' : '#3d2f3c';
+  const bodyC = cool ? '#8ab0e8' : '#d08a5a';
   const trimC = cool ? '#9fc0ea' : '#f0bd7e';
   // 半透明：她们是记忆里跑在前面的人，不该挡住你要看的路
   const M = (c, e, op) => new THREE.MeshLambertMaterial({ color:c, flatShading:true,
     transparent:op < 1, opacity:op, emissive:new THREE.Color(e || 0x000000),
     emissiveIntensity:0.7, depthWrite:op >= 1 });
   // 身体半透明（不挡路），头和领口实一点（还看得出是两个人）
-  const mBody = M(bodyC, cool ? 0x101c30 : 0x2a1808, 0.62),
-        mTrim = M(trimC, cool ? 0x3f6a9a : 0x8a5a1a, 1),
-        mHead = M('#15151c', 0x08080c, 1),
-        mSkin = M(cool ? '#a9b4c8' : '#c9b09a', 0x1a1410, 0.86);
+  const mBody = M(bodyC, cool ? 0x3a6aa8 : 0x7a3a10, 0.55),
+        mTrim = M(trimC, cool ? 0x3f6a9a : 0x8a5a1a, 0.62),
+        mHead = M('#15151c', 0x08080c, 0.58),
+        mSkin = M(cool ? '#b4bfd2' : '#d0b8a2', 0x1a1410, 0.50);
   const g = new THREE.Group();
   const root = new THREE.Group(); g.add(root);
   const add = (p,w,h,d,x,y,z,m)=>{ const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); q.position.set(x,y,z); p.add(q); return q; };
@@ -1147,14 +1191,14 @@ function makePairFigure(which){
   };
   const legL = leg(-1), legR = leg(1);
 
-  const halo = makeGlowSprite(trimC, 2.5, 0.35);
+  const halo = makeGlowSprite(trimC, 1.45, 0.30);
   halo.position.set(0, .95, -.22);
   g.add(halo);
 
-  // 脚下的一圈光：远处也能看见“这两个人站在哪条道上”
+  // 脚下的一滩软光：别再画硬边圆环，那样像站在展台上
   const foot = new THREE.Mesh(
-    new THREE.RingGeometry(0.50, 0.72, 26),
-    new THREE.MeshBasicMaterial({ color:trimC, transparent:true, opacity:0.34,
+    new THREE.CircleGeometry(0.95, 28),
+    new THREE.MeshBasicMaterial({ map:glowTex(), color:trimC, transparent:true, opacity:0.20,
       blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, fog:false })
   );
   foot.rotation.x = -Math.PI/2;
@@ -1175,15 +1219,35 @@ function buildPair(){
   pair.haloA = pair.a.halo;
   pair.haloB = pair.b.halo;
 
-  // 两个人之间那根线：三段，松了就断
-  for (let i=0;i<3;i++){
+  // 两个人之间那根线：七段，能看见松垂；紧的时候连成一条
+  // 先垫一层暗线，亮线压在上面 —— 不管背后是电视还是夜空都读得出来
+  for (let i=0;i<7;i++){
+    const sh = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 0.36, 0.36),
+      new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.34,
+        depthWrite:false, fog:false })
+    );
+    pair.group.add(sh);
+    pair.shadowSegs.push(sh);
+  }
+  for (let i=0;i<7;i++){
     const m = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 0.035, 0.035),
-      new THREE.MeshBasicMaterial({ color:0xffd479, transparent:true, opacity:0.55,
+      new THREE.BoxGeometry(1, 0.12, 0.12),
+      new THREE.MeshBasicMaterial({ color:0xffd479, transparent:true, opacity:0.62,
         blending:THREE.AdditiveBlending, depthWrite:false, fog:false })
     );
     pair.group.add(m);
     pair.segs.push(m);
+  }
+  // 线两端的两个亮点，把线“挂”在两个人身上
+  for (let i=0;i<2;i++){
+    const k = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.12, 0),
+      new THREE.MeshBasicMaterial({ color:0xffd479, transparent:true, opacity:0.9,
+        blending:THREE.AdditiveBlending, depthWrite:false, fog:false })
+    );
+    pair.group.add(k);
+    pair.knots.push(k);
   }
   scene.add(pair.group);
 }
@@ -1192,35 +1256,169 @@ function buildPair(){
 const OB_KINDS = ['barrier','gate','block'];
 const OB_H = { barrier:1.15, gate:2.9, block:2.4 };
 
-let obIM = {}, tapeIM = null, tapeHaloIM = null, rumorIM = null, rumorHalos = [];
+let obIM = {}, obGroup = null, tapeIM = null, tapeHaloIM = null, rumorIM = null, rumorHalos = [];
+
+/* 贴图全部现算（DataTexture），不依赖 canvas —— node 里跑测试也安全 */
+function txData(w, h, fn){
+  const d = new Uint8Array(w*h*4);
+  for (let y=0;y<h;y++) for (let x=0;x<w;x++){
+    const c = fn(x, y, w, h);
+    const i = (y*w+x)*4;
+    d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=(c[3]===undefined?255:c[3]);
+  }
+  const t = new THREE.DataTexture(d, w, h, THREE.RGBAFormat);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.magFilter = THREE.NearestFilter;
+  t.minFilter = THREE.LinearFilter;
+  t.generateMipmaps = false;
+  t.needsUpdate = true;
+  return t;
+}
+let _texRail=null, _texChev=null, _texScr=null, _texGrille=null, _texTape=null;
+
+/* 拦杆：奶白底 + 朱红斜纹（跳过去的那种低栏） */
+function texRail(){
+  if (_texRail) return _texRail;
+  _texRail = txData(96, 24, (x,y)=>{
+    const on = ((x + y*0.85) % 26) < 13;
+    let c = on ? [204,54,42] : [246,240,226];
+    if (x < 2 || x > 93 || y < 2 || y > 21) c = [28,30,36];
+    return c;
+  });
+  return _texRail;
+}
+/* 限高梁：黑黄斜纹（要从下面滑过去） */
+function texChev(){
+  if (_texChev) return _texChev;
+  _texChev = txData(96, 24, (x,y)=>{
+    const on = ((x*0.8 + y) % 24) < 12;
+    let c = on ? [236,186,56] : [34,32,30];
+    if (x < 2 || x > 93 || y < 2 || y > 21) c = [20,18,16];
+    return c;
+  });
+  return _texChev;
+}
+/* 旧电视的彩条测试画面 */
+function texScr(){
+  if (_texScr) return _texScr;
+  const bars = [[240,235,220],[238,206,52],[46,222,214],[54,220,96],[226,64,220],[228,66,60],[56,70,230]];
+  _texScr = txData(64, 48, (x,y)=>{
+    let c = bars[Math.min(6, Math.floor(x/64*7))].slice();
+    if (y > 39) c = [236,236,226];
+    if (y % 3 === 0) c = c.map(n=>n*0.45);
+    const dx=(x/63-0.5)*2, dy=(y/47-0.5)*2;
+    const vig = Math.max(0.25, 1 - (dx*dx*0.5 + dy*dy*0.55));
+    return c.map(n=>Math.round(n*vig));
+  });
+  return _texScr;
+}
+/* 磁带盒面：深色壳 + 标签纸 + 两个卷盘。没有这张脸，它只是一张空白卡片 */
+function texTape(){
+  if (_texTape) return _texTape;
+  _texTape = txData(48, 32, (x,y)=>{
+    let c = [233,214,172];                                        // 暖色外壳（亮壳才看得见）
+    if (x < 2 || x > 45 || y < 2 || y > 29) c = [252,240,206];     // 外壳倒角高光
+    if (y >= 4 && y <= 12 && x >= 5 && x <= 42) c = [252,247,232];  // 标签纸
+    if (y >= 4 && y <= 12 && x >= 5 && x <= 42 && (y === 7 || y === 9)) c = [216,196,158];
+    for (const cx of [15, 32]){                                   // 两个深色卷盘
+      const d = Math.hypot(x-cx, y-21.0);
+      if (d < 6.6) c = [62,54,44];
+      if (d < 3.4) c = [238,226,198];
+      if (d < 1.7) c = [42,36,30];
+    }
+    if (y >= 29 && x >= 11 && x <= 36) c = [32,27,22];            // 底部磁头窗
+    return c;
+  });
+  return _texTape;
+}
+function texGrille(){
+  if (_texGrille) return _texGrille;
+  _texGrille = txData(32, 32, (x,y)=>{
+    const dot = (x%4<2 && y%4<2);
+    return dot ? [104,108,116] : [22,24,28];
+  });
+  return _texGrille;
+}
 
 function buildEntities(){
   genEntities();
 
   const geoBox = new THREE.BoxGeometry(1,1,1);
-  const matB = new THREE.MeshLambertMaterial({ color:0xffffff, flatShading:true });
-  OB_KINDS.forEach(k=>{
-    const list = obstacles.filter(o=>o.kind===k);
-    if (!list.length) return;
-    const im = new THREE.InstancedMesh(geoBox, matB.clone(), list.length);
+  const lam = (c,o)=> new THREE.MeshLambertMaterial(Object.assign({ color:c, flatShading:true }, o||{}));
+  const bas = (c,o)=> new THREE.MeshBasicMaterial(Object.assign({ color:c }, o||{}));
+  const mk = (mat, n)=>{
+    const im = new THREE.InstancedMesh(geoBox, mat, n);
     im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     im.frustumCulled = false;
-    scene.add(im);
-    obIM[k] = { im, list };
-  });
+    obGroup.add(im);
+    return im;
+  };
+  obGroup = new THREE.Group();
+  obGroup.name = 'obstacles';
+  scene.add(obGroup);
 
-  // 磁带（本体 + 一层加色光晕）
-  const tapeGeo = new THREE.BoxGeometry(0.62, 0.42, 0.14);
-  const tapeMat = new THREE.MeshBasicMaterial({ color:0xffd479 });
+  /* 拦杆：两根细腿 + 一道红白板 + 顶灯，看得见天空，一眼能读出“跳” */
+  const B = obstacles.filter(o=>o.kind==='barrier');
+  if (B.length){
+    const P = {
+      rail: mk(lam(0xffffff,{ map:texRail(), emissive:0x180806 }), B.length),
+      top:  mk(lam(0x23262c), B.length),
+      leg:  mk(lam(0x2a2e36), B.length*2),
+      foot: mk(lam(0x181b21), B.length*2),
+      lamp: mk(bas(0xffffff), B.length),
+    };
+    B.forEach((o,i)=>{
+      const e = Math.max(0, Math.min(ERAS.length-1, Math.floor(-o.z/ERA_LEN)));
+      P.lamp.setColorAt(i, new THREE.Color(ERAS[e].accent));
+    });
+    if (P.lamp.instanceColor) P.lamp.instanceColor.needsUpdate = true;
+    obIM.barrier = { list:B, parts:P };
+  }
+
+  /* 限高梁：悬空黑黄梁 + 垂下的软条，底下是空的，能滑 */
+  const G = obstacles.filter(o=>o.kind==='gate');
+  if (G.length){
+    const P = {
+      beam: mk(lam(0xffffff,{ map:texChev(), emissive:0x1c1606 }), G.length),
+      board: mk(lam(0xffffff,{ map:texChev(), emissive:0x1c1606 }), G.length),
+      chain: mk(lam(0x2a2e36), G.length*2),
+      post: mk(lam(0x2a2e36), G.length),
+      lamp: mk(bas(0xff7a48), G.length*2),
+    };
+    // 板面固定用黑黄警示条 —— 不管哪一站都读得懂“低头”
+    obIM.gate = { list:G, parts:P };
+  }
+
+  /* 障碍块：木托盘 + 两台旧电视 + 一只音箱，屏幕是亮着的彩条 */
+  const K = obstacles.filter(o=>o.kind==='block');
+  if (K.length){
+    const P = {
+      pallet: mk(lam(0x4a3a2b), K.length),
+      tv1: mk(lam(0x23262c), K.length),
+      scr1: mk(bas(0xffffff,{ map:texScr() }), K.length),
+      tv2: mk(lam(0x2b2f36), K.length),
+      scr2: mk(bas(0xffffff,{ map:texScr() }), K.length),
+      amp: mk(lam(0x1e2126), K.length),
+      grille: mk(bas(0xffffff,{ map:texGrille() }), K.length),
+      back: mk(lam(0x8a7658), K.length),
+      knob: mk(bas(0xd8d2c4), K.length*2),
+    };
+    obIM.block = { list:K, parts:P };
+  }
+
+  // 磁带（本体 + 一层软光晕）
+  // 盒面有「两个卷盘 + 标签纸」，才读得出是磁带；自发光材质，夜里也看得见
+  const tapeGeo = new THREE.BoxGeometry(0.50, 0.34, 0.13);
+  const tapeMat = new THREE.MeshBasicMaterial({ map:texTape(), color:0xffffff });
   tapeIM = new THREE.InstancedMesh(tapeGeo, tapeMat, tapeData.length);
   tapeIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   tapeIM.frustumCulled = false;
   scene.add(tapeIM);
 
   tapeHaloIM = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1.05, 0.80, 0.30),
-    new THREE.MeshBasicMaterial({ color:0xffd479, transparent:true, opacity:0.20,
-      blending:THREE.AdditiveBlending, depthWrite:false }),
+    new THREE.PlaneGeometry(0.72, 0.55),
+    new THREE.MeshBasicMaterial({ map:glowTex(), color:0xffd479, transparent:true, opacity:0.20,
+      blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide }),
     tapeData.length
   );
   tapeHaloIM.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1255,31 +1453,88 @@ function buildRumor(){
 const _mm = new THREE.Matrix4();
 const _qq = new THREE.Quaternion();
 const _ee = new THREE.Euler();
+const _dp = new THREE.Vector3();
+const _ds = new THREE.Vector3();
+
+function obSet(im, i, x,y,z, sx,sy,sz, ry){
+  _dp.set(x,y,z); _ds.set(sx,sy,sz);
+  if (ry) _qq.setFromEuler(_ee.set(0,ry,0)); else _qq.set(0,0,0,1);
+  _mm.compose(_dp, _qq, _ds);
+  im.setMatrixAt(i, _mm);
+}
 
 function placeObstacles(){
-  const D = new THREE.Vector3(), Q4 = new THREE.Quaternion(), S = new THREE.Vector3();
-  OB_KINDS.forEach(k=>{
-    const rec = obIM[k]; if (!rec) return;
-    rec.list.forEach((o, i) => {
-      const h = OB_H[k];
-      const w = (k==='barrier') ? 2.42 : (k==='gate' ? 2.42 : 1.6);
-      const d = (k==='gate') ? 0.5 : 1.0;
-      const y = (k==='gate') ? ROOF_Y + 1.85 : ROOF_Y + h/2;
-      D.set(LANE_X[o.lane], y, o.z); S.set(w, h, d);
-      _mm.compose(D, Q4, S);
-      rec.im.setMatrixAt(i, _mm);
+  const B = obIM.barrier;
+  if (B && B.parts){
+    const P = B.parts;
+    B.list.forEach((o,i)=>{
+      const x = LANE_X[o.lane], z = o.z;
+      obSet(P.rail, i, x, ROOF_Y+0.80, z, 2.30, 0.46, 0.08);
+      obSet(P.top,  i, x, ROOF_Y+1.09, z, 2.44, 0.10, 0.17);
+      obSet(P.leg, i*2,   x-1.10, ROOF_Y+0.40, z, 0.12, 0.80, 0.15);
+      obSet(P.leg, i*2+1, x+1.10, ROOF_Y+0.40, z, 0.12, 0.80, 0.15);
+      obSet(P.foot, i*2,   x-1.10, ROOF_Y+0.03, z, 0.36, 0.06, 0.48);
+      obSet(P.foot, i*2+1, x+1.10, ROOF_Y+0.03, z, 0.36, 0.06, 0.48);
+      obSet(P.lamp, i, x, ROOF_Y+1.17, z, 0.16, 0.11, 0.13);
     });
-    rec.im.instanceMatrix.needsUpdate = true;
-  });
+    [P.rail,P.top,P.leg,P.foot,P.lamp].forEach(im=> im.instanceMatrix.needsUpdate = true);
+  }
+  const G = obIM.gate;
+  if (G && G.parts){
+    const P = G.parts;
+    G.list.forEach((o,i)=>{
+      const x = LANE_X[o.lane], z = o.z;
+      obSet(P.beam, i, x, ROOF_Y+1.72, z, 2.44, 0.28, 0.28);
+      // 不是一排栅栏，是三条吊在胸口高度的软性警示板：从下面滑过去
+      obSet(P.board, i, x, ROOF_Y+1.22, z, 0.92, 0.42, 0.06);
+      obSet(P.chain, i*2,   x-0.34, ROOF_Y+1.50, z, 0.035, 0.16, 0.035);
+      obSet(P.chain, i*2+1, x+0.34, ROOF_Y+1.50, z, 0.035, 0.16, 0.035);
+      // 只在最外道立两根细柱子，把整排横梁框成一道“门”，中间留空
+      if (o.lane === 1) { _mm.makeScale(1e-4,1e-4,1e-4); P.post.setMatrixAt(i,_mm); }
+      else obSet(P.post, i, x + (o.lane === 0 ? -3.72 : 3.72), ROOF_Y+0.97, z, 0.10, 1.94, 0.10);
+      obSet(P.lamp, i*2,   x-1.02, ROOF_Y+1.90, z, 0.12, 0.10, 0.14);
+      obSet(P.lamp, i*2+1, x+1.02, ROOF_Y+1.90, z, 0.12, 0.10, 0.14);
+    });
+    [P.beam,P.chain,P.board,P.post,P.lamp].forEach(im=> im.instanceMatrix.needsUpdate = true);
+  }
+  const K = obIM.block;
+  if (K && K.parts){
+    const P = K.parts;
+    K.list.forEach((o,i)=>{
+      const x = LANE_X[o.lane], z = o.z;
+      obSet(P.pallet, i, x, ROOF_Y+0.07, z, 1.66, 0.14, 1.18);
+      obSet(P.tv1, i, x, ROOF_Y+0.61, z, 1.56, 0.92, 0.96);
+      obSet(P.scr1, i, x, ROOF_Y+0.66, z+0.49, 1.26, 0.62, 0.05);
+      obSet(P.tv2, i, x+0.02, ROOF_Y+1.52, z+0.02, 1.22, 0.80, 0.84);
+      obSet(P.scr2, i, x+0.02, ROOF_Y+1.55, z+0.455, 0.94, 0.50, 0.05);
+      obSet(P.back, i, x, ROOF_Y+1.40, z-0.52, 1.90, 2.80, 0.14);
+      obSet(P.amp, i, x-0.02, ROOF_Y+2.14, z-0.02, 1.06, 0.44, 0.66);
+      obSet(P.grille, i, x-0.02, ROOF_Y+2.12, z+0.32, 0.84, 0.28, 0.04);
+      obSet(P.knob, i*2,   x-0.70, ROOF_Y+0.64, z+0.49, 0.07, 0.07, 0.05);
+      obSet(P.knob, i*2+1, x, ROOF_Y+2.62, z-0.44, 1.94, 0.22, 0.18);   // 墙顶的警示横条
+    });
+    [P.pallet,P.tv1,P.scr1,P.tv2,P.scr2,P.amp,P.grille,P.knob,P.back].forEach(im=> im.instanceMatrix.needsUpdate = true);
+  }
 }
 
 function hideObstacle(o){
-  const rec = obIM[o.kind]; if (!rec) return;
-  const i = rec.list.indexOf(o);
-  if (i < 0) return;
-  _mm.makeScale(0.0001,0.0001,0.0001);
-  rec.im.setMatrixAt(i, _mm);
-  rec.im.instanceMatrix.needsUpdate = true;
+  const rec = obIM[o.kind]; if (!rec || !rec.parts) return;
+  const i = rec.list.indexOf(o); if (i < 0) return;
+  _mm.makeScale(0.0001, 0.0001, 0.0001);
+  const P = rec.parts, kill=(im,idx)=>{ im.setMatrixAt(idx,_mm); im.instanceMatrix.needsUpdate = true; };
+  if (o.kind === 'barrier'){
+    kill(P.rail,i); kill(P.top,i); kill(P.leg,i*2); kill(P.leg,i*2+1);
+    kill(P.foot,i*2); kill(P.foot,i*2+1); kill(P.lamp,i);
+  } else if (o.kind === 'gate'){
+    kill(P.beam,i);
+    kill(P.board,i);
+    kill(P.chain,i*2); kill(P.chain,i*2+1);
+    kill(P.post,i);
+    kill(P.lamp,i*2); kill(P.lamp,i*2+1);
+  } else {
+    [P.pallet,P.tv1,P.scr1,P.tv2,P.scr2,P.amp,P.grille,P.back].forEach(im=> kill(im,i));
+    kill(P.knob,i*2); kill(P.knob,i*2+1);
+  }
 }
 
 /* ══════════ 场景搭建 ══════════ */
@@ -1404,7 +1659,8 @@ function buildRing(){
   const sg = new THREE.BufferGeometry();
   sg.setAttribute('position', new THREE.BufferAttribute(pos,3));
   const stars = new THREE.Points(sg, new THREE.PointsMaterial({
-    color:0xb8a8e0, size:0.9, transparent:true, opacity:0.7, depthWrite:false, fog:false }));
+    color:0xb8a8e0, size:0.9, transparent:true, opacity:0.7, depthWrite:false, fog:false,
+    map: glowTex(), alphaTest: 0.05, blending: THREE.AdditiveBlending }));
   stars.frustumCulled = false;
   ringGroup.add(stars);
 
@@ -1457,7 +1713,11 @@ function bindInput(){
     if (e.code === 'ArrowLeft' || e.code === 'KeyA'){ e.preventDefault(); tryLane(-1); }
     if (e.code === 'ArrowRight' || e.code === 'KeyD'){ e.preventDefault(); tryLane(1); }
   });
-  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  window.addEventListener('blur', () => { player.slideHold = 0; for (const k in keys) keys[k] = false; });
+  window.addEventListener('keyup', e => {
+    keys[e.code] = false;
+    if (e.code === 'ArrowDown' || e.code === 'KeyS') player.slideHold = 0;
+  });
 
   const el = document.getElementById('stage');
   el.addEventListener('touchstart', e => {
@@ -1471,7 +1731,7 @@ function bindInput(){
     if (ax < 26 && ay < 26) tryJump();
     else if (ax > ay) tryLane(dx > 0 ? 1 : -1);
     else if (dy < 0) tryJump();
-    else trySlide();
+    else tapSlide();
     touchStart = null;
   }, { passive:true });
 }
@@ -1481,17 +1741,39 @@ function tryLane(d){
   const n = Math.max(0, Math.min(2, player.lane + d));
   if (n !== player.lane){ player.lane = n; player.lean = -d*0.5; }
 }
+let jumpBuf = 0, slideBuf = 0;   // 提前按下的键，落地后自动补上
+
 function tryJump(){
   if (G.state !== 'playing') return;
-  if (!player.jumping && player.slide <= 0){
-    player.jumping = true; player.vy = JUMP_V; sfxJump();
+  if (!player.jumping){
+    // 起跳永远优先：正在滑铲也能立刻打断，不再锁住
+    player.jumping = true; player.vy = JUMP_V;
+    player.slide = 0; player.slideT = 0; player.slideHold = 0;
+    sfxJump();
     trauma = Math.min(1, trauma + 0.10);
+  } else {
+    jumpBuf = 0.18;
+  }
+}
+function tapSlide(){
+  if (G.state !== 'playing') return;
+  if (!player.jumping){
+    player.slide = Math.max(player.slide, 0.85);
+    player.slideT = 0; player.slideHold = 0;
+  } else {
+    player.vy = Math.min(player.vy, -9);
+    slideBuf = 0.18;
   }
 }
 function trySlide(){
   if (G.state !== 'playing') return;
-  if (!player.jumping){ player.slide = 0.55; }
-  else { player.vy = Math.min(player.vy, -6); }
+  if (!player.jumping){
+    player.slide = Math.max(player.slide, 0.55);
+    player.slideT = 0; player.slideHold = 1;   // 按住就一直滑
+  } else {
+    player.vy = Math.min(player.vy, -9);        // 空中按下：快速下坠
+    slideBuf = 0.18;                            // 落地瞬间接滑铲
+  }
 }
 
 /* ══════════ 主循环 ══════════ */
@@ -1528,15 +1810,30 @@ function update(dt){
   player.lean += (0 - player.lean) * Math.min(1, 8*dt);
 
   // 跳跃 / 滑铲
+  if (jumpBuf > 0) jumpBuf -= dt;
+  if (slideBuf > 0) slideBuf -= dt;
   if (player.jumping){
     player.vy -= GRAV * dt;
     player.y += player.vy * dt;
     if (player.y <= 0){
       player.y = 0; player.vy = 0; player.jumping = false;
       trauma = Math.min(1, trauma + 0.22);
+      if (slideBuf > 0){ slideBuf = 0; player.slide = 0.55; player.slideT = 0; }
+      else if (jumpBuf > 0){ jumpBuf = 0; player.jumping = true; player.vy = JUMP_V; sfxJump(); }
     }
   }
-  if (player.slide > 0) player.slide -= dt;
+  // 按住下键就保持滑铲（最长 1.6 秒），松开才站起来
+  if (player.slideHold && !player.jumping){
+    player.slideT += dt;
+    if (player.slideT < 1.6) player.slide = Math.max(player.slide, 0.10);
+  }
+  if (player.slide > 0){
+    player.slide -= dt;
+    if (player.slide <= 0){
+      player.slide = 0;
+      if (!player.slideHold) player.slideT = 0;   // 按住时不清零，避免无限滑
+    }
+  }
 
   // 跑步动画
   player.runPhase += dt * (G.speed * 0.72);
@@ -1618,17 +1915,24 @@ function animatePlayer(dt){
     v.legR.hip.rotation.x = -s * 0.95;
     v.legL.kn.rotation.x = Math.max(0, -c) * 1.15;
     v.legR.kn.rotation.x = Math.max(0,  c) * 1.15;
+    // 从正后方看，前后摆腿几乎看不出来 —— 给一点外撇和胯部侧摆，剪影才像在跑
+    v.legL.hip.rotation.z = -0.06 - Math.max(0,  s)*0.10;
+    v.legR.hip.rotation.z =  0.06 + Math.max(0, -s)*0.10;
     v.armL.sh.rotation.x = -s * 0.8;
     v.armR.sh.rotation.x = s * 0.8;
+    v.armL.sh.rotation.z = -0.10 - Math.max(0, s)*0.10;
+    v.armR.sh.rotation.z =  0.10 + Math.max(0,-s)*0.10;
     v.armL.el.rotation.x = -0.5 - Math.max(0,s)*0.5;
     v.armR.el.rotation.x = -0.5 - Math.max(0,-s)*0.5;
     v.torso.rotation.x = 0.10;
+    v.torso.rotation.y = s * 0.08;
+    v.root.rotation.z = Math.sin(ph) * 0.035;
   }
 
   v.shadow.position.y = 0.02 - player.y;
   const sc = Math.max(0.35, 1 - player.y*0.32);
   v.shadow.scale.set(sc, sc, sc);
-  v.shadow.material.opacity = 0.34 * sc;
+  v.shadow.material.opacity = 0.44 * sc;
 }
 
 /* ══════════ 同框：两个人在前面跑，你在不在他们中间 ══════════ */
@@ -1709,7 +2013,9 @@ function updatePair(dt){
     return;
   }
   pair.group.visible = true;
-  pair.z = player.z - PAIR_AHEAD;
+  // 她俩不是钉在轨道上的：偶尔抢半步、偶尔被甩开一点
+  const surge = Math.sin(G.t*1.15)*0.26 + Math.sin(G.t*2.55 + 1.1)*0.09;
+  pair.z = player.z - PAIR_AHEAD - surge;
   pairThink(dt);
   pairDodgeNow();
 
@@ -1770,47 +2076,66 @@ function placePair(dt){
   B.g.visible = pair.mode === 'both';
 
   const ph = pair.runT;
-  const ph2 = pair.runT * 1.0 + 1.7;
+  const ph2 = pair.runT + 1.7;
   const pose = (F, p) => {
     const s = Math.sin(p), c = Math.cos(p);
-    F.legL.hip.rotation.x = s*0.88;
-    F.legR.hip.rotation.x = -s*0.88;
-    F.legL.kn.rotation.x = Math.max(0,-c)*1.05;
-    F.legR.kn.rotation.x = Math.max(0, c)*1.05;
-    F.armL.rotation.x = -s*0.7;
-    F.armR.rotation.x = s*0.7;
-    F.root.position.y = Math.abs(Math.sin(p))*0.05;
-    F.torso.rotation.x = 0.12;
+    F.legL.hip.rotation.x = s*1.08;
+    F.legR.hip.rotation.x = -s*1.08;
+    F.legL.kn.rotation.x = Math.max(0,-c)*1.32;
+    F.legR.kn.rotation.x = Math.max(0, c)*1.32;
+    F.armL.rotation.x = -s*0.98;
+    F.armR.rotation.x = s*0.98;
+    F.root.position.y = Math.abs(s)*0.078;
+    F.root.position.x = s*0.016;
+    F.torso.rotation.x = -0.16;          // 朝 -z 跑，负角度才是往前压
+    F.torso.rotation.y = s*0.10;
+    F.head.rotation.x = -0.06;
   };
   pose(A, ph);
   if (B.g.visible) pose(B, ph2);
 
-  // 光晕：同框越紧越亮
-  const glow = 0.26 + pair.bond/100*0.46;
+  // 光晕 / 脚下软光：同框越紧越亮
+  const glow = 0.30 + pair.bond/100*0.40;
   A.halo.material.opacity = glow;
   B.halo.material.opacity = glow;
-  A.foot.material.opacity = 0.16 + pair.bond/100*0.30;
+  A.foot.material.opacity = 0.14 + pair.bond/100*0.18;
   B.foot.material.opacity = A.foot.material.opacity;
   A.foot.visible = pair.mode !== 'none';
   B.foot.visible = pair.mode === 'both';
 
-  // 那根线
-  const segOn = pair.mode === 'both' && pair.bond >= 12;
-  const tighten = 0.82 + 0.18 * (pair.bond/100);
-  const segW = Math.max(0.05, (g/3) * tighten);
-  const gapK = (g/3) * (1-tighten);
-  for (let i=0;i<3;i++){
-    const m = pair.segs[i];
-    m.visible = segOn;
-    if (!segOn) continue;
-    const sx = x1 + (i+0.5)*(g/3);
-    m.position.set(sx, ROOF_Y + 1.16, z);
-    m.scale.set(segW, 1, 1);
-    const dim = pair.bond < 30 ? (0.12 + 0.10*Math.sin(performance.now()*0.02 + i)) : 0.55;
-    m.material.opacity = Math.max(0.03, dim * (0.35 + pair.bond/100*0.9));
-    m.material.color.copy(new THREE.Color(curPal ? curPal.accent : '#ffb35c'));
+  // 那根线：从一个人腰上挂到另一个人腰上，松了就垂下去、断成虚线
+  const segOn = pair.mode === 'both';
+  const tight = 1 - pair.bond/100;
+  const sag = 0.03 + tight*0.12;
+  const baseY = ROOF_Y + 1.34;
+  const ac = new THREE.Color(curPal ? curPal.accent : '#ffb35c');
+  const N = pair.segs.length;
+  for (let i=0;i<N;i++){
+    const m = pair.segs[i], sh = pair.shadowSegs[i];
+    if (!segOn){ m.visible = false; sh.visible = false; continue; }
+    const t0 = i/N, t1 = (i+1)/N;
+    const px0 = x1 + g*t0, px1 = x1 + g*t1;
+    const py0 = baseY - Math.sin(Math.PI*t0)*sag;
+    const py1 = baseY - Math.sin(Math.PI*t1)*sag;
+    const broken = pair.bond < 44 && (i % 2 === 1) && (Math.sin(pair.runT*0.7 + i*1.9) > 0.0);
+    m.visible = !broken; sh.visible = !broken;
+    if (broken) continue;
+    const mx = (px0+px1)/2, my = (py0+py1)/2, len = Math.hypot(px1-px0, py1-py0)*1.01;
+    const rz = Math.atan2(py1-py0, px1-px0);
+    m.position.set(mx, my, z); m.rotation.z = rz; m.scale.set(len, 1, 1);
+    sh.position.set(mx, my, z); sh.rotation.z = rz; sh.scale.set(len, 1, 1);
+    m.material.opacity = (0.52 + pair.bond/100*0.42) * (pair.bond < 22 ? 0.55 : 1);
+    m.material.color.set(0xfff0d6);
   }
-  if (!segOn) for (const m of pair.segs) m.visible = false;
+  pair.knots.forEach((k, i)=>{
+    k.visible = segOn;
+    if (!segOn) return;
+    k.position.set(i === 0 ? x1 : x2, baseY - 0.01, z);
+    k.rotation.y = pair.runT*1.3;
+    k.material.opacity = 0.55 + pair.bond/100*0.4;
+    k.material.color.copy(ac);
+    k.scale.setScalar(0.9 + 0.18*Math.sin(pair.runT*1.8 + i*2.1));
+  });
 }
 
 /* ══════════ 碰撞 ══════════ */
@@ -1837,7 +2162,7 @@ function collide(){
       const dx = Math.abs(LANE_X[o.lane] - player.x);
       if (dx > 1.30) continue;
       let hits = false;
-      if (o.kind === 'barrier') hits = feet < 1.05;
+      if (o.kind === 'barrier') hits = feet < 1.00;
       else if (o.kind === 'gate') hits = (feet + headY) > 1.55;
       else hits = (feet+headY) > 0.2;
       if (hits && Math.abs(dz) < 1.15){
@@ -2105,36 +2430,53 @@ function startReveal(){
   document.getElementById('flash').classList.add('on');
   setTimeout(()=>{
     if (gen !== RUN) return;           // 上一局的定时器不许动新一局
-    worldGroup.visible = false;
-    particles.visible = false;
-    player.model.g.visible = false;
-    pair.group.visible = false;
-    if (tapeIM) tapeIM.visible = false;
-    if (tapeHaloIM) tapeHaloIM.visible = false;
-    if (rumorIM) rumorIM.visible = false;
-    rumorHalos.forEach(s=> s.visible = false);
-    Object.values(obIM).forEach(r=> r.im.visible = false);
-    ringGroup.visible = true;
-    document.getElementById('flash').classList.remove('on');
-    // 结局的天空：把 ???? 那一站的黑，换成一点凌晨的紫
-    skyMat.uniforms.uTop.value.set('#050610');
-    skyMat.uniforms.uBot.value.set('#1a1226');
-    skyMat.uniforms.uSun.value.set('#ffcf9a');
-    skyMat.uniforms.uSunI.value = 0.32;
-    ambLight.color.set('#3a3048'); ambLight.intensity = 0.45;
-    sunLight.color.set('#e8d4ff'); sunLight.intensity = 0.65;
-    renderer.toneMappingExposure = 1.04;
-    scene.fog = null;
-    // 俯视要够高够远，否则环形轨道的近端会掉出画面
-    camera.position.set(0, 74, 106);
-    camera.fov = 50; camera.updateProjectionMatrix();
-    camera.lookAt(0, -2, 0);
-    skyMesh.position.copy(camera.position);
-    sfxEnd();
-    const rb = document.getElementById('revealBond');
-    if (rb) rb.textContent = '同框 ' + Math.round(pair.bond) + ' · 间距 ' + pair.gap.toFixed(1) + 'm';
-    document.getElementById('revealText').classList.add('on');
+    revealNow();
   }, 700);
+}
+
+// 把世界收掉、只留环形轨道。截图夹具要同步调到这一帧，不能再等 700ms 的闪白
+function revealNow(){
+  const hudEl = document.getElementById('hud');
+  worldGroup.visible = false;
+  particles.visible = false;
+  player.model.g.visible = false;
+  pair.group.visible = false;
+  if (tapeIM) tapeIM.visible = false;
+  if (tapeHaloIM) tapeHaloIM.visible = false;
+  if (rumorIM) rumorIM.visible = false;
+  rumorHalos.forEach(s=> s.visible = false);
+  if (obGroup) obGroup.visible = false;
+  ringGroup.visible = true;
+  document.getElementById('flash').classList.remove('on');
+  // 结局的天空：把 ???? 那一站的黑，换成一点凌晨的紫
+  // 俯视时天空球正上方会占掉画面上缘：原来那团暖色太阳在那里糊成一块褐色污渍，
+  // 结局不需要太阳，只留一点冷紫的凌晨
+  skyMat.uniforms.uTop.value.set('#06050f');
+  skyMat.uniforms.uBot.value.set('#1d1629');
+  skyMat.uniforms.uSun.value.set('#8f7cc0');
+  skyMat.uniforms.uSunI.value = 0.0;
+  ambLight.color.set('#3a3048'); ambLight.intensity = 0.45;
+  sunLight.color.set('#e8d4ff'); sunLight.intensity = 0.65;
+  renderer.toneMappingExposure = 1.04;
+  scene.fog = null;
+  // 俯视要够高够远，否则环形轨道的近端会掉出画面
+  camera.position.set(0, 74, 106);
+  camera.fov = camera.aspect < 1 ? 64 : 50;
+  camera.updateProjectionMatrix();
+  camera.lookAt(0, -2, 0);
+  skyMesh.position.copy(camera.position);
+  // 竖屏的水平视角只有 16°，46 米的环会被左右裁成两条弧 —— 按水平夹角反推缩放
+  const vHalf = camera.fov * Math.PI / 360;
+  const hHalf = Math.atan(Math.tan(vHalf) * camera.aspect);
+  const ringFit = Math.max(0.42, Math.min(1, 0.88 * 129 * Math.tan(hHalf) / 52));
+  ringGroup.scale.setScalar(ringFit);
+  // 进了环形轨道就不再是「跑」了：HUD（同框/间距/磁带）收起来，
+  // 否则左上角的「间距 --」会和画面中央的「间距 0.0m」互相打脸
+  hudEl.classList.remove('on');
+  sfxEnd();
+  const rb = document.getElementById('revealBond');
+  if (rb) rb.textContent = '同框 ' + Math.round(pair.bond) + ' · 间距 ' + pair.gap.toFixed(1) + 'm';
+  document.getElementById('revealText').classList.add('on');
 }
 
 function updateReveal(dt){
@@ -2296,14 +2638,14 @@ function resetRun(){
   if (tapeHaloIM) tapeHaloIM.visible = true;
   if (rumorIM) rumorIM.visible = true;
   rumorHalos.forEach(s=> s.visible = true);
-  Object.values(obIM).forEach(r=> r.im.visible = true);
+  if (obGroup) obGroup.visible = true;
   pair.group.visible = true;
 
   // 状态
   G.state = 'title'; G.t = 0; G.dist = 0; G.speed = SPEED0;
   G.era = 0; G.hits = 0; G.pen = 0; G.flash = 0; G.endPick = null;
   player.z = 0; player.x = 0; player.lane = 1; player.y = 0; player.vy = 0;
-  player.jumping = false; player.slide = 0; player.lean = 0; player.runPhase = 0;
+  player.jumping = false; player.slide = 0; player.slideT = 0; player.slideHold = 0; jumpBuf = 0; slideBuf = 0; player.lean = 0; player.runPhase = 1.35;
   player.model.g.rotation.set(0,0,0);
   player.model.root.rotation.set(0,0,0);
   player.model.root.position.set(0,0,0);
@@ -2422,10 +2764,11 @@ function startGame(){
   document.getElementById('hud').classList.add('on');
   document.getElementById('over').classList.remove('on');
   G.state = 'playing';
+  player.runPhase = 0.55;   // 夹具只跑 4 帧，先给一个迈步相位，别拍成站着
   if (player.model) player.model.g.visible = true;
   G.t = 0; G.speed = SPEED0; G.era = 0;
   player.z = 0; player.x = 0; player.lane = 1; player.y = 0; player.vy = 0;
-  player.jumping = false; player.slide = 0; player.lean = 0; G.pen = 0;
+  player.jumping = false; player.slide = 0; player.slideT = 0; player.slideHold = 0; jumpBuf = 0; slideBuf = 0; player.lean = 0; G.pen = 0;
   st.score = 0; st.tapes = 0; st.hearts = 3; st.combo = 0; st.bestCombo = 0;
   st.perEra = []; st.near = 0; st.precise = 0; st.tlCount = 0;
   st.rumor = null; st.rumorShort = ''; st.shieldUsed = 0;
@@ -2514,6 +2857,7 @@ function shotMode(){
   tEl.classList.add('gone');
   document.getElementById('hud').classList.add('on');
   G.state = 'playing';
+  player.runPhase = 0.55;   // 夹具只跑 4 帧，先给一个迈步相位，别拍成站着
   if (player.model) player.model.g.visible = true;
   G.t = 0; G.speed = SPEED0; G.era = 0;
   player.z = -d; player.lane = 1; player.x = 0;
@@ -2533,15 +2877,24 @@ function shotMode(){
   renderer.render(scene, camera);
   // d 到终点时直接进反转镜头，截图夹具才能拍到环形轨道
   if (d >= ERA_LEN*6 - 40){
-    startReveal();
-    setTimeout(()=>{
-      try{
-        // 夹具没有主循环：手动把反转推进到「两个按钮已出现」的那一帧
-        revealT = 6.25;
-        updateReveal(1/60);
-        renderer.render(scene, camera);
-      }catch(e){}
-    }, 760);
+    try{
+      // 夹具没有主循环：同步收世界、切到环形轨道、把文字/按钮直接摆到最终态，
+      // 否则 __shotDone 先到，截图拍到的是 700ms 闪白
+      G.state = 'reveal'; revealT = 6.25;
+      st.bondEnd = pair.bond; st.gapEnd = pair.gap;
+      const fl = document.getElementById('flash');
+      fl.style.transition = 'none'; fl.style.opacity = '0';
+      document.getElementById('hud').style.transition = 'none';
+      const rt = document.getElementById('revealText');
+      rt.style.transition = 'none'; rt.style.opacity = '1';
+      const cr = document.getElementById('choiceRow');
+      cr.style.transition = 'none';
+      revealNow();
+      revealT = 6.25;
+      updateReveal(1/60);
+      cr.classList.add('on'); cr.style.opacity = '1';
+      renderer.render(scene, camera);
+    }catch(e){}
   }
   window.__shotDone = true;
   document.title = 'shot ok ' + d;

@@ -25,7 +25,7 @@ const SHOT = Q.get('shot');
    in/out 玩家站在两人之间时每秒回多少 / 离开时每秒掉多少
    drift 每秒自然撕开的距离；extra 这个时代无论怎样都在掉的量          */
 const PAIR_ERA = [
-  { mode:'both', gap:1.00, gapMax:1.80, inRate:6, outRate:12, drift:0.02, extra:0.3, tag:'并肩' },
+  { mode:'both', gap:1.75, gapMax:2.60, inRate:6, outRate:12, drift:0.02, extra:0.3, tag:'并肩' },
   { mode:'both', gap:1.70, gapMax:4.40, inRate:3, outRate:14, drift:0.11, extra:1.2, tag:'渐远' },
   { mode:'one',  gap:0.00, gapMax:0.90, inRate:0, outRate:14, drift:0.02, extra:3.0, tag:'只剩一个' },
   { mode:'both', gap:3.60, gapMax:4.80, inRate:4, outRate:14, drift:0.04, extra:2.0, tag:'更远' },
@@ -89,8 +89,8 @@ const ERAS = [
 
   { id:'????', year:'????', tag:'画地为牢',
     skyTop:'#050508', skyBot:'#141018', sun:'#ffffff', sunI:0.0,
-    fog:'#0a0a10', fogN:18, fogF:95,
-    amb:'#3a3540', ambI:0.85, dir:'#d8d0e0', dirI:0.55,
+    fog:'#0a0a10', fogN:26, fogF:112,
+    amb:'#423c50', ambI:0.98, dir:'#ded6ec', dirI:0.72,
     ground:'#06060a', roofC:'#4a4353', roofC2:'#2e2a3a', trim:'#a89ac0',
     accent:'#c8b8e8', glow:'#e8dcff', weather:'dust', pcol:'#c8b8e8',
     lit:'#9a8ac0' },
@@ -210,7 +210,7 @@ const G = {
 };
 
 const player = {
-  lane:1, x:0, y:0, vy:0, jumping:false, slide:0, z:0,
+  lane:1, x:0, y:0, vy:0, jumping:false, slide:0, slideT:0, slideHold:0, z:0,
   runPhase:0, lean:0, dead:false, model:null,
   limbs:{},
 };
@@ -244,8 +244,10 @@ function makeSky(){
         float d = max(dot(normalize(vDir), normalize(uSunPos)), 0.0);
         col += uSun * pow(d, 220.0) * 1.6 * uSunI;
         col += uSun * pow(d, 9.0) * 0.16 * uSunI;
+        // 软肩：原来的太阳盘会顶到 1.0 被硬裁，留下一圈“贴图感”的硬边
+        col = 1.0 - exp(-max(col, vec3(0.0)) * 1.35);
         // ShaderMaterial 不参与 three 的输出色彩空间转换，手动编码回 sRGB
-        gl_FragColor = vec4(pow(max(col, vec3(0.0)), vec3(0.4545)), 1.0);
+        gl_FragColor = vec4(pow(col, vec3(0.4545)), 1.0);
       }`
   });
   const m = new THREE.Mesh(geo, skyMat);
@@ -309,6 +311,12 @@ function buildEra(era, z0){
     // 车顶护栏（两侧）
     b.box(0.12, 0.30, CAR_LEN+0.2, -CAR_W/2-0.20, 3.55, cz, E.trim);
     b.box(0.12, 0.30, CAR_LEN+0.2,  CAR_W/2+0.20, 3.55, cz, E.trim);
+    // 车道分界虚线：让人看得出自己在哪条道（±1.25 是三道边界）
+    for (let d = 0; d < 7; d++){
+      const dz = cz - CAR_LEN/2 + 1.0 + d*2.0;
+      b.box(0.085, 0.014, 1.20, -1.25, 3.432, dz, 0xb9a984);
+      b.box(0.085, 0.014, 1.20,  1.25, 3.432, dz, 0xb9a984);
+    }
     // 车顶导引亮条（两侧）
     b.box(0.26, 0.06, CAR_LEN+0.4, -CAR_W/2+0.18, 3.43, cz, E.trim);
     b.box(0.26, 0.06, CAR_LEN+0.4,  CAR_W/2-0.18, 3.43, cz, E.trim);
@@ -331,9 +339,11 @@ function buildEra(era, z0){
     // 车顶空调机组：底座 + 上盖 + 散热片，别再是光秃秃的灰盒子
     for (let k=-1;k<=1;k+=2){
       const vx = k*2.25, vz = cz + 3.4;
-      b.box(1.05, 0.18, 1.35, vx, 3.45, vz, metalC(E.roofC,0.10,0.76));
-      b.box(0.86, 0.13, 1.15, vx, 3.58, vz, metalC(E.roofC,0.08,0.94));
-      for (let q=0;q<4;q++) b.box(0.90, 0.02, 0.05, vx, 3.65, vz-0.40+q*0.26, metalC(E.roofC,0.10,0.58));
+      // 机组比车顶板亮一档 + 上盖留一条高光边，否则近处看是一块黑窟窿
+      b.box(1.05, 0.18, 1.35, vx, 3.45, vz, metalC(E.roofC,0.22,0.92));
+      b.box(0.86, 0.14, 1.15, vx, 3.58, vz, metalC(E.roofC,0.20,1.16));
+      b.box(0.52, 0.05, 0.78, vx, 3.66, vz, metalC(E.roofC,0.18,1.16));
+      for (let q=0;q<4;q++) b.box(0.90, 0.02, 0.05, vx, 3.65, vz-0.40+q*0.26, metalC(E.roofC,0.20,0.72));
     }
     // 车厢连接处：风挡 + 车钩，让"一节一节"读得出来
     if (i < nCar-1){
@@ -376,10 +386,10 @@ function buildEra(era, z0){
     if (type === 'pole'){
       for (let k=0;k<7;k++){
         const pz = z - k*22;
-        b.cyl(0.14, 9.5, s*(8.5), 4.6, pz, shadeC(E.trim,0.55).getHex());
-        b.box(3.4, 0.16, 0.16, s*(7.0), 8.6, pz, shadeC(E.trim,0.45).getHex());
-        g.box(0.9, 0.16, 0.16, s*(6.2), 8.5, pz, E.glow);   // 灯
-        g.box(1.2, 1.2, 1.2, s*(6.2), 8.2, pz, E.glow);     // 光晕（合并几何，够用）
+        b.cyl(0.14, 11.2, s*(8.5), 5.6, pz, shadeC(E.trim,0.55).getHex());
+        b.box(3.4, 0.10, 0.10, s*(7.0), 10.72, pz, 0x232a2e);   // 灯臂抬到画面外：贴脸时会在 HUD 上压出一条灰带
+        // ???? 是空站台：灯全灭，只留灯杆和灯臂，别在画面顶上挂两块灰片
+        if (E.id !== '????') g.box(0.9, 0.16, 0.16, s*(6.2), 10.62, pz, E.glow);   // 灯
       }
     } else if (type === 'blocks'){
       // 远处楼群
@@ -425,7 +435,8 @@ function buildEra(era, z0){
         const pz = z - k*40;
         b.box(0.25, 5.0, 0.25, s*8.0, 2.5, pz, shadeC(E.trim,0.5).getHex());
         b.box(3.6, 1.5, 0.2, s*8.0, 4.4, pz, shadeC(E.ground,1.6).getHex());
-        g.box(3.2, 1.1, 0.1, s*8.0, 4.4, pz, E.glow);
+        // 灯箱面用当站的主色，纯白会像一块没贴图的洞
+        g.box(3.2, 1.0, 0.1, s*8.0, 4.4, pz, E.accent);
       }
     } else if (type === 'trees'){
       for (let k=0;k<11;k++){
@@ -474,8 +485,8 @@ function buildEra(era, z0){
   const gateCol = E.accent;
   b.box(0.5, 7.5, 0.5, -9.5, 3.75, z0-2, shadeC(gateCol,0.7).getHex());
   b.box(0.5, 7.5, 0.5,  9.5, 3.75, z0-2, shadeC(gateCol,0.7).getHex());
-  b.box(20, 0.7, 0.7, 0, 7.6, z0-2, shadeC(gateCol,0.8).getHex());
-  g.box(9, 0.34, 0.34, 0, 7.4, z0-2.1, E.glow);
+  b.box(20, 0.7, 0.7, 0, 11.2, z0-2, shadeC(gateCol,0.8).getHex());
+  g.box(9, 0.34, 0.34, 0, 11.0, z0-2.1, E.glow);
 
   /* ── 道旁剪影 + 站台 ── */
   const sil = SIL[era] || SIL[5];
@@ -568,10 +579,11 @@ function genEntities(){
       } else if (r < 0.46){
         // 三闸：横梁 -> 滑
         for (let l=0;l<3;l++) obstacles.push({ kind:'gate', lane:l, z, hit:false });
-      } else if (r < 0.70){
+      } else if (r < 0.62){
+        // 单道高墙 -> 只能换道。墙比人高得多，看一眼就知道跳不过去
         const l = (rnd()*3)|0;
         obstacles.push({ kind:'block', lane:l, z, hit:false });
-      } else if (r < 0.88){
+      } else if (r < 0.72){
         const l = (rnd()*3)|0;
         const l2 = (l + 1 + ((rnd()*2)|0)) % 3;
         obstacles.push({ kind:'block', lane:l, z, hit:false });
@@ -580,12 +592,13 @@ function genEntities(){
         const l = (rnd()*3)|0;
         obstacles.push({ kind:'barrier', lane:l, z, hit:false });
       }
-      z -= 15 + rnd()*9;
+      z -= 17 + rnd()*8;
     }
     // 磁带
     let tz = z0 - 24;
     for (let i=0;i<5;i++){
-      tapeData.push({ lane:(rnd()*3)|0, z: tz, y: 1.15 + rnd()*0.9, taken:false, spin: rnd()*6.28 });
+      // 高度压在 1.15 以下：同框线在 1.34，磁带浮到线上就会把「两个人在一条线上」挡掉
+      tapeData.push({ lane:(rnd()*3)|0, z: tz, y: 0.70 + rnd()*0.34, taken:false, spin: rnd()*6.28 });
       tz -= 30 + rnd()*8;
     }
   }
@@ -598,6 +611,21 @@ function genEntities(){
   }
   for (let i=tapeData.length-1;i>=0;i--){
     if (Math.abs(tapeData[i].z - rz) < 4) tapeData.splice(i,1);
+  }
+
+  // 每一站开头留一条能并排跑的道：第一道障碍若只堵住中间，挪到空着的边道，
+  // 让「同框」在开头几秒是看得见的。
+  for (let e=0;e<6;e++){
+    const z0 = -e*ERA_LEN;
+    const first = obstacles.filter(o => Math.abs(o.z - (z0-26)) < 0.51);
+    if (first.length < 3){
+      const mid = first.find(o=>o.lane===1);
+      if (mid){
+        const used = new Set(first.map(o=>o.lane));
+        const free = [0,2].find(l=>!used.has(l));
+        if (free !== undefined) mid.lane = free;
+      }
+    }
   }
 
   obstacles.sort((a,b)=> b.z - a.z);   // 从远到近（z 递减）

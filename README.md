@@ -50,7 +50,7 @@
 
 你以为在往前，其实一直在同一个圈里——跑到终点，轨道折回来，是一个环。
 
-**约 3 分钟** · ← → 换道，↑ 跳，↓ 滑 · [开始玩 →](https://yeahdongcn.github.io/feixue-cp/buxiache-3d/dist/)
+**约 3 分钟** · ← → 换道，↑ 跳（落地前按下也算），↓ 滑铲（按住一直滑） · [开始玩 →](https://yeahdongcn.github.io/feixue-cp/buxiache-3d/dist/)
 
 </td>
 </tr>

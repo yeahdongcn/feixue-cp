@@ -47,6 +47,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
   font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(0,0,0,.85)}
 .hudScore #hudMult{font-family:var(--sans);font-size:13px;margin-left:7px;color:var(--era);
   text-shadow:0 0 18px var(--era)}
+.hudScore .multLabel{font-size:10px;letter-spacing:.12em;color:#b6c2d4;margin-left:4px;vertical-align:2px;text-shadow:0 1px 6px #000}
 .hudTapeRow{margin-top:5px;font-size:12px;letter-spacing:.16em;color:var(--dim);
   text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .hudTapeRow b{color:var(--era);font-weight:600;font-family:var(--mono)}
@@ -137,9 +138,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
 #btnStart:hover{background:#ffd479;border-color:#ffd479;color:#0a0e18;box-shadow:0 0 60px #ffd47955}
 .tmeta{margin-top:13px;font-size:11.5px;letter-spacing:.2em;color:#8f9bb2}
 .tmech{margin-top:20px;font-size:11.5px;line-height:1.95;color:#aab5c9;letter-spacing:.02em;
-  border-left:2px solid rgba(255,179,92,.55);padding:2px 0 2px 11px;text-align:left}
+  border-left:2px solid rgba(255,179,92,.55);padding:2px 0 2px 11px;text-align:left;
+  text-wrap:pretty}
 .tmech b{color:#ffcf8a;font-weight:600}
 .tkeys{margin-top:18px;font-size:11.5px;line-height:2.0;color:#8b96ab;letter-spacing:.03em}
+.tkeysRow{display:block}
 .ttip{margin-top:16px;font-size:11.5px;line-height:1.85;color:#98a2b8;text-align:left;letter-spacing:.01em}
 
 /* ── 结局 / 结算 ── */
@@ -261,7 +264,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
         </div>
       </div>
       <div class="hudRight">
-        <div class="hudScore"><span id="hudScore">0</span><span id="hudMult">×3</span></div>
+        <div class="hudScore"><span id="hudScore">0</span><span id="hudMult">×3</span><span class="multLabel">倍率</span></div>
         <div class="hudTapeRow">磁带 <b id="hudTape">0</b> · <i id="hudCombo">连 0</i></div>
         <div id="hudHearts">●●●</div>
         <div id="hudRumor"></div>
@@ -297,8 +300,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#05060a;color:var(--in
       <div class="tline">2006 年，你挤上了一趟车。<br>车顶上跑着两个人，中间隔着一根线。<br>你保不住她们的二十年，只能让她们留在同一个画面里。</div>
       <button id="btnStart">刷 卡 上 车</button>
       <div class="tmeta">70 秒 · 1140 米 · 不用登录</div>
-      <div class="tmech"><b>同 框</b>：跑在两人中间，线就紧。线断了，分数倍率掉、磁带吸不过来；<br>拉到最满，它能替你挡一次撞。那是这局里你唯一能失去、也唯一能保住的东西。</div>
-      <div class="tkeys">← → 换道　空格 起跳　↓ 滑铲　（手机：左右滑 / 上滑跳 / 下滑铲）</div>
+      <div class="tmech"><b>同 框</b>：跑在两人中间，线就紧。线断了，倍率掉、磁带吸不过来；拉到最满，它能替你挡一次撞。那是这局里你唯一能失去、也唯一能保住的东西。</div>
+      <div class="tkeys"><span class="tkeysRow">← → 换道　空格 起跳　↓ 滑铲</span><span class="tkeysRow">手机：左右滑 换道　上滑 起跳　下滑 滑铲</span></div>
       <div class="ttip">
         本作为虚构怀旧创作。人物与情节均经艺术化处理，不指向任何真实个人的私生活与关系；
         文中所有事件细节来自公开报道与节目内容，未经证实的部分不作断言。请勿据此对真人求证或攻讦。

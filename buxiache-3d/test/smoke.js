@@ -222,7 +222,9 @@ while (G().state==='playing' && bf<20000){
   // 起跳要卡在「撞到之前 0.12~0.30 秒」，太早会落地太晚
   const tImp = (th[ln] - 1.15) / sp;
   if (kd[ln] === 'barrier' && PO.y === 0 && PO.slide <= 0 && tImp > 0.15 && tImp < 0.32) ctx.tryJump();
-  if (kd[ln] === 'gate' && PO.slide <= 0 && !PO.jumping && tImp > 0.05 && tImp < 0.30) ctx.trySlide();
+  if (kd[ln] === 'gate' && PO.slide <= 0 && !PO.jumping && tImp > 0.05 && tImp < 0.30){
+    ctx.trySlide(); PO.slideHold = 0;   // 模拟"点一下"，不是一直按住
+  }
   const hitBefore = OB.filter(o=>o.hit).length;
   const eraBefore = G().era;
   ctx.update(DT);
