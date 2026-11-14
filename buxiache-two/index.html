@@ -44,10 +44,13 @@
 
   .who{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:34px}
   .who button{
-    padding:26px 18px; border:1px solid var(--line); background:var(--panel); color:var(--fg);
+    position:relative; padding:26px 18px 46px; border:1px solid var(--line); background:var(--panel); color:var(--fg);
     font-family:inherit; cursor:pointer; text-align:left; transition:all .22s; border-radius:2px;
   }
-  .who button:hover{border-color:#4a4437; transform:translateY(-2px)}
+  .who button::after{content:"选 择 →"; position:absolute; right:18px; bottom:16px;
+    font-size:11px; letter-spacing:.16em; color:#5d594f; transition:color .2s, transform .2s}
+  .who button:hover{border-color:#5a5346; transform:translateY(-2px); background:#161615}
+  .who button:hover::after{color:var(--acc); transform:translateX(3px)}
   .who .n{font-size:22px; letter-spacing:.1em; display:block; margin-bottom:9px}
   .who .d{font-size:12px; color:var(--dim); line-height:1.9; letter-spacing:.02em}
   .who .xf .n{color:#e0736a}
@@ -67,7 +70,10 @@
     text-align:left; cursor:pointer; transition:background .2s;
   }
   .tl button:hover:not(:disabled){background:#191918}
-  .tl button:disabled{cursor:default; opacity:.34}
+  .tl button:disabled{cursor:default}
+  .tl button:disabled .y, .tl button:disabled .t{color:#4a4740}
+  .tl button:disabled .s{color:#3a3733}
+  .tl button:disabled{background:rgba(8,8,9,.7)}
   .tl .y{font-size:13px; color:var(--acc); letter-spacing:.1em; min-width:74px}
   .tl .t{font-size:15px; letter-spacing:.05em}
   .tl .s{margin-left:auto; font-size:11px; color:var(--dim2); letter-spacing:.1em; white-space:nowrap}
@@ -166,6 +172,7 @@
 <!-- 时间轴 -->
 <section class="screen" id="s-tl">
   <div class="wrap">
+    <div class="kicker" style="margin-bottom:16px">回 到 哪 一 年</div>
     <div class="hud">
       <span id="tl-who"></span>
       <span class="battery" id="tl-batt"></span>
@@ -583,6 +590,7 @@ document.querySelectorAll('.who button').forEach(b => {
 });
 $('arch-go').onclick = () => enterScene(pending);
 
+drawFrame(null);
 // 存档续玩
 load();
 if (S.who && !S.ended){ renderTL(); show('s-tl'); }
