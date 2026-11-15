@@ -1,6 +1,6 @@
 {
  "entry": {
-  "png": "/home/xiaodongye/games/docs/promo/share-cards/01-入口-四个游戏一图说清.png",
+  "png": "/home/xiaodongye/games/docs/promo/share-cards/with-qr/01-entry.png",
   "vw": 1080,
   "vh": 1440,
   "docH": 1440,
@@ -382,7 +382,7 @@
   "errs": []
  },
  "ending": {
-  "png": "/home/xiaodongye/games/docs/promo/share-cards/02-结局-你的版本她的版本.png",
+  "png": "/home/xiaodongye/games/docs/promo/share-cards/with-qr/02-ending.png",
   "vw": 1080,
   "vh": 1440,
   "docH": 1440,
@@ -728,7 +728,7 @@
   "errs": []
  },
  "quote": {
-  "png": "/home/xiaodongye/games/docs/promo/share-cards/03-金句-我画地为牢厉娜.png",
+  "png": "/home/xiaodongye/games/docs/promo/share-cards/with-qr/03-quote.png",
   "vw": 1080,
   "vh": 1350,
   "docH": 1350,
@@ -882,7 +882,7 @@
   "errs": []
  },
  "ledger": {
-  "png": "/home/xiaodongye/games/docs/promo/share-cards/04-考据-十二条料七条经得起查.png",
+  "png": "/home/xiaodongye/games/docs/promo/share-cards/with-qr/04-ledger.png",
   "vw": 1080,
   "vh": 1350,
   "docH": 1350,

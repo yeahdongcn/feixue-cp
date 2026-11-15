@@ -8,12 +8,12 @@ const PW = '/home/xiaodongye/dsh-3090/repo/node_modules/playwright';
 const { chromium } = require(PW);
 
 const SRC = __dirname;
-const OUT = path.join(SRC, '..', 'share-cards');
+const OUT = path.join(SRC, '..', 'share-cards', 'with-qr');
 const CARDS = [
-  { id:'entry',  file:'card-1-entry.html',  w:1080, h:1440, out:'01-入口-四个游戏一图说清' },
-  { id:'ending', file:'card-2-ending.html', w:1080, h:1440, out:'02-结局-你的版本她的版本' },
-  { id:'quote',  file:'card-3-quote.html',  w:1080, h:1350, out:'03-金句-我画地为牢厉娜' },
-  { id:'ledger', file:'card-4-ledger.html', w:1080, h:1350, out:'04-考据-十二条料七条经得起查' },
+  { id:'entry',  file:'card-1-entry.html',  w:1080, h:1440, out:'01-entry' },
+  { id:'ending', file:'card-2-ending.html', w:1080, h:1440, out:'02-ending' },
+  { id:'quote',  file:'card-3-quote.html',  w:1080, h:1350, out:'03-quote' },
+  { id:'ledger', file:'card-4-ledger.html', w:1080, h:1350, out:'04-ledger' },
 ];
 
 const PROBE = () => {
